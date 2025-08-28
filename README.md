@@ -1,2 +1,6 @@
-# phoenix
-Qt GUI/IDE on Bedrock. Proof-of-concept of AI-native optical design UX.
+# Phoenix — GUI/IDE on Bedrock (PoC)
+
+**Phoenix** is a Qt-based GUI that orchestrates Bedrock primitives:
+visualization, tolerancing, reporting, and AI-assisted workflows.
+
+> Phoenix is a proof-of-concept UX. Bedrock is the foundation.
