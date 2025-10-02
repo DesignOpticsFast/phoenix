@@ -1,0 +1,36 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 6 * * 1'  # weekly (Mon 06:00 UTC)
+
+jobs:
+  analyze:
+    name: CodeQL               # <— this is the check name you’ll add in branch protection
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Init CodeQL — scan C/C++ for the Qt CMake skeleton you have
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: cpp
+          # queries: security-and-quality   # optional, default is fine
+
+      # Autobuild is fine for now (does nothing if there’s no build)
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
