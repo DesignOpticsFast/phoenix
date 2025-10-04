@@ -124,3 +124,9 @@
 3642	4711	1759603204279990151	CMakeFiles/phoenix_app.dir/src/ui/StepViewer.cpp.o	7c943442d4ad0224
 3642	5097	1759603204279794695	CMakeFiles/phoenix_app.dir/src/ui/MainWindow.cpp.o	628f1986ae53d187
 5097	5210	1759603205734642014	phoenix_app.app/Contents/MacOS/phoenix_app	d60f8e9001a6cb2d
+108	153	1759616629893934758	phoenix_app_autogen/timestamp	6f35c0a33de9b8ed
+108	153	1759616629893934758	phoenix_app_autogen/mocs_compilation.cpp	6f35c0a33de9b8ed
+108	153	1759616629893934758	/Users/mark/Projects/phoenix/build/phoenix_app_autogen/timestamp	6f35c0a33de9b8ed
+108	153	1759616629893934758	/Users/mark/Projects/phoenix/build/phoenix_app_autogen/mocs_compilation.cpp	6f35c0a33de9b8ed
+153	1645	1759616629939225737	CMakeFiles/phoenix_app.dir/src/ui/MainWindow.cpp.o	628f1986ae53d187
+1645	1783	1759616631430458683	phoenix_app.app/Contents/MacOS/phoenix_app	d60f8e9001a6cb2d

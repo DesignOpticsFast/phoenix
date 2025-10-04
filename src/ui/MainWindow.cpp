@@ -9,6 +9,9 @@
 #include <QStatusBar>
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
+#ifdef Q_OS_MAC
+  menuBar()->setNativeMenuBar(false);
+#endif
   client_  = new BedrockClient;
   watcher_ = new QFutureWatcher<QString>(this);
 
