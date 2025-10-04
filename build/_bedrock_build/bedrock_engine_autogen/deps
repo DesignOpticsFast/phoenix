@@ -1,0 +1,29 @@
+bedrock_engine_autogen/timestamp: \
+	/Users/mark/Projects/bedrock/CMakeLists.txt \
+	/Users/mark/Projects/bedrock/include/bedrock/engine.hpp \
+	/Users/mark/Projects/bedrock/src/engine/engine.cpp \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEApplicationFrameworkTargets-release.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEApplicationFrameworkTargets.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADECompileDefinitionsAndFlags-release.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEConfig.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEConfigVersion.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEDEToolsTargets-release.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEDEToolsTargets.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEDataExchangeTargets-release.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEDataExchangeTargets.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEDrawTargets-release.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEDrawTargets.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEFoundationClassesTargets-release.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEFoundationClassesTargets.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEModelingAlgorithmsTargets-release.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEModelingAlgorithmsTargets.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEModelingDataTargets-release.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEModelingDataTargets.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEVisualizationTargets-release.cmake \
+	/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEVisualizationTargets.cmake \
+	/opt/homebrew/share/cmake/Modules/CTest.cmake \
+	/opt/homebrew/share/cmake/Modules/CTestTargets.cmake \
+	/opt/homebrew/share/cmake/Modules/CTestUseLaunchers.cmake \
+	/opt/homebrew/share/cmake/Modules/DartConfiguration.tcl.in \
+	/opt/homebrew/share/cmake/Templates/CTestScript.cmake.in \
+	/opt/homebrew/bin/cmake

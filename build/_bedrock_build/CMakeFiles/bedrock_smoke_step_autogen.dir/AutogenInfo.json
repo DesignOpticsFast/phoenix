@@ -1,0 +1,109 @@
+{
+	"BUILD_DIR" : "/Users/mark/Projects/phoenix/build/_bedrock_build/bedrock_smoke_step_autogen",
+	"CMAKE_BINARY_DIR" : "/Users/mark/Projects/phoenix/build",
+	"CMAKE_CURRENT_BINARY_DIR" : "/Users/mark/Projects/phoenix/build/_bedrock_build",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/Users/mark/Projects/bedrock",
+	"CMAKE_EXECUTABLE" : "/opt/homebrew/bin/cmake",
+	"CMAKE_LIST_FILES" : 
+	[
+		"/Users/mark/Projects/bedrock/CMakeLists.txt",
+		"/opt/homebrew/share/cmake/Modules/CTest.cmake",
+		"/opt/homebrew/share/cmake/Modules/CTestUseLaunchers.cmake",
+		"/opt/homebrew/share/cmake/Modules/CTestTargets.cmake",
+		"/opt/homebrew/share/cmake/Modules/DartConfiguration.tcl.in",
+		"/opt/homebrew/share/cmake/Templates/CTestScript.cmake.in",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEConfigVersion.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEConfig.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADECompileDefinitionsAndFlags-release.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEFoundationClassesTargets.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEFoundationClassesTargets-release.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEModelingDataTargets.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEModelingDataTargets-release.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEModelingAlgorithmsTargets.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEModelingAlgorithmsTargets-release.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEVisualizationTargets.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEVisualizationTargets-release.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEApplicationFrameworkTargets.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEApplicationFrameworkTargets-release.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEDataExchangeTargets.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEDataExchangeTargets-release.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEDEToolsTargets.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEDEToolsTargets-release.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEDrawTargets.cmake",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/lib/cmake/opencascade/OpenCASCADEDrawTargets-release.cmake"
+	],
+	"CMAKE_SOURCE_DIR" : "/Users/mark/Projects/phoenix",
+	"CROSS_CONFIG" : false,
+	"DEP_FILE" : "/Users/mark/Projects/phoenix/build/_bedrock_build/bedrock_smoke_step_autogen/deps",
+	"DEP_FILE_RULE_NAME" : "bedrock_smoke_step_autogen/timestamp",
+	"HEADERS" : [],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "/Users/mark/Projects/phoenix/build/_bedrock_build/bedrock_smoke_step_autogen/include",
+	"MOC_COMPILATION_FILE" : "/Users/mark/Projects/phoenix/build/_bedrock_build/bedrock_smoke_step_autogen/mocs_compilation.cpp",
+	"MOC_DEFINITIONS" : [],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"/Users/mark/Projects/bedrock/include",
+		"/opt/homebrew/Cellar/opencascade/7.9.1/include/opencascade",
+		"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1",
+		"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include",
+		"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include",
+		"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"
+	],
+	"MOC_MACRO_NAMES" : 
+	[
+		"Q_OBJECT",
+		"Q_GADGET",
+		"Q_NAMESPACE",
+		"Q_NAMESPACE_EXPORT",
+		"Q_GADGET_EXPORT",
+		"Q_ENUM_NS"
+	],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : 
+	[
+		"/usr/bin/c++",
+		"-std=gnu++20",
+		"-w",
+		"-dM",
+		"-E",
+		"/opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp"
+	],
+	"MOC_PREDEFS_FILE" : "/Users/mark/Projects/phoenix/build/_bedrock_build/bedrock_smoke_step_autogen/moc_predefs.h",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : 
+	[
+		"/Users/mark/Projects/phoenix/build/_bedrock_build/bedrock_engine_autogen/mocs_compilation.cpp",
+		"/Users/mark/Projects/phoenix/build/_bedrock_build/bedrock_geom_autogen/mocs_compilation.cpp"
+	],
+	"MULTI_CONFIG" : false,
+	"PARALLEL" : 10,
+	"PARSE_CACHE_FILE" : "/Users/mark/Projects/phoenix/build/_bedrock_build/CMakeFiles/bedrock_smoke_step_autogen.dir/ParseCache.txt",
+	"QT_MOC_EXECUTABLE" : "/Users/mark/Qt/6.9.3/macos/libexec/moc",
+	"QT_UIC_EXECUTABLE" : "/Users/mark/Qt/6.9.3/macos/libexec/uic",
+	"QT_VERSION_MAJOR" : 6,
+	"QT_VERSION_MINOR" : 9,
+	"SETTINGS_FILE" : "/Users/mark/Projects/phoenix/build/_bedrock_build/CMakeFiles/bedrock_smoke_step_autogen.dir/AutogenUsed.txt",
+	"SOURCES" : 
+	[
+		[ "/Users/mark/Projects/bedrock/tests/smoke_step_main.cpp", "MU", null ]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [],
+	"UIC_SKIP" : 
+	[
+		"/Users/mark/Projects/phoenix/build/_bedrock_build/bedrock_engine_autogen/mocs_compilation.cpp",
+		"/Users/mark/Projects/phoenix/build/_bedrock_build/bedrock_geom_autogen/mocs_compilation.cpp"
+	],
+	"UIC_UI_FILES" : [],
+	"USE_BETTER_GRAPH" : true,
+	"VERBOSITY" : 0
+}
