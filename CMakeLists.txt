@@ -8,7 +8,8 @@ project(Phoenix
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+# Qt (Widgets + Concurrent)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Concurrent)
 
 # Pull Bedrock in as sibling
 add_subdirectory(../bedrock ${CMAKE_BINARY_DIR}/_bedrock_build)
@@ -22,11 +23,13 @@ add_executable(phoenix_app
 
 target_include_directories(phoenix_app PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
   ../bedrock/include
 )
 
 target_link_libraries(phoenix_app PRIVATE
   Qt6::Widgets
+  Qt6::Concurrent
   bedrock_engine
 )
 

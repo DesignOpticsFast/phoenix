@@ -5,17 +5,14 @@
 #include <QMenuBar>
 #include <QAction>
 #include <QStandardPaths>
-#include <QtConcurrent>
-#include <QFutureWatcher>
+#include <QtConcurrent/QtConcurrent>
 #include <QStatusBar>
 
-using FWatcher = QFutureWatcher<QString>;
-
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
-  client_ = new BedrockClient;
-  watcher_ = new FWatcher(this);
+  client_  = new BedrockClient;
+  watcher_ = new QFutureWatcher<QString>(this);
 
-  auto* fileMenu = menuBar()->addMenu("&File");
+  auto* fileMenu  = menuBar()->addMenu("&File");
   auto* newDesign = new QAction("New Design", this);
   fileMenu->addAction(newDesign);
   connect(newDesign, &QAction::triggered, this, &MainWindow::onNewDesign);
@@ -37,7 +34,7 @@ void MainWindow::onNewDesign() {
   });
 
   watcher_->setFuture(fut);
-  connect(watcher_, &FWatcher::finished, this, [this]{
+  connect(watcher_, &QFutureWatcher<QString>::finished, this, [this]{
     const QString path = watcher_->future().result();
     statusBar()->showMessage("STEP created: " + path, 5000);
     auto* v = new StepViewer(this);
