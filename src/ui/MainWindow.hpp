@@ -1,6 +1,8 @@
 #pragma once
 #include <QMainWindow>
-class QFutureWatcherQString;
+#include <QFutureWatcher>
+#include <QString>
+
 class BedrockClient;
 
 class MainWindow : public QMainWindow {
@@ -13,6 +15,6 @@ private slots:
   void onNewDesign();
 
 private:
-  BedrockClient* client_{nullptr};
-  QFutureWatcherQString* watcher_{nullptr};
+  BedrockClient*               client_{nullptr};
+  QFutureWatcher<QString>*     watcher_{nullptr};
 };

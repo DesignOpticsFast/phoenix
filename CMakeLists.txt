@@ -8,17 +8,29 @@ project(Phoenix
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Qt (Widgets + Concurrent)
+# Enable Qt automoc/uic/rcc so Q_OBJECT headers generate moc files
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+
 find_package(Qt6 REQUIRED COMPONENTS Widgets Concurrent)
 
 # Pull Bedrock in as sibling
 add_subdirectory(../bedrock ${CMAKE_BINARY_DIR}/_bedrock_build)
 
 add_executable(phoenix_app
+  # sources
   src/main.cpp
   src/adapters/bedrock_client.cpp
   src/ui/MainWindow.cpp
   src/ui/StepViewer.cpp
+
+  # headers with Q_OBJECT for AUTOMOC
+  src/ui/MainWindow.hpp
+  src/ui/StepViewer.hpp
+
+  # non-Q_OBJECT header (ok to list)
+  src/adapters/bedrock_client.hpp
 )
 
 target_include_directories(phoenix_app PRIVATE
