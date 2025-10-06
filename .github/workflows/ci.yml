@@ -1,6 +1,4 @@
 name: CI
-permissions:
-  contents: read
 
 permissions:
   contents: read
@@ -14,17 +12,24 @@ on:
 
 jobs:
   build:
-    name: macOS build (Qt 6.9.3)
+    name: macOS build (Qt 6.9.3 + Bedrock subdir)
     runs-on: macos-14
 
     steps:
-      - name: Checkout
+      - name: Checkout Phoenix
         uses: actions/checkout@v4
+
+      - name: Checkout Bedrock (sibling directory)
+        uses: actions/checkout@v4
+        with:
+          repository: DesignOpticsFast/bedrock
+          ref: main
+          path: bedrock   # ends up at /Users/runner/work/phoenix/bedrock
 
       - name: Install tools
         run: |
           brew update
-          brew install cmake ninja
+          brew install cmake ninja opencascade
 
       - name: Install Qt 6.9.3
         uses: jurplel/install-qt-action@v4
@@ -37,10 +42,11 @@ jobs:
           rm -rf build build-ci
 
       - name: Configure (CMake)
-        env:
-          CMAKE_PREFIX_PATH: ${{ env.Qt6_DIR }}
         run: |
-          cmake -S . -B build-ci -G Ninja -DCMAKE_BUILD_TYPE=Release
+          OCCT_PREFIX="$(brew --prefix opencascade)"
+          cmake -S . -B build-ci -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${Qt6_DIR};${OCCT_PREFIX}"
 
       - name: Build
         run: cmake --build build-ci --config Release -j
