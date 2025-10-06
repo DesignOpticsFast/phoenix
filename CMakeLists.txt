@@ -31,6 +31,7 @@ add_executable(phoenix_app
 
   # non-Q_OBJECT header (ok to list)
   src/adapters/bedrock_client.hpp
+  src/ui/MainWindow.ui
 )
 
 target_include_directories(phoenix_app PRIVATE

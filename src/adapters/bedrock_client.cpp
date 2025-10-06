@@ -1,11 +1,19 @@
 #include "adapters/bedrock_client.hpp"
-#include <bedrock/engine.hpp>
+#include "bedrock/engine.hpp"
 
-BedrockClient::BedrockClient(SomChangedFn cb)
-  : eng_(new bedrock::Engine(std::move(cb))) {}
+#include <memory>
+#include <string>
 
-BedrockClient::~BedrockClient() { delete eng_; }
+std::unique_ptr<BedrockClient> BedrockClient::create(bedrock::Engine& engine) {
+    return std::unique_ptr<BedrockClient>(new BedrockClient(engine));
+}
+
+BedrockClient::BedrockClient(bedrock::Engine& engine) noexcept
+    : engine_(engine) {}
+
+BedrockClient::~BedrockClient() noexcept = default;
 
 QString BedrockClient::newDesignTSE_writeSTEP(const QString& outDir) {
-  return QString::fromStdString(eng_->NewDesign_TSE_WriteSTEP(outDir.toStdString()));
+    const std::string absPath = engine_.NewDesign_TSE_WriteSTEP(outDir.toStdString());
+    return QString::fromStdString(absPath);
 }

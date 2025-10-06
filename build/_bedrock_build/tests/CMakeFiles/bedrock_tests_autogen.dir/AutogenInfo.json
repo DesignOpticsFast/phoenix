@@ -3,14 +3,14 @@
 	"CMAKE_BINARY_DIR" : "/Users/mark/Projects/phoenix/build",
 	"CMAKE_CURRENT_BINARY_DIR" : "/Users/mark/Projects/phoenix/build/_bedrock_build/tests",
 	"CMAKE_CURRENT_SOURCE_DIR" : "/Users/mark/Projects/bedrock/tests",
-	"CMAKE_EXECUTABLE" : "/opt/homebrew/bin/cmake",
+	"CMAKE_EXECUTABLE" : "/opt/homebrew/Cellar/cmake/4.1.2/bin/cmake",
 	"CMAKE_LIST_FILES" : 
 	[
 		"/Users/mark/Projects/bedrock/tests/CMakeLists.txt",
-		"/opt/homebrew/share/cmake/Modules/FetchContent.cmake",
-		"/opt/homebrew/share/cmake/Modules/ExternalProject/shared_internal_commands.cmake",
-		"/opt/homebrew/share/cmake/Modules/FetchContent/CMakeLists.cmake.in",
-		"/opt/homebrew/share/cmake/Modules/GoogleTest.cmake"
+		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/FetchContent.cmake",
+		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/ExternalProject/shared_internal_commands.cmake",
+		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/FetchContent/CMakeLists.cmake.in",
+		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/GoogleTest.cmake"
 	],
 	"CMAKE_SOURCE_DIR" : "/Users/mark/Projects/phoenix",
 	"CROSS_CONFIG" : false,
@@ -51,12 +51,12 @@
 	"MOC_PATH_PREFIX" : false,
 	"MOC_PREDEFS_CMD" : 
 	[
-		"/usr/bin/c++",
+		"/usr/bin/clang++",
 		"-std=gnu++20",
 		"-w",
 		"-dM",
 		"-E",
-		"/opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp"
+		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CMakeCXXCompilerABI.cpp"
 	],
 	"MOC_PREDEFS_FILE" : "/Users/mark/Projects/phoenix/build/_bedrock_build/tests/bedrock_tests_autogen/moc_predefs.h",
 	"MOC_RELAXED_MODE" : false,

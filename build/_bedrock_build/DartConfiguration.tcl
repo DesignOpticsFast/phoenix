@@ -14,7 +14,7 @@ CostDataFile:
 Site: marksmaudio1077.lan
 
 # Build name is osname-revision-compiler, i.e. Linux-2.4.2-2smp-c++
-BuildName: Darwin-c++
+BuildName: Darwin-clang++
 
 # Subprojects
 LabelsForSubprojects: 
@@ -27,8 +27,8 @@ SubmitInactivityTimeout:
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "/opt/homebrew/bin/cmake" "/Users/mark/Projects/bedrock"
-MakeCommand: /opt/homebrew/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
+ConfigureCommand: "/opt/homebrew/Cellar/cmake/4.1.2/bin/cmake" "/Users/mark/Projects/bedrock"
+MakeCommand: /opt/homebrew/Cellar/cmake/4.1.2/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
 DefaultCTestConfigurationType: Release
 
 # version control
@@ -45,7 +45,7 @@ SVNOptions:
 SVNUpdateOptions: 
 
 # Git options
-GITCommand: /Applications/GitHub Desktop.app/Contents/Resources/app/git/bin/git
+GITCommand: /usr/bin/git
 GITInitSubmodules: 
 GITUpdateOptions: 
 GITUpdateCustom: 
@@ -58,12 +58,12 @@ P4UpdateOptions:
 P4UpdateCustom: 
 
 # Generic update command
-UpdateCommand: /Applications/GitHub Desktop.app/Contents/Resources/app/git/bin/git
+UpdateCommand: /usr/bin/git
 UpdateOptions: 
 UpdateType: git
 
 # Compiler info
-Compiler: /usr/bin/c++
+Compiler: /usr/bin/clang++
 CompilerVersion: 17.0.0.17000319
 
 # Dynamic analysis (MemCheck)

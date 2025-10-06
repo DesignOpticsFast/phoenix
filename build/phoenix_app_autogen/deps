@@ -952,6 +952,8 @@ phoenix_app_autogen/timestamp: \
 	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/ptrcheck.h \
 	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stdarg.h \
 	/Users/mark/Projects/phoenix/CMakeLists.txt \
+	/Users/mark/Projects/phoenix/build/.qtc/package-manager/auto-setup.cmake \
+	/Users/mark/Projects/phoenix/build/.qtc/package-manager/maintenance_tool_provider.cmake \
 	/Users/mark/Projects/phoenix/build/CMakeFiles/4.1.2/CMakeCXXCompiler.cmake \
 	/Users/mark/Projects/phoenix/build/CMakeFiles/4.1.2/CMakeSystem.cmake \
 	/Users/mark/Projects/phoenix/build/phoenix_app_autogen/moc_predefs.h \
@@ -1362,42 +1364,43 @@ phoenix_app_autogen/timestamp: \
 	/Users/mark/Qt/6.9.3/macos/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsTargets-relwithdebinfo.cmake \
 	/Users/mark/Qt/6.9.3/macos/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsTargets.cmake \
 	/Users/mark/Qt/6.9.3/macos/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsVersionlessTargets.cmake \
-	/opt/homebrew/share/cmake/Modules/CMakeCXXInformation.cmake \
-	/opt/homebrew/share/cmake/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake \
-	/opt/homebrew/share/cmake/Modules/CMakeCommonLanguageInclude.cmake \
-	/opt/homebrew/share/cmake/Modules/CMakeFindDependencyMacro.cmake \
-	/opt/homebrew/share/cmake/Modules/CMakeGenericSystem.cmake \
-	/opt/homebrew/share/cmake/Modules/CMakeInitializeConfigs.cmake \
-	/opt/homebrew/share/cmake/Modules/CMakeLanguageInformation.cmake \
-	/opt/homebrew/share/cmake/Modules/CMakeSystemSpecificInformation.cmake \
-	/opt/homebrew/share/cmake/Modules/CMakeSystemSpecificInitialize.cmake \
-	/opt/homebrew/share/cmake/Modules/CheckCXXCompilerFlag.cmake \
-	/opt/homebrew/share/cmake/Modules/CheckCXXSourceCompiles.cmake \
-	/opt/homebrew/share/cmake/Modules/CheckIncludeFileCXX.cmake \
-	/opt/homebrew/share/cmake/Modules/CheckLibraryExists.cmake \
-	/opt/homebrew/share/cmake/Modules/Compiler/AppleClang-CXX.cmake \
-	/opt/homebrew/share/cmake/Modules/Compiler/CMakeCommonCompilerMacros.cmake \
-	/opt/homebrew/share/cmake/Modules/Compiler/Clang.cmake \
-	/opt/homebrew/share/cmake/Modules/Compiler/GNU.cmake \
-	/opt/homebrew/share/cmake/Modules/FindOpenGL.cmake \
-	/opt/homebrew/share/cmake/Modules/FindPackageHandleStandardArgs.cmake \
-	/opt/homebrew/share/cmake/Modules/FindPackageMessage.cmake \
-	/opt/homebrew/share/cmake/Modules/FindThreads.cmake \
-	/opt/homebrew/share/cmake/Modules/GNUInstallDirs.cmake \
-	/opt/homebrew/share/cmake/Modules/Internal/CMakeCXXLinkerInformation.cmake \
-	/opt/homebrew/share/cmake/Modules/Internal/CMakeCommonLinkerInformation.cmake \
-	/opt/homebrew/share/cmake/Modules/Internal/CheckCompilerFlag.cmake \
-	/opt/homebrew/share/cmake/Modules/Internal/CheckFlagCommonConfig.cmake \
-	/opt/homebrew/share/cmake/Modules/Internal/CheckSourceCompiles.cmake \
-	/opt/homebrew/share/cmake/Modules/Linker/AppleClang-CXX.cmake \
-	/opt/homebrew/share/cmake/Modules/Linker/AppleClang.cmake \
-	/opt/homebrew/share/cmake/Modules/MacroAddFileDependencies.cmake \
-	/opt/homebrew/share/cmake/Modules/Platform/Apple-AppleClang-CXX.cmake \
-	/opt/homebrew/share/cmake/Modules/Platform/Apple-Clang-CXX.cmake \
-	/opt/homebrew/share/cmake/Modules/Platform/Apple-Clang.cmake \
-	/opt/homebrew/share/cmake/Modules/Platform/Darwin-Initialize.cmake \
-	/opt/homebrew/share/cmake/Modules/Platform/Darwin.cmake \
-	/opt/homebrew/share/cmake/Modules/Platform/Linker/Apple-AppleClang-CXX.cmake \
-	/opt/homebrew/share/cmake/Modules/Platform/Linker/Apple-AppleClang.cmake \
-	/opt/homebrew/share/cmake/Modules/Platform/UnixPaths.cmake \
-	/opt/homebrew/bin/cmake
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CMakeCXXInformation.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CMakeCommonLanguageInclude.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CMakeFindDependencyMacro.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CMakeGenericSystem.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CMakeInitializeConfigs.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CMakeLanguageInformation.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CMakeSystemSpecificInformation.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CMakeSystemSpecificInitialize.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CheckCXXCompilerFlag.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CheckCXXSourceCompiles.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CheckIncludeFileCXX.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CheckLibraryExists.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Compiler/AppleClang-CXX.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Compiler/CMakeCommonCompilerMacros.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Compiler/Clang.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Compiler/GNU.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/FindOpenGL.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/FindPackageHandleStandardArgs.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/FindPackageMessage.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/FindThreads.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/GNUInstallDirs.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Internal/CMakeCXXLinkerInformation.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Internal/CMakeCommonLinkerInformation.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Internal/CheckCompilerFlag.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Internal/CheckFlagCommonConfig.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Internal/CheckSourceCompiles.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Linker/AppleClang-CXX.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Linker/AppleClang.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/MacroAddFileDependencies.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Platform/Apple-AppleClang-CXX.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Platform/Apple-Clang-CXX.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Platform/Apple-Clang.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Platform/Darwin-Initialize.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Platform/Darwin.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Platform/Linker/Apple-AppleClang-CXX.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Platform/Linker/Apple-AppleClang.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/Platform/UnixPaths.cmake \
+	/Users/mark/Projects/phoenix/src/ui/MainWindow.ui \
+	/opt/homebrew/Cellar/cmake/4.1.2/bin/cmake

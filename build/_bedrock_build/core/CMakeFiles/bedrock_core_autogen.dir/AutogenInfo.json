@@ -3,7 +3,7 @@
 	"CMAKE_BINARY_DIR" : "/Users/mark/Projects/phoenix/build",
 	"CMAKE_CURRENT_BINARY_DIR" : "/Users/mark/Projects/phoenix/build/_bedrock_build/core",
 	"CMAKE_CURRENT_SOURCE_DIR" : "/Users/mark/Projects/bedrock/core",
-	"CMAKE_EXECUTABLE" : "/opt/homebrew/bin/cmake",
+	"CMAKE_EXECUTABLE" : "/opt/homebrew/Cellar/cmake/4.1.2/bin/cmake",
 	"CMAKE_LIST_FILES" : [ "/Users/mark/Projects/bedrock/core/CMakeLists.txt" ],
 	"CMAKE_SOURCE_DIR" : "/Users/mark/Projects/phoenix",
 	"CROSS_CONFIG" : false,
@@ -42,12 +42,12 @@
 	"MOC_PATH_PREFIX" : false,
 	"MOC_PREDEFS_CMD" : 
 	[
-		"/usr/bin/c++",
+		"/usr/bin/clang++",
 		"-std=gnu++20",
 		"-w",
 		"-dM",
 		"-E",
-		"/opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp"
+		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CMakeCXXCompilerABI.cpp"
 	],
 	"MOC_PREDEFS_FILE" : "/Users/mark/Projects/phoenix/build/_bedrock_build/core/bedrock_core_autogen/moc_predefs.h",
 	"MOC_RELAXED_MODE" : false,

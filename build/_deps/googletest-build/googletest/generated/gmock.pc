@@ -1,5 +1,5 @@
-libdir=/usr/local/lib
-includedir=/usr/local/include
+libdir=/tmp/lib
+includedir=/tmp/include
 
 Name: gmock
 Description: GoogleMock (without main() function)

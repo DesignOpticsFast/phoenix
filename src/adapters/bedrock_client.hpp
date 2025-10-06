@@ -1,18 +1,23 @@
 #pragma once
+#include <memory>
 #include <QString>
-#include <functional>
+
 namespace bedrock { class Engine; }
 
 class BedrockClient {
 public:
-  using SomChangedFn = std::function<void(int)>;
+    [[nodiscard]] static std::unique_ptr<BedrockClient> create(bedrock::Engine& engine);
+    ~BedrockClient() noexcept;
 
-  explicit BedrockClient(SomChangedFn cb = nullptr);
-  ~BedrockClient();
+    BedrockClient(const BedrockClient&) = delete;
+    BedrockClient& operator=(const BedrockClient&) = delete;
+    BedrockClient(BedrockClient&&) noexcept = default;
+    BedrockClient& operator=(BedrockClient&&) = delete; // cannot reseat a reference
 
-  // Returns absolute path to STEP file (blocking; call off GUI thread)
-  QString newDesignTSE_writeSTEP(const QString& outDir);
+    // Blocking; call from a worker (QtConcurrent). Returns absolute path to the STEP.
+    [[nodiscard]] QString newDesignTSE_writeSTEP(const QString& outDir);
 
 private:
-  bedrock::Engine* eng_;
+    explicit BedrockClient(bedrock::Engine& engine) noexcept;
+    bedrock::Engine& engine_; // non-null by type
 };

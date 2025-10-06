@@ -3,16 +3,17 @@
 	"CMAKE_BINARY_DIR" : "/Users/mark/Projects/phoenix/build",
 	"CMAKE_CURRENT_BINARY_DIR" : "/Users/mark/Projects/phoenix/build/_deps/googletest-build/googlemock",
 	"CMAKE_CURRENT_SOURCE_DIR" : "/Users/mark/Projects/phoenix/build/_deps/googletest-src/googlemock",
-	"CMAKE_EXECUTABLE" : "/opt/homebrew/bin/cmake",
+	"CMAKE_EXECUTABLE" : "/opt/homebrew/Cellar/cmake/4.1.2/bin/cmake",
 	"CMAKE_LIST_FILES" : 
 	[
 		"/Users/mark/Projects/phoenix/build/_deps/googletest-src/googlemock/CMakeLists.txt",
-		"/opt/homebrew/share/cmake/Modules/FindThreads.cmake",
-		"/opt/homebrew/share/cmake/Modules/CheckLibraryExists.cmake",
-		"/opt/homebrew/share/cmake/Modules/CheckIncludeFile.cmake",
-		"/opt/homebrew/share/cmake/Modules/CheckCSourceCompiles.cmake",
-		"/opt/homebrew/share/cmake/Modules/FindPackageHandleStandardArgs.cmake",
-		"/opt/homebrew/share/cmake/Modules/FindPackageMessage.cmake",
+		"/Users/mark/Projects/phoenix/build/.qtc/package-manager/auto-setup.cmake",
+		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/FindThreads.cmake",
+		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CheckLibraryExists.cmake",
+		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CheckIncludeFile.cmake",
+		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CheckCSourceCompiles.cmake",
+		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/FindPackageHandleStandardArgs.cmake",
+		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/FindPackageMessage.cmake",
 		"/Users/mark/Projects/phoenix/build/_deps/googletest-src/googlemock/cmake/gmock.pc.in",
 		"/Users/mark/Projects/phoenix/build/_deps/googletest-src/googlemock/cmake/gmock_main.pc.in"
 	],
@@ -56,12 +57,12 @@
 	"MOC_PATH_PREFIX" : false,
 	"MOC_PREDEFS_CMD" : 
 	[
-		"/usr/bin/c++",
+		"/usr/bin/clang++",
 		"-std=c++20",
 		"-w",
 		"-dM",
 		"-E",
-		"/opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp"
+		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CMakeCXXCompilerABI.cpp"
 	],
 	"MOC_PREDEFS_FILE" : "/Users/mark/Projects/phoenix/build/_deps/googletest-build/googlemock/gmock_autogen/moc_predefs.h",
 	"MOC_RELAXED_MODE" : false,

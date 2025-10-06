@@ -1,50 +1,59 @@
 #include "MainWindow.hpp"
-#include "adapters/bedrock_client.hpp"
-#include "StepViewer.hpp"
+#include "ui_MainWindow.h"
 
-#include <QMenuBar>
-#include <QAction>
-#include <QStandardPaths>
 #include <QtConcurrent/QtConcurrent>
-#include <QStatusBar>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QPushButton>
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
-#ifdef Q_OS_MAC
-  menuBar()->setNativeMenuBar(false);
-#endif
-  client_  = new BedrockClient;
-  watcher_ = new QFutureWatcher<QString>(this);
+#include "adapters/bedrock_client.hpp"
+#include "bedrock/engine.hpp"   // ensures complete type for bedrock::Engine
 
-  auto* fileMenu  = menuBar()->addMenu("&File");
-  auto* newDesign = new QAction("New Design", this);
-  fileMenu->addAction(newDesign);
-  connect(newDesign, &QAction::triggered, this, &MainWindow::onNewDesign);
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent),
+    ui_(std::make_unique<Ui::MainWindow>())
+{
+    ui_->setupUi(this);
 
-  statusBar()->showMessage("Ready");
-  resize(900, 600);
+    // Create/obtain an Engine and a BedrockClient via factory
+    static bedrock::Engine engine;
+    client_ = BedrockClient::create(engine);
+
+    // Hook up STEP export button
+    if (ui_->btnExportSTEP) {
+        connect(ui_->btnExportSTEP, &QPushButton::clicked, this, [this]() {
+            const QString outDir =
+                QFileDialog::getExistingDirectory(this, "Select Output Directory");
+            if (outDir.isEmpty())
+                return;
+
+            // BedrockClient is not a QObject → capture a raw non-owning pointer
+            BedrockClient* clientPtr = client_.get();
+
+            auto future = QtConcurrent::run([clientPtr, outDir]() -> QString {
+                try {
+                    // Real exporter call — blocking off the GUI thread
+                    return clientPtr->newDesignTSE_writeSTEP(outDir);
+                } catch (const std::exception& ex) {
+                    return QString("Error: ") + ex.what();
+                }
+            });
+
+            watcher_.setFuture(future);
+            connect(&watcher_, &QFutureWatcher<QString>::finished,
+                    this, &MainWindow::onExportSTEPFinished);
+        });
+    }
 }
 
-MainWindow::~MainWindow() {
-  delete client_;
-}
+MainWindow::~MainWindow() = default;
 
-void MainWindow::onNewDesign() {
-  statusBar()->showMessage("Generating STEP...");
-  const QString outDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-
-  auto fut = QtConcurrent::run([this, outDir]{
-    return client_->newDesignTSE_writeSTEP(outDir);
-  });
-
-  watcher_->setFuture(fut);
-  connect(watcher_, &QFutureWatcher<QString>::finished, this, [this]{
-    const QString path = watcher_->future().result();
-    statusBar()->showMessage("STEP created: " + path, 5000);
-    auto* v = new StepViewer(this);
-    v->setAttribute(Qt::WA_DeleteOnClose);
-    v->setPath(path);
-    v->setWindowTitle("Phoenix — STEP viewer (placeholder)");
-    v->resize(700, 200);
-    v->show();
-  });
+void MainWindow::onExportSTEPFinished()
+{
+    const QString result = watcher_.future().result();
+    if (result.startsWith("Error:"))
+        QMessageBox::critical(this, "STEP Export Failed", result);
+    else
+        QMessageBox::information(this, "STEP Export Complete",
+                                 "STEP file saved:\n" + result);
 }
