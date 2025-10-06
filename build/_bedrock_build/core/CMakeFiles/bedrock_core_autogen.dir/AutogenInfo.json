@@ -1,0 +1,73 @@
+{
+	"BUILD_DIR" : "/Users/mark/Projects/phoenix/build/_bedrock_build/core/bedrock_core_autogen",
+	"CMAKE_BINARY_DIR" : "/Users/mark/Projects/phoenix/build",
+	"CMAKE_CURRENT_BINARY_DIR" : "/Users/mark/Projects/phoenix/build/_bedrock_build/core",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/Users/mark/Projects/bedrock/core",
+	"CMAKE_EXECUTABLE" : "/opt/homebrew/Cellar/cmake/4.1.2/bin/cmake",
+	"CMAKE_LIST_FILES" : [ "/Users/mark/Projects/bedrock/core/CMakeLists.txt" ],
+	"CMAKE_SOURCE_DIR" : "/Users/mark/Projects/phoenix",
+	"CROSS_CONFIG" : false,
+	"DEP_FILE" : "/Users/mark/Projects/phoenix/build/_bedrock_build/core/bedrock_core_autogen/deps",
+	"DEP_FILE_RULE_NAME" : "bedrock_core_autogen/timestamp",
+	"HEADERS" : [],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "/Users/mark/Projects/phoenix/build/_bedrock_build/core/bedrock_core_autogen/include",
+	"MOC_COMPILATION_FILE" : "/Users/mark/Projects/phoenix/build/_bedrock_build/core/bedrock_core_autogen/mocs_compilation.cpp",
+	"MOC_DEFINITIONS" : [],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"/Users/mark/Projects/bedrock/core/include",
+		"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1",
+		"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include",
+		"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include",
+		"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"
+	],
+	"MOC_MACRO_NAMES" : 
+	[
+		"Q_OBJECT",
+		"Q_GADGET",
+		"Q_NAMESPACE",
+		"Q_NAMESPACE_EXPORT",
+		"Q_GADGET_EXPORT",
+		"Q_ENUM_NS"
+	],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : 
+	[
+		"/usr/bin/clang++",
+		"-std=gnu++20",
+		"-w",
+		"-dM",
+		"-E",
+		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CMakeCXXCompilerABI.cpp"
+	],
+	"MOC_PREDEFS_FILE" : "/Users/mark/Projects/phoenix/build/_bedrock_build/core/bedrock_core_autogen/moc_predefs.h",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : [],
+	"MULTI_CONFIG" : false,
+	"PARALLEL" : 10,
+	"PARSE_CACHE_FILE" : "/Users/mark/Projects/phoenix/build/_bedrock_build/core/CMakeFiles/bedrock_core_autogen.dir/ParseCache.txt",
+	"QT_MOC_EXECUTABLE" : "/Users/mark/Qt/6.9.3/macos/libexec/moc",
+	"QT_UIC_EXECUTABLE" : "/Users/mark/Qt/6.9.3/macos/libexec/uic",
+	"QT_VERSION_MAJOR" : 6,
+	"QT_VERSION_MINOR" : 9,
+	"SETTINGS_FILE" : "/Users/mark/Projects/phoenix/build/_bedrock_build/core/CMakeFiles/bedrock_core_autogen.dir/AutogenUsed.txt",
+	"SOURCES" : 
+	[
+		[ "/Users/mark/Projects/bedrock/core/src/bedrock_math.cpp", "MU", null ]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [],
+	"UIC_SKIP" : [],
+	"UIC_UI_FILES" : [],
+	"USE_BETTER_GRAPH" : true,
+	"VERBOSITY" : 0
+}

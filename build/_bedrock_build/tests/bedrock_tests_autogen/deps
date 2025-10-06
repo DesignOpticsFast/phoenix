@@ -1,0 +1,8 @@
+bedrock_tests_autogen/timestamp: \
+	/Users/mark/Projects/bedrock/tests/CMakeLists.txt \
+	/Users/mark/Projects/bedrock/tests/test_math.cpp \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/ExternalProject/shared_internal_commands.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/FetchContent.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/FetchContent/CMakeLists.cmake.in \
+	/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/GoogleTest.cmake \
+	/opt/homebrew/Cellar/cmake/4.1.2/bin/cmake

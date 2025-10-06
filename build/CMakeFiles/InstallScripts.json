@@ -1,0 +1,13 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/mark/Projects/phoenix/build/cmake_install.cmake",
+		"/Users/mark/Projects/phoenix/build/_bedrock_build/cmake_install.cmake",
+		"/Users/mark/Projects/phoenix/build/_bedrock_build/core/cmake_install.cmake",
+		"/Users/mark/Projects/phoenix/build/_bedrock_build/tests/cmake_install.cmake",
+		"/Users/mark/Projects/phoenix/build/_deps/googletest-build/cmake_install.cmake",
+		"/Users/mark/Projects/phoenix/build/_deps/googletest-build/googlemock/cmake_install.cmake",
+		"/Users/mark/Projects/phoenix/build/_deps/googletest-build/googletest/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

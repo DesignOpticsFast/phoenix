@@ -1,41 +1,105 @@
-# Prerequisites
+# ────────────────────────────────
+#  Phoenix Project Git Ignore
+# ────────────────────────────────
+
+# === Prerequisites ===
 *.d
 
-# Compiled Object files
+# === Compiled Object files ===
 *.slo
 *.lo
 *.o
 *.obj
 
-# Precompiled Headers
+# === Precompiled Headers ===
 *.gch
 *.pch
 
-# Linker files
+# === Linker / Build Artifacts ===
 *.ilk
-
-# Debugger Files
 *.pdb
+*.idb
+*.map
+*.exp
 
-# Compiled Dynamic libraries
+# === Compiled Libraries ===
 *.so
 *.dylib
 *.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
 *.lai
 *.la
 *.a
 *.lib
 
-# Executables
+# === Executables / Bundles ===
 *.exe
 *.out
 *.app
+*.bin
+*.run
+*.dSYM/
 
-# debug information files
+# === Debug / Profile Info ===
 *.dwo
+*.gcda
+*.gcno
+*.gcov
+
+# === CMake / Ninja / QMake Artifacts ===
+/build*/
+_build*/
+/_build*
+CMakeFiles/
+CMakeCache.txt
+*.cmake
+*.ninja
+*.ninja_deps
+*.ninja_log
+*.make
+Makefile
+*.pro.user
+*.qmake.stash
+
+# === Qt Auto-generated Files ===
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+*_autogen/
+*.autosave
+*.qrc.depends
+.qtcreator*
+
+# === IDE / OS Metadata ===
+*.user
+*.user.*
+*.DS_Store
+*.swp
+*.swo
+*.log
+*.tmp
+*.bak
+*~
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# === Local Development / Cache ===
+.cache/
+.idea/
+.vscode/
+*.code-workspace
+
+# === Project Specific ===
+# Prevent committing built app bundles or intermediate files
+phoenix_app_autogen/
+bin/
+lib/
+dist/
+output/
+temp/
+logs/
+test-output/
+coverage/
+
+# Optional: ignore Bedrock sub-builds if they appear inside Phoenix
+_bedrock_build/
