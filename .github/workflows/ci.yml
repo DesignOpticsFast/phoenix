@@ -7,26 +7,44 @@ on:
   push:
     branches: [ "**" ]
     tags:    [ "v*" ]
+    paths:
+      - ".github/workflows/ci.yml"
+      - "CMakeLists.txt"
+      - "src/**"
+      - "include/**"
+      - "ui/**"
   pull_request:
+    branches: [ "**" ]
+    paths:
+      - ".github/workflows/ci.yml"
+      - "CMakeLists.txt"
+      - "src/**"
+      - "include/**"
+      - "ui/**"
   workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     name: macOS build (Qt 6.9.3 + Bedrock sibling)
     runs-on: macos-14
+    timeout-minutes: 20
 
     steps:
       - name: Checkout Phoenix
         uses: actions/checkout@v4
 
-      # Clone Bedrock as a REAL sibling: $GITHUB_WORKSPACE/.. /bedrock
+      # Phoenix expects ../bedrock; make it a real sibling of $GITHUB_WORKSPACE
       - name: Checkout Bedrock as ../bedrock
         run: |
           cd "$GITHUB_WORKSPACE"
-          git clone --depth 1 --branch main https://github.com/DesignOpticsFast/bedrock.git ../bedrock
+          git clone --depth=1 --branch main https://github.com/DesignOpticsFast/bedrock.git ../bedrock
           test -f ../bedrock/CMakeLists.txt
 
-      - name: Install tools and OpenCascade
+      - name: Install tools + OCCT (Homebrew)
         run: |
           brew update
           brew install cmake ninja opencascade
@@ -37,18 +55,27 @@ jobs:
           version: "6.9.3"
           cache: true
 
-      - name: Clean previous build dirs (if any)
+      - name: Clean build dirs
         run: |
           rm -rf build build-ci
 
       - name: Configure (CMake)
         run: |
-          QT_PREFIX="${Qt6_DIR}"
           OCCT_DIR="$(brew --prefix opencascade)/lib/cmake/opencascade"
           cmake -S . -B build-ci -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH="${QT_PREFIX}" \
+            -DCMAKE_PREFIX_PATH="${Qt6_DIR}" \
             -DOpenCASCADE_DIR="${OCCT_DIR}"
 
       - name: Build
         run: cmake --build build-ci --config Release -j
+
+      # Optional: upload logs on failure for faster triage
+      - name: Upload CMake logs (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cmake-logs
+          path: |
+            build-ci/CMakeFiles/CMakeOutput.log
+            build-ci/CMakeFiles/CMakeError.log
