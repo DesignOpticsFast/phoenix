@@ -1,0 +1,39 @@
+name: PR Guard
+on:
+  pull_request:
+    types: [opened, synchronize, edited]
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect changed files
+        id: diff
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+          git diff --name-only origin/${{ github.base_ref }}...HEAD > changed.txt
+          echo "count=$(wc -l < changed.txt)" >> $GITHUB_OUTPUT
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          cat changed.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Block forbidden paths
+        run: |
+          FORBIDDEN_REGEX='^(.github/(?!workflows/pr-guard.yml).+|.*\.env.*|.*secrets.*|CMakePresets\.json)$'
+          if grep -P "${FORBIDDEN_REGEX}" changed.txt; then
+            echo "::error::Forbidden path(s) modified. Please remove and resubmit."
+            exit 1
+          fi
+      - name: Flag very large diffs
+        run: |
+          MAX=600
+          TOTAL=$(git diff --shortstat origin/${{ github.base_ref }}...HEAD | awk '{print $4+$6}')
+          echo "Total changed lines: ${TOTAL:-0}"
+          if [ "${TOTAL:-0}" -gt "$MAX" ]; then
+            echo "::error::Diff too large (${TOTAL} lines > ${MAX}). Split your PR."
+            exit 1
+          fi
