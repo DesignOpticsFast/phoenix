@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    - cron: '0 6 * * 1'  # weekly (Mon 06:00 UTC)
+    - cron: '0 6 * * 1'
 
 permissions:
   actions: read
@@ -44,6 +44,10 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: cpp, python
+      
+      - name: Clean build directories
+        run: |
+          rm -rf build build-ci
       
       - name: Configure and build
         run: |
