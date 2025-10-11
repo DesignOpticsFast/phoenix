@@ -8,25 +8,51 @@ on:
   schedule:
     - cron: '0 6 * * 1'  # weekly (Mon 06:00 UTC)
 
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
 jobs:
   analyze:
-    name: CodeQL   # check name matches what’s in branch protection
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-
+    name: CodeQL Analysis
+    runs-on: macos-14
+    timeout-minutes: 90
+    
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      # Initialize CodeQL — scan GitHub Actions for now
+      - name: Checkout Phoenix
+        uses: actions/checkout@v4
+      
+      - name: Checkout Bedrock as sibling
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          git clone --depth=1 --branch main https://github.com/DesignOpticsFast/bedrock.git ../bedrock
+          test -f ../bedrock/CMakeLists.txt
+      
+      - name: Install tools + OCCT
+        run: |
+          brew update
+          brew install cmake ninja opencascade
+      
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.9.3"
+          cache: true
+      
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: actions
-
-      # Run the analysis
+          languages: cpp, python
+      
+      - name: Configure and build
+        run: |
+          OCCT_DIR="$(brew --prefix opencascade)/lib/cmake/opencascade"
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${Qt6_DIR}" \
+            -DOpenCASCADE_DIR="${OCCT_DIR}"
+          cmake --build build --config Release -j
+      
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
