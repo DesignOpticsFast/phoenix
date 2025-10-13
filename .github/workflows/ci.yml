@@ -35,7 +35,7 @@ jobs:
 
     steps:
       - name: Checkout Phoenix
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Phoenix expects ../bedrock; make it a real sibling of $GITHUB_WORKSPACE
       - name: Checkout Bedrock as ../bedrock
