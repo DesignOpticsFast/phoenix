@@ -15,6 +15,15 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui_->setupUi(this);
 
+    // Add Help→About menu
+    auto helpMenu = this->menuBar()->addMenu(tr("&Help"));
+    auto actAbout = helpMenu->addAction(tr("&About"));
+    connect(actAbout, &QAction::triggered, this, [this]{
+      QMessageBox::about(this,
+                         tr("About Phoenix"),
+                         tr("Phoenix v0.1 — AI Integration Test"));
+    });
+
     // Create/obtain an Engine and a BedrockClient via factory
     static bedrock::Engine engine;
     client_ = BedrockClient::create(engine);
