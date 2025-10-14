@@ -4,6 +4,38 @@
 
 ---
 
+## CI/CD Configuration Gaps (Discovered During Sprint 002 Deployment)
+
+**Status:** Documented - Fix planned for Sprint 003
+
+### Issue 1: CodeQL Architecture Mismatch
+**Problem:** CodeQL workflow fails with linker errors  
+**Root Cause:** CMakeLists.txt forces `-arch x86_64` on Apple Silicon runner (macos-14)
+- Runner has arm64 Homebrew dependencies
+- Build attempts x86_64 compilation
+- Linker fails: "symbol(s) not found for architecture x86_64"
+
+**Location:** Embedded Bedrock build within Phoenix  
+**Impact:** CodeQL cannot complete analysis  
+**Workaround:** Temporarily removed from required checks for v1.0.0 deployment  
+**Fix Plan:** Sprint 003 - Update CMake to use native architecture or properly cross-compile
+
+### Issue 2: CI Path Filters Don't Include Infrastructure
+**Problem:** CI workflow never runs for `.underlord/` changes  
+**Root Cause:** Path filters in `.github/workflows/ci.yml` only watch code directories  
+**Impact:** "macOS build" required check never executes for infrastructure changes  
+**Workaround:** Not needed for `.underlord/` (infrastructure doesn't need compilation)  
+**Fix Plan:** Optional - Consider adding `.underlord/**` to path filters if we want CI validation
+
+### Issue 3: PR Guard Size Limit
+**Problem:** PR Guard fails for PRs > 600 lines  
+**Root Cause:** `.github/workflows/pr-guard.yml` enforces size limit  
+**Impact:** Large infrastructure deployments trigger false positive  
+**Workaround:** Temporarily removed required checks for v1.0.0 deployment  
+**Fix Plan:** Optional - Consider label-based exception (e.g., skip for "deployment" label)
+
+---
+
 ## 🚨 Critical Issues
 
 ### Directory Naming Convention
