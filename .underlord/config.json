@@ -1,0 +1,55 @@
+{
+  "project": "phoenix",
+  "description": "Qt6-based optical design application with Bedrock integration",
+  "autonomy_level": "medium",
+  "engine": "claude-sonnet-4-5",
+  "branch_conventions": {
+    "prefix": "sprint-",
+    "format": "sprint-{number}-{slug}",
+    "examples": ["sprint-002-main-ui", "sprint-003-lens-editor"]
+  },
+  "requires_human_approval": [
+    "build",
+    "merge",
+    "ui-changes",
+    "breaking-changes"
+  ],
+  "build_system": {
+    "type": "CMake",
+    "generator": "Ninja",
+    "presets": ["dev", "release"],
+    "test_command": "ctest --test-dir build --output-on-failure",
+    "platform_specific": {
+      "macos": "Primary CI target",
+      "linux": "Secondary support"
+    }
+  },
+  "ci": {
+    "required_checks": [
+      "validate",
+      "macOS build (Qt 6.9.3 + Bedrock sibling)",
+      "CodeQL Analysis"
+    ],
+    "timeout_minutes": 20
+  },
+  "dependencies": [
+    "Qt6",
+    "OCCT",
+    "GoogleTest",
+    "Bedrock (sibling repo)"
+  ],
+  "depends_on": {
+    "repositories": ["bedrock"],
+    "note": "Bedrock must be in sibling directory for local builds"
+  },
+  "code_standards": {
+    "cpp_version": "17",
+    "qt_version": "6.9+",
+    "namespace": "phoenix",
+    "naming_convention": "camelCase for Qt slots/signals, snake_case for logic"
+  },
+  "documentation": {
+    "changelog": "CHANGELOG.md",
+    "sprint_history": ".underlord/docs/SPRINT_HISTORY.md"
+  }
+}

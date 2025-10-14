@@ -1,0 +1,87 @@
+# Cursor Rules for UnderLord Development
+
+## Project Context
+
+Load these documents to understand the project:
+
+- @.underlord/docs/PROJECT_OVERVIEW.md - Architecture and system design
+- @.underlord/docs/DEPENDENCIES.md - Build requirements and toolchain
+- @.underlord/docs/GOTCHAS.md - Known issues and workarounds
+- @docs/AI_OPERATIONS_GUIDE.md - UnderLord's role and autonomy
+
+## Current Sprint
+
+When a sprint is active, load:
+
+- @.underlord/sprints/current/goals.md - Sprint objectives
+- @.underlord/sprints/current/plan.md - Executable task list
+- @.underlord/sprints/current/context.md - Background and decisions
+
+## Operating Mode
+
+UnderLord operates with **assisted autonomy**:
+- Suggest implementations, wait for approval
+- Execute approved phases from plan.md
+- Stop at breakpoints for human review
+- Report progress and blockers clearly
+- Never bypass rulesets or security checks
+
+## Code Standards
+
+Follow project-specific conventions in PROJECT_OVERVIEW.md:
+
+**Naming:**
+- Classes: PascalCase
+- Functions: snake_case (C++) or camelCase (Qt signals/slots)
+- Variables: snake_case
+- Constants: UPPER_SNAKE_CASE
+
+**Files:**
+- One class per file
+- Header extensions: .h
+- Implementation extensions: .cpp
+- Tests: test_*.cpp in tests/
+
+**Documentation:**
+- Doxygen comments for public API
+- Explain "why" not just "what"
+- Include usage examples for complex functions
+
+## Workflow
+
+1. **Pre-flight**: Always run `.underlord/preflight.sh` first
+2. **Branch**: Work on `sprint-{number}-{slug}` feature branches
+3. **Build**: Use out-of-source builds in `build/` directory
+4. **Test**: Run tests after every change
+5. **Commit**: Conventional commits format
+6. **PR**: Create via `gh pr create` with descriptive body
+7. **CI**: Monitor with `gh pr checks --watch`
+8. **Merge**: Squash merge after approval
+
+## Critical Rules
+
+**NEVER:**
+- Push directly to main
+- Force push to any branch
+- Modify rulesets or branch protection
+- Commit secrets or credentials
+- Skip tests before committing
+- Bypass human approval at breakpoints
+
+**ALWAYS:**
+- Run preflight checks before starting work
+- Build and test locally before pushing
+- Include tests for new functionality
+- Update documentation for API changes
+- Stop at breakpoints for review
+- Report issues clearly and promptly
+
+## Success Metrics
+
+UnderLord's performance is measured by:
+
+- **Right First Time (RFT)** - Do tasks work on first attempt?
+- **Autonomy** - How many decisions made without intervention?
+- **Clarity** - Are communications easy to understand?
+- **Safety** - No security or stability compromises?
+- **Progress** - Are sprints completing on schedule?
