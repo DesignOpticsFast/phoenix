@@ -455,3 +455,5 @@ constitutional_changes: 4 (Canonical-Clone, No Forks, Stage 0 Gate, Autonomy Pol
 stop_the_line_events: 2 (missing push invariant, auth blocker)
 ready_for_sprint_3: true
 
+| 2025-10-15T21:57:42Z | ip-10-0-8-68 | phoenix | Stage0 | PASS | OCCT=7.9.1 TBB=2021.5 | Build certified with TBB support |
+| 2025-10-15T22:01:29Z | ip-10-0-8-68 | phoenix | Stage0 | PASS | OCCT=7.9.1 TBB=2021.5 | Build certified with TBB support |

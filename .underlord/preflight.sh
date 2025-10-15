@@ -187,3 +187,37 @@ else
     echo "🔧 Resolve issues above before proceeding"
     exit 1
 fi
+
+section "5️⃣.5  OCCT/TBB Version Assertions"
+# Expect OCCT >= 7.9.1 and TBB >= 2021.5
+req_occt="7.9.1"
+req_tbb="2021.5"
+
+occt_cfg="${OpenCASCADE_DIR:-/opt/occt-7.9.1/lib/cmake/opencascade}/OpenCASCADEConfig.cmake"
+if [ -f "$occt_cfg" ]; then
+  occt_ver="$(grep -m1 -E 'set\(OpenCASCADE_VERSION' "$occt_cfg" 2>/dev/null | sed 's/[^0-9.]*//g' || true)"
+  [ -z "$occt_ver" ] && occt_ver="$(grep -m1 -E 'set\(Foundation_VERSION' "$occt_cfg" 2>/dev/null | sed 's/[^0-9.]*//g' || true)"
+else
+  occt_ver=""
+fi
+
+tbb_so="$(ls ${TBB_ROOT_DIR:-/opt/tbb-2021.5}/lib64/libtbb.so* 2>/dev/null | head -n1)"
+if [ -n "$tbb_so" ]; then
+  tbb_ver="$(strings "$tbb_so" 2>/dev/null | grep -m1 -E '^TBB_version' | sed 's/[^0-9.]*//g')"
+else
+  tbb_ver=""
+fi
+
+ver_ge() { [ "$(printf '%s\n' "$2" "$1" | sort -V | head -n1)" = "$2" ]; }
+
+echo "Detected: OCCT=${occt_ver:-NONE} TBB=${tbb_ver:-NONE} (required: OCCT>=$req_occt TBB>=$req_tbb)"
+if [ -z "$occt_ver" ] || ! ver_ge "$occt_ver" "$req_occt"; then 
+  echo "❌ OpenCASCADE $req_occt or higher required"
+  exit 1
+fi
+if [ -z "$tbb_ver" ] || ! ver_ge "$tbb_ver" "$req_tbb"; then 
+  echo "❌ TBB $req_tbb or higher required"
+  exit 1
+fi
+echo "✅ OCCT/TBB versions OK"
+
