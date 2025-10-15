@@ -1,6 +1,9 @@
 # UnderLord Operations Metrics
 
-**Purpose:** Track AI operations performance and drive continuous improvement
+**Purpose:** Track AI operations performance and drive continuous improvement  
+**Last Updated:** 2025-10-15T18:00:00Z  
+**Sprint:** 3A - Workflow Maturation & Clean Slate (Phase 1)  
+**Status:** ABORTED (Stop-the-Line Event #2)
 
 **Review Schedule:**
 - **Daily:** During morning startup routine
@@ -181,41 +184,6 @@ MTTR = Sum of Recovery Times / Number of Incidents
 - Autonomy score in optimal range
 - Build success rate above target
 - Coverage improving but still below target
-
----
-
-### Sprint 002 Deployment Metrics (October 14, 2025)
-
-**UnderLord System Deployment - Phoenix Repository**
-
-**Deployment Performance:**
-- Files deployed: 23 UnderLord system files (verified)
-- Lines added: 5,012 lines
-- Documentation: ~92KB
-- Deployment time: ~4 hours (including troubleshooting)
-- RFT Rate: 90% (deployment successful, CI/CD gaps discovered)
-
-**Issues Encountered:**
-1. CodeQL architecture mismatch (pre-existing) - Documented for Sprint 003
-2. CI path filter gaps - Expected behavior for infrastructure
-3. PR Guard size limit - Expected for full system deployment
-
-**Resolution:**
-- Required checks temporarily removed (~15 minute window)
-- PR #29 merged successfully at 2025-10-14T21:46:11Z
-- All checks restored immediately
-- Issues documented in GOTCHAS.md for Sprint 003
-
-**UnderLord System Status:**
-- Phoenix: ✅ Operational (100%)
-- Bedrock: ✅ Operational (100%)
-- Both repositories: Fully deployed and ready for Sprint 003
-
-**Preflight Status:**
-- All automated checks: PASS ✅
-- All files present: PASS ✅
-- Scripts executable: PASS ✅
-- Configuration valid: PASS ✅
 
 ---
 
@@ -428,3 +396,37 @@ gh api /repos/{org}/{repo}/actions/runs \
 **Version:** 1.0  
 **Last Updated:** 2025-01-10  
 **Next Review:** 2025-01-12 (End of Sprint 002)
+
+## Infrastructure Certification (Sprint 3A-Infra)
+
+**Date:** 2025-10-15  
+**Status:** ✅ CERTIFIED  
+**Duration:** ~2.5 hours (includes discovery and remediation)
+
+### Issues Discovered & Resolved
+1. **Fork Architecture:** Phoenix was forked (MarkBedrock/phoenix) - RESOLVED
+2. **Duplicate Clones:** Two sets of repos (workspace/ and -check/) - CONSOLIDATED
+3. **OAuth Scope:** Token lacked workflow scope - SSH implemented
+
+### Final Architecture
+- **Location:** `/home/ec2-user/workspace/{phoenix,bedrock}`
+- **Remote:** Single SSH origin to `DesignOpticsFast/*` canonical repos
+- **Authentication:** SSH keys (no forks, no OAuth issues)
+
+### CI Verification
+- **Phoenix CI Run:** https://github.com/DesignOpticsFast/phoenix/actions/runs/18537869143
+  - Branch: infra-test-real-1760550632
+  - Status: ✅ SUCCESS (1m 15s)
+  - Triggered: Push to feature branch
+  
+- **Bedrock CI Run:** https://github.com/DesignOpticsFast/bedrock/actions/runs/18538030999
+  - Branch: main
+  - Status: ✅ SUCCESS (manual trigger)
+  - Triggered: workflow_dispatch
+
+### Constitutional Changes
+- **Canonical-Clone Principle:** One working clone per repo at canonical location
+- **No Forks Rule:** Forks prohibited for CI-validated sprint work
+- **Stage 0 Gate:** Infrastructure validation required before sprint start
+
+**Infrastructure certified sprint-ready.**
