@@ -18,6 +18,28 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Check Cursor autonomy mode
+echo "Checking Cursor autonomy mode..."
+AUTON_OK=1
+CURSOR_SETTINGS="$HOME/.config/Cursor/User/settings.json"
+
+if [ ! -f "$CURSOR_SETTINGS" ]; then
+    echo "⚠️  Cursor settings file not found at $CURSOR_SETTINGS"
+    echo "   Assuming autonomy mode configured correctly"
+else
+    grep -q '"cursor.ai.autoApprove": true' "$CURSOR_SETTINGS" || AUTON_OK=0
+    grep -q '"cursor.ai.batchMode": true' "$CURSOR_SETTINGS" || AUTON_OK=0
+    grep -q '"cursor.terminal.approval": "batch"' "$CURSOR_SETTINGS" || AUTON_OK=0
+    
+    if [ $AUTON_OK -ne 1 ]; then
+        echo "❌ Cursor autonomy mode not configured"
+        echo "   Fix settings, restart Cursor, then re-run preflight"
+        exit 1
+    fi
+fi
+echo "✅ Cursor autonomy mode OK"
+echo
+
 FAILURES=0
 
 # Function to check command
