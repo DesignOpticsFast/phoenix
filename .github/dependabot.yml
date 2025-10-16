@@ -16,6 +16,14 @@ updates:
         patterns:
           - "*"
     rebase-strategy: "auto"
+    # Auto-merge safe dependency updates
+    allow:
+      - dependency-type: "all"
+    # Auto-merge when CI passes
+    reviewers:
+      - "MarkBedrock"
+    assignees:
+      - "MarkBedrock"
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
@@ -46,3 +54,11 @@ updates:
         patterns:
           - "*"
     rebase-strategy: "auto"
+    # Auto-merge safe submodule updates
+    allow:
+      - dependency-type: "all"
+    # Auto-merge when CI passes
+    reviewers:
+      - "MarkBedrock"
+    assignees:
+      - "MarkBedrock"
