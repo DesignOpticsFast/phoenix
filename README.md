@@ -82,3 +82,4 @@ Use conventional style:
 - AI-assisted design tools
 # Trigger validation with infra-ci label
 # Test commit for dev-01 runner
+# Test Phoenix CI
