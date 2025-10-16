@@ -102,4 +102,4 @@ test-output/
 coverage/
 
 # Optional: ignore Bedrock sub-builds if they appear inside Phoenix
-_bedrock_build/
+_bedrock_build/build/
