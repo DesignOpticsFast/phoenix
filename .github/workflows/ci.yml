@@ -51,15 +51,13 @@ jobs:
       - name: Install tools (Amazon Linux)
         run: |
           sudo dnf update -y
-          sudo dnf install -y cmake ninja ccache
-          # Note: Qt6 not available in Amazon Linux 2023 - using basic toolchain for now
+          sudo dnf install -y cmake ninja-build
+          # Note: Qt6 and ccache not available in Amazon Linux 2023 - using basic toolchain for now
 
-      - name: Setup ccache dirs
+      - name: Setup build environment
         run: |
-          mkdir -p /var/cache/ccache
-          echo "CCACHE_DIR=/var/cache/ccache" >> $GITHUB_ENV
-          echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE" >> $GITHUB_ENV
-          sudo chown -R github-runner:github-runner /var/cache/ccache
+          # Skip ccache setup since not available in AL2023
+          echo "Using basic build environment without ccache"
 
       - name: Clean build dirs
         run: |
@@ -70,15 +68,12 @@ jobs:
           # Skip Qt-dependent build for now - just test basic CMake configuration
           echo "Testing basic CMake configuration without Qt dependencies"
           cmake -S . -B build-ci -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+            -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: |
-          ccache -z
+          # Skip ccache since not available in AL2023
           cmake --build build-ci --config Release -j
-          ccache -s
 
       - name: Assert Phoenix has no OCCT dependencies
         run: |
@@ -174,9 +169,8 @@ jobs:
 
       - name: Build
         run: |
-          ccache -z
+          # Skip ccache since not available in AL2023
           cmake --build build-ci --config Release -j
-          ccache -s
 
       - name: Assert Phoenix has no OCCT dependencies
         run: |
