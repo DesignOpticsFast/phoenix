@@ -30,7 +30,7 @@ concurrency:
 jobs:
   build:
     name: macOS build (Qt 6.9.3 + Bedrock sibling)
-    runs-on: macos-14
+    runs-on: macos-12
     timeout-minutes: 20
 
     steps:
@@ -83,7 +83,7 @@ jobs:
             -DOpenCASCADE_DIR="${OCCT_DIR}" \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_OSX_ARCHITECTURES=arm64
+            -DCMAKE_OSX_ARCHITECTURES=x86_64
 
       - name: Build
         run: |
