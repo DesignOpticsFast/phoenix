@@ -37,6 +37,8 @@
 - CI cache integration essential for consistent performance
 - Source build required for AL2023 (package not available)
 
+**Policy Change:** 2025-10-16: PR Guard updated to allow internal, infra-ci–labeled edits to .github/workflows/ci.yml; retains blocks for .env, secrets, CMakePresets.json.
+
 ---
 
 ## Sprint 007 (Phase 7): Workflow Validation

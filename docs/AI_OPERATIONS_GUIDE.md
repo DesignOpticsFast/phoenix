@@ -75,9 +75,20 @@ This balances efficiency, safety, quality, and learning.
 - ❌ Force push
 - ❌ Push directly to main
 - ❌ Commit credentials
-- ❌ Modify .github/ without approval
+- ❌ Modify .github/ without approval (exception: internal PRs with `infra-ci` label may modify `.github/workflows/ci.yml`)
 - ❌ Skip tests
 - ❌ Disable safety checks
+
+### Guarded CI Edits via infra-ci Label
+
+**Policy:** Internal PRs labeled `infra-ci` may modify `.github/workflows/ci.yml` to enable CI/CD improvements while maintaining security.
+
+**Requirements:**
+- Must be internal PR (same repository)
+- Must have `infra-ci` label applied
+- Only allows modification of `ci.yml` workflow
+- All other `.github/**` files remain protected
+- `.env`, `secrets`, `CMakePresets.json` remain blocked
 
 ---
 
