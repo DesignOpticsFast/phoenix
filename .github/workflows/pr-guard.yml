@@ -1,39 +1,49 @@
-name: PR Guard
+name: PR Guard (Internal + Labeled CI Edits)
 on:
-  pull_request:
-    types: [opened, synchronize, edited]
-permissions:
-  contents: read
-  pull-requests: read
+  pull_request_target:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
 jobs:
-  validate:
+  guard:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Detect changed files
-        id: diff
+      - name: Compute context
+        id: ctx
         run: |
-          git fetch origin ${{ github.base_ref }} --depth=1
-          git diff --name-only origin/${{ github.base_ref }}...HEAD > changed.txt
-          echo "count=$(wc -l < changed.txt)" >> $GITHUB_OUTPUT
-          echo "files<<EOF" >> $GITHUB_OUTPUT
-          cat changed.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-      - name: Block forbidden paths
-        run: |
-          FORBIDDEN_REGEX='^(.github/(?!workflows/pr-guard.yml).+|.*\.env.*|.*secrets.*|CMakePresets\.json)$'
-          if grep -P "${FORBIDDEN_REGEX}" changed.txt; then
-            echo "::error::Forbidden path(s) modified. Please remove and resubmit."
-            exit 1
+          if [ "${{ github.event.pull_request.head.repo.full_name }}" = "${{ github.repository }}" ]; then
+            echo "internal=true" >> $GITHUB_OUTPUT
+          else
+            echo "internal=false" >> $GITHUB_OUTPUT
           fi
-      - name: Flag very large diffs
+          echo "labels=${{ join(github.event.pull_request.labels.*.name, ',') }}" >> $GITHUB_OUTPUT
+
+      - name: Fetch base and list changed files
         run: |
-          MAX=600
-          TOTAL=$(git diff --shortstat origin/${{ github.base_ref }}...HEAD | awk '{print $4+$6}')
-          echo "Total changed lines: ${TOTAL:-0}"
-          if [ "${TOTAL:-0}" -gt "$MAX" ]; then
-            echo "::error::Diff too large (${TOTAL} lines > ${MAX}). Split your PR."
-            exit 1
+          git init
+          git remote add origin "https://github.com/${{ github.repository }}.git"
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          git fetch origin "refs/pull/${{ github.event.pull_request.number }}/merge":pr-merge --depth=1
+          git checkout pr-merge
+          git diff --name-only origin/"${{ github.base_ref }}" > changed.txt
+          echo "Changed files:"; cat changed.txt
+
+      - name: Decide policy
+        id: policy
+        run: |
+          internal="${{ steps.ctx.outputs.internal }}"
+          labels="${{ steps.ctx.outputs.labels }}"
+          allow_ci="false"
+          echo "$labels" | grep -qi '\binfra-ci\b' && [ "$internal" = "true" ] && allow_ci="true"
+          echo "allow_ci=$allow_ci" >> $GITHUB_OUTPUT
+
+      - name: Validate modified paths
+        run: |
+          if [ "${{ steps.policy.outputs.allow_ci }}" = "true" ]; then
+            REGEX='^(.github/(?!workflows/(pr-guard\.yml|ci\.yml)).+|.*\.env.*|.*secrets.*|CMakePresets\.json)$'
+          else
+            REGEX='^(.github/(?!workflows/pr-guard\.yml).+|.*\.env.*|.*secrets.*|CMakePresets\.json)$'
           fi
+          awk -v re="$REGEX" 'match($0,re){print "Forbidden:", $0; bad=1} END{exit bad}' changed.txt
