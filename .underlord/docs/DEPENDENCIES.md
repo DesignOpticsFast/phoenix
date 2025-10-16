@@ -1,6 +1,6 @@
 # Project Dependencies
 
-**Last Updated:** 2025-10-14
+**Last Updated:** 2025-10-16
 
 ---
 
@@ -12,7 +12,7 @@
 - **Installation:**
   ```bash
   # Amazon Linux 2023
-  sudo yum install cmake
+  sudo dnf install cmake
   
   # macOS
   brew install cmake
@@ -23,7 +23,7 @@
 - **Purpose:** Fast parallel builds
 - **Installation:**
   ```bash
-  sudo yum install ninja-build  # Amazon Linux
+  sudo dnf install ninja-build  # Amazon Linux
   brew install ninja            # macOS
   ```
 
@@ -36,7 +36,7 @@
 - **Purpose:** C++17 compilation on Linux
 - **Installation:**
   ```bash
-  sudo yum install gcc gcc-c++
+  sudo dnf install gcc gcc-c++
   ```
 
 ### Clang (macOS)
@@ -54,7 +54,7 @@
 - **License:** LGPL 2.1
 - **Installation:**
   ```bash
-  sudo yum install occt occt-devel  # Amazon Linux
+  sudo dnf install occt occt-devel  # Amazon Linux
   brew install opencascade          # macOS
   ```
 
@@ -67,7 +67,7 @@
 - **Purpose:** Unit testing
 - **Installation:**
   ```bash
-  sudo yum install gtest gtest-devel  # Amazon Linux
+  sudo dnf install gtest gtest-devel  # Amazon Linux
   brew install googletest             # macOS
   ```
 
@@ -100,35 +100,32 @@
 - **Purpose:** Dramatically speeds up rebuilds by caching compilation results
 - **Installation:**
   ```bash
-  # Built from source on Amazon Linux 2023
-  cd /tmp && git clone https://github.com/ccache/ccache.git
-  cd ccache && git checkout v4.9.1
-  mkdir build && cd build
-  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
-  make -j$(nproc) && sudo make install
+  # Amazon Linux 2023
+  sudo dnf install -y ccache
+  
+  # macOS
+  brew install ccache
   ```
 - **Configuration:**
   ```bash
-  # Cache directory and size
-  sudo mkdir -p /var/cache/ccache && sudo chown ec2-user:ec2-user /var/cache/ccache
-  ccache --set-config cache_dir=/var/cache/ccache
-  ccache --set-config max_size=20G
-  ccache --set-config compiler_check=content
-  
   # Environment variables (add to ~/.bashrc)
   export CCACHE_DIR=/var/cache/ccache
-  export CCACHE_BASEDIR=/home/ec2-user/workspace
+  export CCACHE_BASEDIR=~/workspace
+  export CCACHE_COMPRESS=1
   export CCACHE_SLOPPINESS=time_macros
+  
+  # Verify setup
+  ccache -s
   ```
 - **Usage:** Automatically enabled via CMake launcher variables
-- **Performance:** 100% cache hit rate on rebuilds (verified on AL2023 dev-01)
+- **Performance:** 100% cache hit rate on rebuilds (~20GB cache, verified on AL2023 dev-01)
 
 ### GitHub CLI (gh)
 - **Version:** 2.0+
 - **Purpose:** PR management, CI monitoring
 - **Installation:**
   ```bash
-  sudo yum install gh  # Amazon Linux
+  sudo dnf install gh  # Amazon Linux
   brew install gh      # macOS
   ```
 - **Authentication:**
@@ -167,14 +164,14 @@
 
 ### Amazon Linux 2023 (Bedrock)
 ```bash
-sudo yum update -y
-sudo yum install -y cmake ninja-build gcc gcc-c++ \
+sudo dnf update -y
+sudo dnf install -y cmake ninja-build gcc gcc-c++ ccache \
   occt occt-devel gtest gtest-devel git gh
 ```
 
 ### macOS (Phoenix)
 ```bash
-brew install cmake ninja opencascade qt@6 googletest gh
+brew install cmake ninja opencascade tbb ccache qt@6 googletest gh
 echo 'export Qt6_DIR=/opt/homebrew/opt/qt@6/lib/cmake/Qt6' >> ~/.zshrc
 ```
 
@@ -194,7 +191,7 @@ export Qt6_DIR=/opt/homebrew/opt/qt@6/lib/cmake/Qt6
 
 ### GTest not found
 ```bash
-sudo yum install gtest-devel  # Amazon Linux
+sudo dnf install gtest-devel  # Amazon Linux
 brew install googletest       # macOS
 ```
 
