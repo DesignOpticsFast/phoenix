@@ -29,6 +29,7 @@ jobs:
       - name: Checkout Bedrock as sibling
         run: |
           cd "$GITHUB_WORKSPACE"
+          rm -rf ../bedrock || true
           git clone --depth=1 --branch main https://github.com/DesignOpticsFast/bedrock.git ../bedrock
           test -f ../bedrock/CMakeLists.txt
       
