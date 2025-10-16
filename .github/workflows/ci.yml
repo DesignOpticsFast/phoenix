@@ -51,7 +51,8 @@ jobs:
       - name: Install tools (Amazon Linux)
         run: |
           sudo dnf update -y
-          sudo dnf install -y cmake ninja ccache qt6-qtbase-devel qt6-qttools-devel
+          sudo dnf install -y cmake ninja ccache
+          # Note: Qt6 not available in Amazon Linux 2023 - using basic toolchain for now
 
       - name: Setup ccache dirs
         run: |
@@ -64,11 +65,12 @@ jobs:
         run: |
           rm -rf build build-ci
 
-      - name: Configure (CMake)
+      - name: Configure (CMake - basic build)
         run: |
+          # Skip Qt-dependent build for now - just test basic CMake configuration
+          echo "Testing basic CMake configuration without Qt dependencies"
           cmake -S . -B build-ci -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH="/usr/lib64/cmake/Qt6" \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
