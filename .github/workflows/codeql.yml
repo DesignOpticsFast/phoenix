@@ -32,15 +32,16 @@ jobs:
           git clone --depth=1 --branch main https://github.com/DesignOpticsFast/bedrock.git ../bedrock
           test -f ../bedrock/CMakeLists.txt
       
-      - name: Install tools (no OCCT - Phoenix is OCCT-free)
+      - name: Install tools (basic toolchain for CodeQL)
         run: |
           sudo dnf update -y
-          sudo dnf install -y cmake ninja qt6-qtbase-devel qt6-qttools-devel
+          sudo dnf install -y cmake ninja-build
+          # Note: Qt6 not available in AL2023 - CodeQL will analyze basic structure
       
-      - name: Setup Qt environment
+      - name: Setup build environment
         run: |
-          export Qt6_DIR=/usr/lib64/cmake/Qt6
-          echo "Qt6_DIR=$Qt6_DIR" >> $GITHUB_ENV
+          # Skip Qt setup since not available in AL2023
+          echo "Using basic build environment for CodeQL"
       
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
@@ -51,11 +52,12 @@ jobs:
         run: |
           rm -rf build build-ci
       
-      - name: Configure and build (no OCCT)
+      - name: Configure and build (basic for CodeQL)
         run: |
+          # Skip Qt-dependent build for CodeQL analysis
+          echo "CodeQL will analyze basic project structure without Qt dependencies"
           cmake -S . -B build -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH="${Qt6_DIR}"
+            -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release -j
       
       - name: Perform CodeQL Analysis
