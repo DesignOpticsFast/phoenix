@@ -43,7 +43,7 @@ target_include_directories(phoenix_app PRIVATE
 target_link_libraries(phoenix_app PRIVATE
   Qt6::Widgets
   Qt6::Concurrent
-  bedrock_engine
+  bedrock_plugin  # Clean plugin interface without OCCT dependencies
 )
 
 if(APPLE)

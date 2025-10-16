@@ -7,7 +7,6 @@
 #include <QPushButton>
 
 #include "adapters/bedrock_client.hpp"
-#include "bedrock/engine.hpp"   // ensures complete type for bedrock::Engine
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -15,9 +14,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui_->setupUi(this);
 
-    // Create/obtain an Engine and a BedrockClient via factory
-    static bedrock::Engine engine;
-    client_ = BedrockClient::create(engine);
+    // Create BedrockClient via factory (no longer needs Engine reference)
+    client_ = BedrockClient::create();
 
     // Hook up STEP export button
     if (ui_->btnExportSTEP) {

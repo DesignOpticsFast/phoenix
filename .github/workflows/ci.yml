@@ -44,10 +44,10 @@ jobs:
           git clone --depth=1 --branch main https://github.com/DesignOpticsFast/bedrock.git ../bedrock
           test -f ../bedrock/CMakeLists.txt
 
-      - name: Install tools + OCCT (Homebrew)
+      - name: Install tools (Homebrew)
         run: |
           brew update
-          brew install cmake ninja opencascade ccache
+          brew install cmake ninja ccache
 
       - name: Setup ccache dirs
         run: |
@@ -76,11 +76,9 @@ jobs:
 
       - name: Configure (CMake)
         run: |
-          OCCT_DIR="$(brew --prefix opencascade)/lib/cmake/opencascade"
           cmake -S . -B build-ci -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH="${Qt6_DIR}" \
-            -DOpenCASCADE_DIR="${OCCT_DIR}" \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_OSX_ARCHITECTURES=x86_64
@@ -90,6 +88,23 @@ jobs:
           ccache -z
           cmake --build build-ci --config Release -j
           ccache -s
+
+      - name: Assert Phoenix has no OCCT dependencies
+        run: |
+          # Check that no OCCT headers are included in Phoenix sources
+          if grep -r "TopoDS_\|BRep\|STEPControl\|IGESControl\|TKV3d\|TKernel\|OpenCASCADE" src/ tests/ plugins/ 2>/dev/null; then
+            echo "❌ Phoenix must not depend on OCCT - found OCCT includes in source files"
+            exit 1
+          fi
+          
+          # Check that OCCT libraries don't appear on Phoenix link line
+          cmake --build build-ci --verbose 2>&1 | tee build-ci/link.log
+          if grep -E "TKernel|TKV3d|TKBRep|OpenCASCADE" build-ci/link.log; then
+            echo "❌ Phoenix must not link to OCCT libraries"
+            exit 1
+          fi
+          
+          echo "✅ Phoenix is clean of OCCT dependencies"
 
       # Optional: upload logs on failure for faster triage
       - name: Upload CMake logs (on failure)
