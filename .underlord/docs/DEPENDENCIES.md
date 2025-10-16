@@ -100,25 +100,22 @@
 - **Purpose:** Dramatically speeds up rebuilds by caching compilation results
 - **Installation:**
   ```bash
-  # Built from source on Amazon Linux 2023
-  cd /tmp && git clone https://github.com/ccache/ccache.git
-  cd ccache && git checkout v4.9.1
-  mkdir build && cd build
-  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
-  make -j$(nproc) && sudo make install
+  # Amazon Linux 2023
+  sudo dnf install -y ccache
+  
+  # macOS
+  brew install ccache
   ```
 - **Configuration:**
   ```bash
-  # Cache directory and size
-  sudo mkdir -p /var/cache/ccache && sudo chown ec2-user:ec2-user /var/cache/ccache
-  ccache --set-config cache_dir=/var/cache/ccache
-  ccache --set-config max_size=20G
-  ccache --set-config compiler_check=content
-  
   # Environment variables (add to ~/.bashrc)
   export CCACHE_DIR=/var/cache/ccache
-  export CCACHE_BASEDIR=/home/ec2-user/workspace
+  export CCACHE_BASEDIR=~/workspace
+  export CCACHE_COMPRESS=1
   export CCACHE_SLOPPINESS=time_macros
+  
+  # Verify setup
+  ccache -s
   ```
 - **Usage:** Automatically enabled via CMake launcher variables
 - **Performance:** 100% cache hit rate on rebuilds (verified on AL2023 dev-01)

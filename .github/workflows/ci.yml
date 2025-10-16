@@ -70,6 +70,12 @@ jobs:
           version: "6.9.3"
           cache: true
 
+      - name: Print tool versions
+        run: |
+          cmake --version
+          ninja --version
+          ccache --version
+
       - name: Clean build dirs
         run: |
           rm -rf build build-ci
@@ -90,6 +96,18 @@ jobs:
           ccache -z
           cmake --build build-ci --config Release -j
           ccache -s
+
+      - name: Generate ccache stats
+        run: |
+          ccache -s > ccache-stats.txt
+
+      - name: Upload ccache stats
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ccache-stats
+          path: ccache-stats.txt
+          retention-days: 7
 
       # Optional: upload logs on failure for faster triage
       - name: Upload CMake logs (on failure)
