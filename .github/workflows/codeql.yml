@@ -16,8 +16,11 @@ permissions:
 jobs:
   analyze:
     name: CodeQL Analysis
-    runs-on: macos-14
+    runs-on: [self-hosted, linux, x64, dev01, fastpath]
     timeout-minutes: 90
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     
     steps:
       - name: Checkout Phoenix
@@ -31,14 +34,13 @@ jobs:
       
       - name: Install tools + OCCT
         run: |
-          brew update
-          brew install cmake ninja opencascade
+          sudo dnf update -y
+          sudo dnf install -y cmake ninja opencascade-devel qt6-qtbase-devel qt6-qttools-devel
       
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: "6.9.3"
-          cache: true
+      - name: Setup Qt environment
+        run: |
+          export Qt6_DIR=/usr/lib64/cmake/Qt6
+          echo "Qt6_DIR=$Qt6_DIR" >> $GITHUB_ENV
       
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
@@ -51,7 +53,7 @@ jobs:
       
       - name: Configure and build
         run: |
-          OCCT_DIR="$(brew --prefix opencascade)/lib/cmake/opencascade"
+          OCCT_DIR="/usr/lib64/cmake/opencascade"
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH="${Qt6_DIR}" \
