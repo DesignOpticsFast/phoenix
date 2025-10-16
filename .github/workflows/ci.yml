@@ -92,7 +92,8 @@ jobs:
             -DCMAKE_PREFIX_PATH="${Qt6_DIR}" \
             -DOpenCASCADE_DIR="${OCCT_DIR}" \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_OSX_ARCHITECTURES=arm64
 
       - name: Build
         run: |
