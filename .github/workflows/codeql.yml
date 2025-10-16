@@ -64,9 +64,10 @@ jobs:
           add_executable(test_app main.cpp)
           EOF
           echo 'int main() { return 0; }' > main.cpp
+          # Use the test CMakeLists.txt
+          cp CMakeLists_test.txt CMakeLists.txt
           cmake -S . -B build -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -f CMakeLists_test.txt
+            -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release -j
       
       - name: Perform CodeQL Analysis
