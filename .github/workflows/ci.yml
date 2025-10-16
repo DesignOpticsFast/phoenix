@@ -47,7 +47,22 @@ jobs:
       - name: Install tools + OCCT (Homebrew)
         run: |
           brew update
-          brew install cmake ninja opencascade
+          brew install cmake ninja opencascade ccache
+
+      - name: Setup ccache dirs
+        run: |
+          mkdir -p ~/.cache/ccache
+          echo "CCACHE_DIR=$HOME/.cache/ccache" >> $GITHUB_ENV
+          echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+
+      - name: ccache cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-${{ runner.os }}-${{ matrix.compiler || 'gcc' }}-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake', '**/CMakePresets.json') }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ matrix.compiler || 'gcc' }}-
+            ccache-${{ runner.os }}-
 
       - name: Install Qt 6.9.3
         uses: jurplel/install-qt-action@v4
@@ -65,10 +80,15 @@ jobs:
           cmake -S . -B build-ci -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH="${Qt6_DIR}" \
-            -DOpenCASCADE_DIR="${OCCT_DIR}"
+            -DOpenCASCADE_DIR="${OCCT_DIR}" \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Build
-        run: cmake --build build-ci --config Release -j
+        run: |
+          ccache -z
+          cmake --build build-ci --config Release -j
+          ccache -s
 
       # Optional: upload logs on failure for faster triage
       - name: Upload CMake logs (on failure)
