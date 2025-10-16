@@ -1,5 +1,0 @@
-if(EXISTS "/Users/mark/Projects/phoenix/build/_bedrock_build/tests/bedrock_tests[1]_tests.cmake")
-  include("/Users/mark/Projects/phoenix/build/_bedrock_build/tests/bedrock_tests[1]_tests.cmake")
-else()
-  add_test(bedrock_tests_NOT_BUILT bedrock_tests_NOT_BUILT)
-endif()
