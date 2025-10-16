@@ -80,3 +80,4 @@ Use conventional style:
 - Import/export support (Rosetta, ZMX)
 - Tolerancing and optimization workflows
 - AI-assisted design tools
+# Trigger validation with infra-ci label

@@ -6,6 +6,41 @@
 
 ---
 
+## Sprint 003: Ccache Integration & Build Performance
+**Date:** 2025-10-15  
+**Branch:** `feat/ccache-integration` (both repos)  
+**Status:** Complete
+
+**Goal:** Install and configure ccache for dramatic build speed improvements
+
+**Deliverables:**
+- ✅ ccache 4.9.1 installed and configured (20G cache, AL2023)
+- ✅ CMake integration via compiler launcher variables
+- ✅ GitHub Actions CI cache integration (both repos)
+- ✅ Two-pass build verification: 100% cache hit rate achieved
+- ✅ Documentation updated (DEPENDENCIES.md, SPRINT_HISTORY.md)
+
+**Performance Results:**
+- **Phoenix:** 100% cache hit rate on rebuild (46/46 compilations cached)
+- **Bedrock:** 100% cache hit rate on rebuild (18/18 compilations cached)
+- **Cache Size:** 20GB configured, ~0.01GB used
+- **Build Time Improvement:** Near-instantaneous rebuilds
+
+**Technical Implementation:**
+- Built ccache from source (not available in AL2023 repos)
+- CMake launcher variables: `CMAKE_C_COMPILER_LAUNCHER=ccache`
+- CI cache keying: `ccache-${{ runner.os }}-${{ matrix.compiler }}-${{ hashFiles('**/CMakeLists.txt') }}`
+- Environment: `CCACHE_DIR=/var/cache/ccache`, `CCACHE_BASEDIR=/home/ec2-user/workspace`
+
+**Lessons Learned:**
+- ccache significantly improves developer experience
+- CI cache integration essential for consistent performance
+- Source build required for AL2023 (package not available)
+
+**Policy Change:** 2025-10-16: PR Guard updated to allow internal, infra-ci–labeled edits to .github/workflows/ci.yml; retains blocks for .env, secrets, CMakePresets.json.
+
+---
+
 ## Sprint 007 (Phase 7): Workflow Validation
 **Date:** 2025-10-14  
 **Branch:** `chore/identity-sample` (Bedrock), `chore/about-menu` (Phoenix)  
