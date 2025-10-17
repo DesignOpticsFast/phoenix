@@ -241,11 +241,23 @@ All acceptances met; Milestones A and B signed off by Mark; CI green (macOS/Win/
 
 ---
 
+## 🚨 Known Deviations
+
+### Qt Charts Usage (Phase 1-2)
+- **Deviation:** Used Qt Charts (deprecated) for plotting functionality
+- **Cause:** Failed to identify deprecation status before implementation
+- **Policy Violation:** "No deprecated libraries" policy violated
+- **Mitigation:** Migration to Qt Graphs planned for Phase 3-5
+- **Reference:** [Project Notes](project_notes.md#post-incident-note--qt-charts-deprecated-usage)
+
+---
+
 ## ✅ Status: Final — Approved for UnderLord Execution (Rev 5.1)
 
 This Rev 5.1 supersedes all prior revisions and includes:
 - Gate 0.5 decisions (Transport: LocalSocket+Protobuf, Qt: 6.9.3)
 - Phoenix → C++17 (Qt-aligned)
 - Bedrock → C++20 (OpenMP/TBB/multi-config)
+- Known deviations documented with corrective actions
 
 UnderLord may now commence Phase 1 & 2 execution.

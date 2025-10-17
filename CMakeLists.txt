@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 
+# Include policy enforcement first
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(policy_no_deprecated)
+
 project(Phoenix
   VERSION 0.0.1
   DESCRIPTION "Qt UI for Bedrock"
