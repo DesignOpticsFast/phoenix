@@ -1,4 +1,0 @@
-bedrock_core_autogen/timestamp: \
-	/Users/mark/Projects/bedrock/core/CMakeLists.txt \
-	/Users/mark/Projects/bedrock/core/src/bedrock_math.cpp \
-	/opt/homebrew/Cellar/cmake/4.1.2/bin/cmake

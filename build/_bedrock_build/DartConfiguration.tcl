@@ -4,31 +4,30 @@
 
 
 # Configuration directories and files
-SourceDirectory: /Users/mark/Projects/bedrock
-BuildDirectory: /Users/mark/Projects/phoenix/build/_bedrock_build
+SourceDirectory: /home/ec2-user/workspace/bedrock
+BuildDirectory: /home/ec2-user/workspace/phoenix/build/_bedrock_build
 
 # Where to place the cost data store
 CostDataFile: 
 
 # Site is something like machine.domain, i.e. pragmatic.crd
-Site: marksmaudio1077.lan
+Site: ip-10-0-8-68.us-east-2.compute.internal
 
 # Build name is osname-revision-compiler, i.e. Linux-2.4.2-2smp-c++
-BuildName: Darwin-clang++
+BuildName: Linux-c++
 
 # Subprojects
 LabelsForSubprojects: 
 
 # Submission information
 SubmitURL: http://
-SubmitInactivityTimeout: 
 
 # Dashboard start time
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "/opt/homebrew/Cellar/cmake/4.1.2/bin/cmake" "/Users/mark/Projects/bedrock"
-MakeCommand: /opt/homebrew/Cellar/cmake/4.1.2/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
+ConfigureCommand: "/usr/bin/cmake" "/home/ec2-user/workspace/bedrock"
+MakeCommand: /usr/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
 DefaultCTestConfigurationType: Release
 
 # version control
@@ -63,8 +62,8 @@ UpdateOptions:
 UpdateType: git
 
 # Compiler info
-Compiler: /usr/bin/clang++
-CompilerVersion: 17.0.0.17000319
+Compiler: /usr/bin/c++
+CompilerVersion: 11.5.0
 
 # Dynamic analysis (MemCheck)
 PurifyCommand: 
@@ -76,7 +75,7 @@ CudaSanitizerCommand:
 CudaSanitizerCommandOptions: 
 MemoryCheckType: 
 MemoryCheckSanitizerOptions: 
-MemoryCheckCommand: MEMORYCHECK_COMMAND-NOTFOUND
+MemoryCheckCommand: /usr/bin/valgrind
 MemoryCheckCommandOptions: 
 MemoryCheckSuppressionFile: 
 
@@ -94,9 +93,6 @@ TimeOut: 1500
 # During parallel testing CTest will not start a new test if doing
 # so would cause the system load to exceed this value.
 TestLoad: 
-
-TLSVerify: 
-TLSVersion: 
 
 UseLaunchers: 
 CurlOptions: 
