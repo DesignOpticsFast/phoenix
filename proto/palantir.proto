@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package palantir;
+
+// Core message types for Palantir protocol
+// Transport: LocalSocket + Protobuf (4-byte length prefix + protobuf payload)
+
+// Job management
+message JobId {
+  string id = 1;
+}
+
+message ComputeSpec {
+  string feature_id = 1;
+  map<string, string> params = 2;
+  optional int32 deadline_ms = 3;
+  optional bool produce_debug = 4;
+}
+
+message StartReply {
+  JobId job_id = 1;
+  string status = 2;  // "OK", "INVALID_ARGUMENT", etc.
+  optional string error_message = 3;
+}
+
+// Progress and status
+message Progress {
+  JobId job_id = 1;
+  double progress_pct = 2;  // 0.0 to 100.0
+  string status = 3;        // "RUNNING", "CANCELLING", etc.
+  optional string message = 4;
+}
+
+// Results
+message ResultMeta {
+  JobId job_id = 1;
+  string status = 2;  // "SUCCEEDED", "FAILED", "CANCELLED"
+  string dtype = 3;   // "f64", "f32", "i32", etc.
+  repeated int32 shape = 4;  // [N] for 1D, [H, W] for 2D, etc.
+  int64 compute_elapsed_ms = 5;
+  int64 bytes_total = 6;
+  repeated string labels = 7;
+  optional string error_message = 8;
+}
+
+message DataChunk {
+  JobId job_id = 1;
+  int32 chunk_index = 2;
+  int32 total_chunks = 3;
+  bytes data = 4;
+}
+
+// Control messages
+message Cancel {
+  JobId job_id = 1;
+}
+
+message StartJob {
+  JobId job_id = 1;
+  ComputeSpec spec = 2;
+}
+
+message CapabilitiesRequest {
+  // Empty message to request capabilities
+}
+
+message Capabilities {
+  int32 max_concurrency = 1;
+  repeated string supported_features = 2;
+  string protocol_version = 3;
+}
+
+message Pong {
+  int64 timestamp_ms = 1;
+}
+
+// XY Sine specific messages
+message XYSineSpec {
+  double amplitude = 1;
+  double frequency = 2;
+  double phase = 3;
+  int32 cycles = 4;
+  int32 n_samples = 5;  // 100-10000
+}
+
+message XYSineResult {
+  repeated double x_values = 1;
+  repeated double y_values = 2;
+  int32 series_points = 3;
+  int32 series_points_effective = 4;
+  bool downsampling_enabled = 5;
+}

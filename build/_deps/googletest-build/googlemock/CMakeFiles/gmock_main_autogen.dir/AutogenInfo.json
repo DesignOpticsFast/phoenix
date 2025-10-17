@@ -1,30 +1,28 @@
 {
-	"BUILD_DIR" : "/Users/mark/Projects/phoenix/build/_deps/googletest-build/googlemock/gmock_main_autogen",
-	"CMAKE_BINARY_DIR" : "/Users/mark/Projects/phoenix/build",
-	"CMAKE_CURRENT_BINARY_DIR" : "/Users/mark/Projects/phoenix/build/_deps/googletest-build/googlemock",
-	"CMAKE_CURRENT_SOURCE_DIR" : "/Users/mark/Projects/phoenix/build/_deps/googletest-src/googlemock",
-	"CMAKE_EXECUTABLE" : "/opt/homebrew/Cellar/cmake/4.1.2/bin/cmake",
+	"BUILD_DIR" : "/home/ec2-user/workspace/phoenix/build/_deps/googletest-build/googlemock/gmock_main_autogen",
+	"CMAKE_BINARY_DIR" : "/home/ec2-user/workspace/phoenix/build",
+	"CMAKE_CURRENT_BINARY_DIR" : "/home/ec2-user/workspace/phoenix/build/_deps/googletest-build/googlemock",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/home/ec2-user/workspace/phoenix/build/_deps/googletest-src/googlemock",
+	"CMAKE_EXECUTABLE" : "/usr/bin/cmake",
 	"CMAKE_LIST_FILES" : 
 	[
-		"/Users/mark/Projects/phoenix/build/_deps/googletest-src/googlemock/CMakeLists.txt",
-		"/Users/mark/Projects/phoenix/build/.qtc/package-manager/auto-setup.cmake",
-		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/FindThreads.cmake",
-		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CheckLibraryExists.cmake",
-		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CheckIncludeFile.cmake",
-		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CheckCSourceCompiles.cmake",
-		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/FindPackageHandleStandardArgs.cmake",
-		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/FindPackageMessage.cmake",
-		"/Users/mark/Projects/phoenix/build/_deps/googletest-src/googlemock/cmake/gmock.pc.in",
-		"/Users/mark/Projects/phoenix/build/_deps/googletest-src/googlemock/cmake/gmock_main.pc.in"
+		"/home/ec2-user/workspace/phoenix/build/_deps/googletest-src/googlemock/CMakeLists.txt",
+		"/usr/share/cmake/Modules/FindThreads.cmake",
+		"/usr/share/cmake/Modules/CheckLibraryExists.cmake",
+		"/usr/share/cmake/Modules/CheckIncludeFile.cmake",
+		"/usr/share/cmake/Modules/CheckCSourceCompiles.cmake",
+		"/usr/share/cmake/Modules/FindPackageHandleStandardArgs.cmake",
+		"/usr/share/cmake/Modules/FindPackageMessage.cmake",
+		"/home/ec2-user/workspace/phoenix/build/_deps/googletest-src/googlemock/cmake/gmock.pc.in",
+		"/home/ec2-user/workspace/phoenix/build/_deps/googletest-src/googlemock/cmake/gmock_main.pc.in"
 	],
-	"CMAKE_SOURCE_DIR" : "/Users/mark/Projects/phoenix",
-	"CROSS_CONFIG" : false,
-	"DEP_FILE" : "/Users/mark/Projects/phoenix/build/_deps/googletest-build/googlemock/gmock_main_autogen/deps",
-	"DEP_FILE_RULE_NAME" : "gmock_main_autogen/timestamp",
+	"CMAKE_SOURCE_DIR" : "/home/ec2-user/workspace/phoenix",
+	"DEP_FILE" : "",
+	"DEP_FILE_RULE_NAME" : "",
 	"HEADERS" : [],
 	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
-	"INCLUDE_DIR" : "/Users/mark/Projects/phoenix/build/_deps/googletest-build/googlemock/gmock_main_autogen/include",
-	"MOC_COMPILATION_FILE" : "/Users/mark/Projects/phoenix/build/_deps/googletest-build/googlemock/gmock_main_autogen/mocs_compilation.cpp",
+	"INCLUDE_DIR" : "/home/ec2-user/workspace/phoenix/build/_deps/googletest-build/googlemock/gmock_main_autogen/include",
+	"MOC_COMPILATION_FILE" : "/home/ec2-user/workspace/phoenix/build/_deps/googletest-build/googlemock/gmock_main_autogen/mocs_compilation.cpp",
 	"MOC_DEFINITIONS" : [],
 	"MOC_DEPEND_FILTERS" : 
 	[
@@ -35,14 +33,16 @@
 	],
 	"MOC_INCLUDES" : 
 	[
-		"/Users/mark/Projects/phoenix/build/_deps/googletest-src/googlemock/include",
-		"/Users/mark/Projects/phoenix/build/_deps/googletest-src/googlemock",
-		"/Users/mark/Projects/phoenix/build/_deps/googletest-src/googletest/include",
-		"/Users/mark/Projects/phoenix/build/_deps/googletest-src/googletest",
-		"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1",
-		"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include",
-		"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include",
-		"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"
+		"/home/ec2-user/workspace/phoenix/build/_deps/googletest-src/googlemock/include",
+		"/home/ec2-user/workspace/phoenix/build/_deps/googletest-src/googlemock",
+		"/home/ec2-user/workspace/phoenix/build/_deps/googletest-src/googletest/include",
+		"/home/ec2-user/workspace/phoenix/build/_deps/googletest-src/googletest",
+		"/usr/include/c++/11",
+		"/usr/include/c++/11/x86_64-amazon-linux",
+		"/usr/include/c++/11/backward",
+		"/usr/lib/gcc/x86_64-amazon-linux/11/include",
+		"/usr/local/include",
+		"/usr/include"
 	],
 	"MOC_MACRO_NAMES" : 
 	[
@@ -57,31 +57,30 @@
 	"MOC_PATH_PREFIX" : false,
 	"MOC_PREDEFS_CMD" : 
 	[
-		"/usr/bin/clang++",
-		"-std=c++20",
-		"-w",
+		"/usr/bin/c++",
 		"-dM",
 		"-E",
-		"/opt/homebrew/Cellar/cmake/4.1.2/share/cmake/Modules/CMakeCXXCompilerABI.cpp"
+		"-c",
+		"/usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp"
 	],
-	"MOC_PREDEFS_FILE" : "/Users/mark/Projects/phoenix/build/_deps/googletest-build/googlemock/gmock_main_autogen/moc_predefs.h",
+	"MOC_PREDEFS_FILE" : "/home/ec2-user/workspace/phoenix/build/_deps/googletest-build/googlemock/gmock_main_autogen/moc_predefs.h",
 	"MOC_RELAXED_MODE" : false,
 	"MOC_SKIP" : 
 	[
-		"/Users/mark/Projects/phoenix/build/_deps/googletest-build/googlemock/gmock_autogen/mocs_compilation.cpp"
+		"/home/ec2-user/workspace/phoenix/build/_deps/googletest-build/googlemock/gmock_autogen/mocs_compilation.cpp"
 	],
 	"MULTI_CONFIG" : false,
-	"PARALLEL" : 10,
-	"PARSE_CACHE_FILE" : "/Users/mark/Projects/phoenix/build/_deps/googletest-build/googlemock/CMakeFiles/gmock_main_autogen.dir/ParseCache.txt",
-	"QT_MOC_EXECUTABLE" : "/Users/mark/Qt/6.9.3/macos/libexec/moc",
-	"QT_UIC_EXECUTABLE" : "/Users/mark/Qt/6.9.3/macos/libexec/uic",
+	"PARALLEL" : 8,
+	"PARSE_CACHE_FILE" : "/home/ec2-user/workspace/phoenix/build/_deps/googletest-build/googlemock/CMakeFiles/gmock_main_autogen.dir/ParseCache.txt",
+	"QT_MOC_EXECUTABLE" : "/opt/Qt/6.9.3/gcc_64/libexec/moc",
+	"QT_UIC_EXECUTABLE" : "/opt/Qt/6.9.3/gcc_64/libexec/uic",
 	"QT_VERSION_MAJOR" : 6,
 	"QT_VERSION_MINOR" : 9,
-	"SETTINGS_FILE" : "/Users/mark/Projects/phoenix/build/_deps/googletest-build/googlemock/CMakeFiles/gmock_main_autogen.dir/AutogenUsed.txt",
+	"SETTINGS_FILE" : "/home/ec2-user/workspace/phoenix/build/_deps/googletest-build/googlemock/CMakeFiles/gmock_main_autogen.dir/AutogenUsed.txt",
 	"SOURCES" : 
 	[
 		[
-			"/Users/mark/Projects/phoenix/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
+			"/home/ec2-user/workspace/phoenix/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
 			"MU",
 			null
 		]
@@ -90,9 +89,8 @@
 	"UIC_SEARCH_PATHS" : [],
 	"UIC_SKIP" : 
 	[
-		"/Users/mark/Projects/phoenix/build/_deps/googletest-build/googlemock/gmock_autogen/mocs_compilation.cpp"
+		"/home/ec2-user/workspace/phoenix/build/_deps/googletest-build/googlemock/gmock_autogen/mocs_compilation.cpp"
 	],
 	"UIC_UI_FILES" : [],
-	"USE_BETTER_GRAPH" : true,
 	"VERBOSITY" : 0
 }

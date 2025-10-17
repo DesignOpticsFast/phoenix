@@ -1,5 +1,5 @@
-libdir=/tmp/lib
-includedir=/tmp/include
+libdir=/usr/local/lib64
+includedir=/usr/local/include
 
 Name: gtest
 Description: GoogleTest (without main() function)
