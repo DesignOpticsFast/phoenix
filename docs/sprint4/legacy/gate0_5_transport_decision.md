@@ -1,5 +1,7 @@
 # Gate 0.5B - Transport Benchmark Decision
 
+> ⚠️ **Superseded by Gate 0.5 Decision (2025-10-18): gRPC UDS adopted with 2.04% overhead / 45 MB footprint.**
+
 **Date:** October 17, 2025
 **Test:** gRPC UDS vs LocalSocket+Protobuf
 

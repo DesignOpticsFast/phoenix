@@ -241,6 +241,11 @@ for (int iter=0;iter<iterations;++iter){
 
 Record if transport ≠ gRPC UDS · threading model changed · Qt Graphs replaced
 
+## 📋 Milestone A Checklists
+
+- **Phase 1 Checklist:** [p1_checklist.md](results/p1_checklist.md) - MainWindow & Chrome implementation
+- **Phase 2 Checklist:** [p2_checklist.md](results/p2_checklist.md) - Palantir v0 + XY Sine Analysis
+
 ---
 
 ## 🏁 Definition of Done
