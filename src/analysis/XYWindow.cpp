@@ -585,3 +585,6 @@ void XYWindow::closeEvent(QCloseEvent *event)
 }
 
 #include "XYWindow.moc"
+
+
+

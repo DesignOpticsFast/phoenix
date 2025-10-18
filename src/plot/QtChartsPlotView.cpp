@@ -166,3 +166,6 @@ void QtChartsPlotView::applyDownsampling()
 }
 
 #include "QtChartsPlotView.moc"
+
+
+

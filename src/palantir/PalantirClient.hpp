@@ -87,3 +87,6 @@ private:
     palantir::Capabilities serverCapabilities_;
     bool capabilitiesReceived_;
 };
+
+
+

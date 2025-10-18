@@ -61,3 +61,6 @@ private:
     QLocale currentLocale_;
     QString currentDecimalSeparator_;
 };
+
+
+

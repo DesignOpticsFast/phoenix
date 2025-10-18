@@ -97,3 +97,6 @@ int main(int argc, char *argv[])
 }
 
 #include "gate0_5_qtcharts_headless.moc"
+
+
+

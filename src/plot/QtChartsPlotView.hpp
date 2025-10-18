@@ -44,3 +44,6 @@ private:
     bool downsamplingEnabled_;
     static const int MAX_POINTS = 2000;
 };
+
+
+
