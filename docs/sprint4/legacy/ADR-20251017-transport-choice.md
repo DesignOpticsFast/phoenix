@@ -1,6 +1,6 @@
 # ADR-20251017: Transport Protocol Choice for Palantir
 
-> ⚠️ **Superseded by Phase 0.5 Gate Decision (2025-10-18): Qt 6.10 + Graphs / gRPC UDS baseline.**
+> ⚠️ **Superseded by CONTROL_REV_5.3.md and Phase 0.5 Gate Decision (2025-10-18): gRPC UDS adopted with 2.04% overhead / 45 MB footprint.**
 
 **Date:** October 17, 2025  
 **Status:** Accepted  

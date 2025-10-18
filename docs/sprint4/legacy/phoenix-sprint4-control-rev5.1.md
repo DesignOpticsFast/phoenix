@@ -1,6 +1,6 @@
 # Phoenix Sprint 4 — System Architecture & Work Statement (Rev 5.1)
 
-> ⚠️ **Superseded by Phase 0.5 Gate Decision (2025-10-18): Qt 6.10 + Graphs / gRPC UDS baseline.**
+> ⚠️ **Superseded by CONTROL_REV_5.3.md and Phase 0.5 Gate Decision (2025-10-18): Qt 6.10 + Graphs / gRPC UDS baseline.**
 
 **Owner / Validation Authority:** Mark Nicholson  
 **Repositories:** DesignOpticsFast/phoenix, DesignOpticsFast/bedrock  

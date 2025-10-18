@@ -1,5 +1,7 @@
 # Phoenix Sprint 4 - Preflight Report (dev-01)
 
+> ⚠️ **Superseded by Phase 0.5 Gate PASS (2025-10-18): Qt 6.10 + Graphs / gRPC UDS foundation established.**
+
 **Date:** October 16, 2025  
 **System:** Amazon Linux 2023 (dev-01)  
 **Purpose:** Environment verification for Phoenix Sprint 4 development  
