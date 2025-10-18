@@ -1,5 +1,7 @@
 # Gate 0.5A - Qt Charts Scale Probe Results
 
+> ⚠️ **Superseded by Phase 0.5 Gate Decision (2025-10-18): Qt 6.10 + Graphs / gRPC UDS baseline.**
+
 **Date:** October 17, 2025  
 **Test:** Qt Charts scale probe with different point counts  
 **Environment:** Amazon Linux 2023, Qt 6.9.3, 16 cores, 62GB RAM  

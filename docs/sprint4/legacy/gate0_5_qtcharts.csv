@@ -1,3 +1,5 @@
+# ⚠️ Superseded by Phase 0.5 Gate Decision (2025-10-18): Qt 6.10 + Graphs / gRPC UDS baseline.
+
 ui_event,ui_latency_ms,fps_observed,series_points,series_points_effective,downsampling_enabled,cpu_pct,rss_mb
 telemetry,10,30,100,100,false,0,7.52734
 telemetry,117,30,100,100,false,0,9.60938
