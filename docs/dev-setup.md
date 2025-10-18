@@ -1,6 +1,8 @@
-Developer Environment Setup — Amazon Linux 2023 + Qt 6.9.3
+Developer Environment Setup — Amazon Linux 2023 + Qt 6.10.0
 
 This guide provides complete steps for setting up a development environment for Phoenix/Bedrock/Rosetta. It covers installing prerequisites, downloading Qt from S3, verifying integrity, configuring environment variables, and running a smoke test build.
+
+> ⚠️ **Updated for Phase 0.5 Gate PASS (2025-10-18): Qt 6.10.0 + Qt Graphs / gRPC UDS foundation.**
 
 ⸻
 
@@ -27,8 +29,8 @@ aws --version
 
 Artifacts are versioned and stored with a checksum file.
 
-aws s3 cp s3://phoenix-dev-artifacts-us-east-2-mn/artifacts/6.9.3/Qt-6.9.3-gcc_64.tgz /tmp/
-aws s3 cp s3://phoenix-dev-artifacts-us-east-2-mn/artifacts/6.9.3/Qt-6.9.3-gcc_64.sha256 /tmp/
+aws s3 cp s3://phoenix-dev-artifacts-us-east-2-mn/artifacts/6.10.0/Qt-6.10.0-gcc_64.tgz /tmp/
+aws s3 cp s3://phoenix-dev-artifacts-us-east-2-mn/artifacts/6.10.0/Qt-6.10.0-gcc_64.sha256 /tmp/
 
 
 ⸻
@@ -36,11 +38,11 @@ aws s3 cp s3://phoenix-dev-artifacts-us-east-2-mn/artifacts/6.9.3/Qt-6.9.3-gcc_6
 2) Verify SHA256 checksum
 
 cd /tmp
-sha256sum -c Qt-6.9.3-gcc_64.sha256
+sha256sum -c Qt-6.10.0-gcc_64.sha256
 
 Expected output:
 
-Qt-6.9.3-gcc_64.tgz: OK
+Qt-6.10.0-gcc_64.tgz: OK
 
 If it does not match, re-download and re-verify.
 
@@ -49,8 +51,8 @@ If it does not match, re-download and re-verify.
 3) Extract to /opt/Qt
 
 sudo mkdir -p /opt/Qt
-sudo tar -xzf /tmp/Qt-6.9.3-gcc_64.tgz -C /opt
-ls -l /opt/Qt/6.9.3/gcc_64/bin/qmake
+sudo tar -xzf /tmp/Qt-6.10.0-gcc_64.tgz -C /opt
+ls -l /opt/Qt/6.10.0/gcc_64/bin/qmake
 
 Ensure that qmake exists in the extracted directory.
 
@@ -60,8 +62,8 @@ Ensure that qmake exists in the extracted directory.
 
 Append the environment variables globally so all users/shells inherit them.
 
-echo 'PATH=/opt/Qt/6.9.3/gcc_64/bin:$PATH' | sudo tee -a /etc/environment
-echo 'CMAKE_PREFIX_PATH=/opt/Qt/6.9.3/gcc_64/lib/cmake' | sudo tee -a /etc/environment
+echo 'PATH=/opt/Qt/6.10.0/gcc_64/bin:$PATH' | sudo tee -a /etc/environment
+echo 'CMAKE_PREFIX_PATH=/opt/Qt/6.10.0/gcc_64/lib/cmake' | sudo tee -a /etc/environment
 echo 'ARTIFACTS_BUCKET=phoenix-dev-artifacts-us-east-2-mn' | sudo tee -a /etc/environment
 
 Open a new shell to apply changes:
@@ -75,9 +77,9 @@ qmake -v
 echo $CMAKE_PREFIX_PATH
 
 Expected:
-	•	which qmake → /opt/Qt/6.9.3/gcc_64/bin/qmake
-	•	qmake -v → Qt version 6.9.3
-	•	CMAKE_PREFIX_PATH → /opt/Qt/6.9.3/gcc_64/lib/cmake
+	•	which qmake → /opt/Qt/6.10.0/gcc_64/bin/qmake
+	•	qmake -v → Qt version 6.10.0
+	•	CMAKE_PREFIX_PATH → /opt/Qt/6.10.0/gcc_64/lib/cmake
 
 ⸻
 
@@ -115,7 +117,7 @@ If the build succeeds and produces a qt_smoke executable, Qt is installed and wi
 
 Troubleshooting
 	•	qmake: command not found: Ensure /etc/environment has been updated and reload your shell with bash -l.
-	•	CMake cannot find Qt: Ensure CMAKE_PREFIX_PATH points to /opt/Qt/6.9.3/gcc_64/lib/cmake.
+	•	CMake cannot find Qt: Ensure CMAKE_PREFIX_PATH points to /opt/Qt/6.10.0/gcc_64/lib/cmake.
 	•	Missing OpenGL headers: Run sudo dnf install -y mesa-libGL-devel libglvnd-devel.
 
 ⸻
