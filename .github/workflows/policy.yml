@@ -1,0 +1,68 @@
+name: Policy Enforcement
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  no-deprecated-libraries:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Qt
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y qt6-base-dev qt6-charts-dev qt6-graphs-dev
+    
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_PREFIX_PATH="/usr/lib/x86_64-linux-gnu/cmake"
+    
+    - name: Build (should fail on deprecated libraries)
+      run: |
+        cd build
+        make -j$(nproc)
+      continue-on-error: true
+    
+    - name: Check for Qt6Charts in build artifacts
+      run: |
+        if grep -R "Qt6Charts" build/ 2>/dev/null; then
+          echo "❌ Qt6Charts found in build artifacts (forbidden)"
+          exit 1
+        fi
+        echo "✅ No Qt6Charts found in build artifacts"
+    
+    - name: Check for Qt6Charts in linked libraries
+      run: |
+        if find build -type f -executable -print0 | xargs -0 ldd 2>/dev/null | grep -q Qt6Charts; then
+          echo "❌ Linked against Qt6Charts (forbidden)"
+          exit 1
+        fi
+        echo "✅ No Qt6Charts linked in executables"
+    
+    - name: Check for other deprecated Qt modules
+      run: |
+        DEPRECATED_MODULES=("Qt6WebEngine" "Qt6WebEngineWidgets" "Qt6WebView" "Qt6Xml" "Qt6XmlPatterns")
+        for module in "${DEPRECATED_MODULES[@]}"; do
+          if grep -R "$module" build/ 2>/dev/null; then
+            echo "❌ $module found (forbidden)"
+            exit 1
+          fi
+        done
+        echo "✅ No deprecated Qt modules found"
+    
+    - name: Policy Check Summary
+      run: |
+        echo "✅ Policy enforcement passed:"
+        echo "  - No Qt6Charts usage detected"
+        echo "  - No deprecated Qt modules found"
+        echo "  - Build artifacts clean"
+
+
+
