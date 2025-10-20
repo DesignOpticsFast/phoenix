@@ -16,7 +16,7 @@ jobs:
     - name: Setup Qt
       run: |
         sudo apt-get update
-        sudo apt-get install -y qt6-base-dev qt6-charts-dev qt6-graphs-dev
+        sudo apt-get install -y qt6-base-dev qt6-graphs-dev
     
     - name: Configure CMake
       run: |
@@ -24,11 +24,10 @@ jobs:
         cd build
         cmake .. -DCMAKE_PREFIX_PATH="/usr/lib/x86_64-linux-gnu/cmake"
     
-    - name: Build (should fail on deprecated libraries)
+    - name: Build (should succeed without deprecated libraries)
       run: |
         cd build
         make -j$(nproc)
-      continue-on-error: true
     
     - name: Check for Qt6Charts in build artifacts
       run: |
@@ -63,6 +62,7 @@ jobs:
         echo "  - No Qt6Charts usage detected"
         echo "  - No deprecated Qt modules found"
         echo "  - Build artifacts clean"
+
 
 
 

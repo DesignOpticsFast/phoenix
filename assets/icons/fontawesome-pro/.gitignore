@@ -1,0 +1,11 @@
+# Font Awesome Pro - Exclude large files
+metadata/icon-families.json
+metadata/icons.json
+metadata/icon-metadata.json
+metadata/*.json.bak
+
+# Keep only essential files
+!metadata/icon-index.json
+!metadata/usage-examples.json
+!fonts/*.ttf
+!svgs/*.svg

@@ -1,5 +1,15 @@
 # Phoenix — GUI/IDE for Bedrock
 
+> **Status**: CI workflows updated and tested ✅
+
+[![CI](https://github.com/DesignOpticsFast/phoenix/actions/workflows/ci.yml/badge.svg)](https://github.com/DesignOpticsFast/phoenix/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/DesignOpticsFast/phoenix/actions/workflows/codeql.yml/badge.svg)](https://github.com/DesignOpticsFast/phoenix/actions/workflows/codeql.yml)
+[![PR Guard](https://github.com/DesignOpticsFast/phoenix/actions/workflows/pr-guard.yml/badge.svg)](https://github.com/DesignOpticsFast/phoenix/actions/workflows/pr-guard.yml)
+[![Policy](https://github.com/DesignOpticsFast/phoenix/actions/workflows/policy.yml/badge.svg)](https://github.com/DesignOpticsFast/phoenix/actions/workflows/policy.yml)
+[![Auto-merge Dependabot](https://github.com/DesignOpticsFast/phoenix/actions/workflows/auto-merge-dependabot.yml/badge.svg)](https://github.com/DesignOpticsFast/phoenix/actions/workflows/auto-merge-dependabot.yml)
+
+📋 **[Workflow Dependencies](docs/workflow-dependencies.md)** | 🎨 **[Icon System](docs/icons.md)** | 📚 **[API Documentation](docs/)**
+
 **Phoenix** is the Qt-based GUI that orchestrates **Bedrock** primitives:
 visualization, tolerancing, reporting, and (eventually) AI-assisted workflows.
 
