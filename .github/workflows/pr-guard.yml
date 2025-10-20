@@ -10,8 +10,11 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-      - name: Compute context
-        id: ctx
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Detect changed files
+        id: diff
         run: |
           if [ "${{ github.event.pull_request.head.repo.full_name }}" = "${{ github.repository }}" ]; then
             echo "internal=true" >> $GITHUB_OUTPUT
