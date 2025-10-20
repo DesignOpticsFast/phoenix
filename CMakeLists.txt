@@ -33,6 +33,12 @@ add_executable(phoenix_app
   src/analysis/XYWindow.cpp
   src/plot/QtGraphsPlotView.cpp
   src/palantir/palantir.pb.cc
+  
+  # Icon system sources
+  src/ui/icons/IconProvider.cpp
+  src/ui/icons/IconBootstrap.cpp
+  src/ui/icons/PhxIconImageProvider.cpp
+  src/tools/IconGallery.cpp
 
   # headers with Q_OBJECT for AUTOMOC
   src/app/MainWindow.hpp
@@ -41,9 +47,13 @@ add_executable(phoenix_app
   src/palantir/PalantirClient.hpp
   src/analysis/XYWindow.hpp
   src/plot/QtGraphsPlotView.hpp
+  src/tools/IconGallery.h
 
   # non-Q_OBJECT header (ok to list)
   src/adapters/bedrock_client.hpp
+  src/ui/icons/IconProvider.h
+  src/ui/icons/IconBootstrap.h
+  src/ui/icons/PhxIconImageProvider.h
   src/ui/MainWindow.ui
 )
 
@@ -53,12 +63,20 @@ target_include_directories(phoenix_app PRIVATE
   ../bedrock/include
 )
 
+# Add icon resources
+qt_add_resources(phoenix_app "phoenix_icons"
+  PREFIX "/"
+  FILES
+    src/ui/icons/phoenix_icons.qrc
+)
+
 target_link_libraries(phoenix_app PRIVATE
   Qt6::Widgets
   Qt6::Concurrent
   Qt6::Core
   Qt6::Graphs
   bedrock_plugin  # Clean plugin interface without OCCT dependencies
+  protobuf  # Protocol Buffers for Palantir communication
 )
 
 if(APPLE)

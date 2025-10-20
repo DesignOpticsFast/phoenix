@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/">
+        <!-- Fonts -->
+        <file alias="fonts/fa-sharp-solid-900.ttf">assets/icons/fontawesome-pro/fonts/fa-sharp-solid-900.ttf</file>
+        <file alias="fonts/fa-sharp-regular-400.ttf">assets/icons/fontawesome-pro/fonts/fa-sharp-regular-400.ttf</file>
+        <file alias="fonts/fa-duotone-900.ttf">assets/icons/fontawesome-pro/fonts/fa-duotone-900.ttf</file>
+        <file alias="fonts/fa-brands-400.ttf">assets/icons/fontawesome-pro/fonts/fa-brands-400.ttf</file>
+        <file alias="fonts/fa-solid-900.ttf">assets/icons/fontawesome-pro/fonts/fa-solid-900.ttf</file>
+        
+        <!-- Example SVGs -->
+        <file alias="icons/save.svg">assets/icons/fontawesome-pro/svgs/save.svg</file>
+        <file alias="icons/open.svg">assets/icons/fontawesome-pro/svgs/open.svg</file>
+        <file alias="icons/chart-line.svg">assets/icons/fontawesome-pro/svgs/chart-line.svg</file>
+        <file alias="icons/fallback.svg">assets/icons/fontawesome-pro/svgs/fallback.svg</file>
+        
+        <!-- Icon manifest -->
+        <file alias="icons/phx-icons.json">assets/icons/phx-icons.json</file>
+    </qresource>
+</RCC>

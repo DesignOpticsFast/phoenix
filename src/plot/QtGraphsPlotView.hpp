@@ -1,20 +1,18 @@
 #pragma once
 
 #include <QWidget>
-#include <QChartView>
-#include <QLineSeries>
-#include <QChart>
-#include <QValueAxis>
 #include <QString>
+#include <QPen>
+#include <QBrush>
 #include <vector>
 
-class QtChartsPlotView : public QChartView
+class QtGraphsPlotView : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit QtChartsPlotView(QWidget *parent = nullptr);
-    ~QtChartsPlotView() override;
+    explicit QtGraphsPlotView(QWidget *parent = nullptr);
+    ~QtGraphsPlotView() override;
 
     void setData(const std::vector<double>& xValues, const std::vector<double>& yValues);
     void setTitle(const QString& title);
@@ -22,15 +20,16 @@ public:
     void setYLabel(const QString& label);
     void clearData();
 
+protected:
+    void paintEvent(QPaintEvent* event) override;
+
 private:
-    void setupChart();
-    void updateChart();
+    void setupPlot();
+    void updatePlot();
     void applyDownsampling();
     
-    QChart* chart_;
-    QLineSeries* series_;
-    QValueAxis* xAxis_;
-    QValueAxis* yAxis_;
+    QPen linePen_;
+    QBrush backgroundBrush_;
     
     std::vector<double> xValues_;
     std::vector<double> yValues_;
@@ -41,6 +40,7 @@ private:
     QString xLabel_;
     QString yLabel_;
     
+    double xMin_, xMax_, yMin_, yMax_;
     bool downsamplingEnabled_;
     static const int MAX_POINTS = 2000;
 };

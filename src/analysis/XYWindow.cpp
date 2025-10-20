@@ -1,5 +1,5 @@
 #include "XYWindow.hpp"
-#include "QtGraphsPlotView.hpp"
+#include "../plot/QtGraphsPlotView.hpp"
 
 #include <QMainWindow>
 #include <QTabWidget>
@@ -8,6 +8,8 @@
 #include <QLineEdit>
 #include <QDoubleSpinBox>
 #include <QSpinBox>
+#include <QStatusBar>
+#include <QDateTime>
 #include <QPushButton>
 #include <QLabel>
 #include <QTableWidget>
@@ -71,7 +73,7 @@ void XYWindow::setPalantirClient(PalantirClient* client)
     
     if (client) {
         connect(client, &PalantirClient::jobStarted, this, &XYWindow::onJobStarted);
-        connect(client, &PalantirClient::jobProgress, this, &PalantirClient::onJobProgress);
+        connect(client, &PalantirClient::jobProgress, this, &XYWindow::onJobProgress);
         connect(client, &PalantirClient::jobCompleted, this, &XYWindow::onJobCompleted);
         connect(client, &PalantirClient::jobFailed, this, &XYWindow::onJobFailed);
         connect(client, &PalantirClient::jobCancelled, this, &XYWindow::onJobCancelled);

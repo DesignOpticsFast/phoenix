@@ -21,7 +21,7 @@ PalantirClient::PalantirClient(QObject *parent)
     // Connect socket signals
     connect(socket_.get(), &QLocalSocket::connected, this, &PalantirClient::onSocketConnected);
     connect(socket_.get(), &QLocalSocket::disconnected, this, &PalantirClient::onSocketDisconnected);
-    connect(socket_.get(), QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::error),
+    connect(socket_.get(), &QLocalSocket::errorOccurred,
             this, &PalantirClient::onSocketError);
     connect(socket_.get(), &QLocalSocket::readyRead, this, &PalantirClient::onSocketReadyRead);
     

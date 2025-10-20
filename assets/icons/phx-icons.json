@@ -1,0 +1,47 @@
+{
+  "save": {
+    "fa": "floppy-disk",
+    "style": "sharp-solid",
+    "unicode": "\uf0c7"
+  },
+  "open": {
+    "fa": "folder-open",
+    "style": "sharp-solid",
+    "unicode": "\uf07c"
+  },
+  "chart-line": {
+    "fa": "chart-line",
+    "style": "sharp-solid",
+    "unicode": "\uf201"
+  },
+  "chart-scatter": {
+    "fa": "chart-scatter",
+    "style": "sharp-solid",
+    "unicode": "\uf201"
+  },
+  "wave-sine": {
+    "fa": "wave-sine",
+    "style": "sharp-solid",
+    "unicode": "\uf201"
+  },
+  "cube": {
+    "fa": "cube",
+    "style": "sharp-solid",
+    "unicode": "\uf1b2"
+  },
+  "ruler-combined": {
+    "fa": "ruler-combined",
+    "style": "sharp-solid",
+    "unicode": "\uf545"
+  },
+  "brain": {
+    "fa": "brain",
+    "style": "sharp-solid",
+    "unicode": "\uf5dc"
+  },
+  "_fallback": {
+    "fa": "circle-question",
+    "style": "sharp-solid",
+    "unicode": "\uf059"
+  }
+}

@@ -2,8 +2,6 @@
 metadata/icon-families.json
 metadata/icons.json
 metadata/icon-metadata.json
-metadata/*.json.bak
-
 # Keep only essential files
 !metadata/icon-index.json
 !metadata/usage-examples.json
