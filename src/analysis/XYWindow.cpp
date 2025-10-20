@@ -1,5 +1,5 @@
 #include "XYWindow.hpp"
-#include "QtChartsPlotView.hpp"
+#include "QtGraphsPlotView.hpp"
 
 #include <QMainWindow>
 #include <QTabWidget>
@@ -132,7 +132,7 @@ void XYWindow::setupTabs()
     // Graph tab
     graphTab_ = new QWidget();
     QVBoxLayout* graphLayout = new QVBoxLayout(graphTab_);
-    plotView_ = new QtChartsPlotView(graphTab_);
+    plotView_ = new QtGraphsPlotView(graphTab_);
     graphLayout->addWidget(plotView_);
     tabWidget_->addTab(graphTab_, "Graph");
     
@@ -585,6 +585,7 @@ void XYWindow::closeEvent(QCloseEvent *event)
 }
 
 #include "XYWindow.moc"
+
 
 
 

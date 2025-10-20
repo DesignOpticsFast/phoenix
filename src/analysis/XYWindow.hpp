@@ -18,7 +18,7 @@
 #include "../palantir/PalantirClient.hpp"
 #include "../palantir/palantir.pb.h"
 
-class QtChartsPlotView;
+class QtGraphsPlotView;
 
 class XYWindow : public QMainWindow
 {
@@ -76,7 +76,7 @@ private:
     QWidget* debugTab_;
     
     // Graph tab
-    QtChartsPlotView* plotView_;
+    QtGraphsPlotView* plotView_;
     
     // Data tab
     QTableWidget* dataTable_;
@@ -118,6 +118,7 @@ private:
     // Update timer
     QTimer updateTimer_;
 };
+
 
 
 

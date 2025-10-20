@@ -17,7 +17,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Concurrent Core Charts)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Concurrent Core Graphs)
 
 # Pull Bedrock in as sibling
 add_subdirectory(../bedrock ${CMAKE_BINARY_DIR}/_bedrock_build)
@@ -31,7 +31,7 @@ add_executable(phoenix_app
   src/ui/StepViewer.cpp
   src/palantir/PalantirClient.cpp
   src/analysis/XYWindow.cpp
-  src/plot/QtChartsPlotView.cpp
+  src/plot/QtGraphsPlotView.cpp
   src/palantir/palantir.pb.cc
 
   # headers with Q_OBJECT for AUTOMOC
@@ -40,7 +40,7 @@ add_executable(phoenix_app
   src/ui/StepViewer.hpp
   src/palantir/PalantirClient.hpp
   src/analysis/XYWindow.hpp
-  src/plot/QtChartsPlotView.hpp
+  src/plot/QtGraphsPlotView.hpp
 
   # non-Q_OBJECT header (ok to list)
   src/adapters/bedrock_client.hpp
@@ -57,7 +57,7 @@ target_link_libraries(phoenix_app PRIVATE
   Qt6::Widgets
   Qt6::Concurrent
   Qt6::Core
-  Qt6::Charts
+  Qt6::Graphs
   bedrock_plugin  # Clean plugin interface without OCCT dependencies
 )
 

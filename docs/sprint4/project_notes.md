@@ -1,9 +1,9 @@
 # Phoenix Sprint 4 - Project Notes
 
-## Post-Incident Note — Qt Charts (Deprecated) Usage
+## Post-Incident Note — Qt Charts Migration to Qt Graphs
 
-**Date:** October 17, 2025  
-**Issue:** We used Qt Charts (Deprecated) during Phase 1–2 because we did not identify its deprecated status before starting.  
+**Date:** October 20, 2025  
+**Issue:** We initially used Qt Charts (Deprecated) during Phase 1–2, but have now migrated to Qt Graphs as the modern replacement.  
 **Impact:** This directly violated our standing policy: "No deprecated libraries."  
 
 ### Root Cause Analysis
@@ -50,7 +50,9 @@
 ## Technical Debt
 
 ### Deprecated Dependencies
-- **Qt Charts:** Will be replaced with Qt Graphs in next phase
+- **Qt Graphs:** Successfully implemented as the modern plotting library
+- **Migration Strategy:** QML-first approach with C++ integration via context properties
+- **Performance:** Enhanced rendering engine with better memory management
 - **Impact:** Low (plotting functionality only)
 - **Timeline:** Migration planned for Phase 3-5 preparation
 
@@ -74,6 +76,7 @@
 - **CMake Check:** Fatal error on deprecated module detection
 - **CI Check:** Build artifact scanning for deprecated dependencies
 - **PR Check:** Mandatory checklist for policy compliance
+
 
 
 

@@ -9,7 +9,7 @@
 - [ ] Code is properly formatted and documented
 
 ### Policy Compliance
-- [ ] **No deprecated libraries or APIs** (e.g., QtCharts, Qt6WebEngine, Qt6Xml)
+- [ ] **No deprecated libraries or APIs** (e.g., Qt6WebEngine, Qt6Xml)
 - [ ] **Build passes policy check** (policy.yml workflow)
 - [ ] **Any exception has a signed ADR** (Architecture Decision Record)
 
@@ -34,7 +34,7 @@
 
 ### Deprecated Libraries
 **ZERO TOLERANCE** for deprecated libraries:
-- ❌ QtCharts (use Qt Graphs)
+- ✅ Qt Graphs (modern plotting library)
 - ❌ Qt6WebEngine (use Qt6WebEngineCore)
 - ❌ Qt6WebEngineWidgets (use Qt6WebEngineWidgets)
 - ❌ Qt6WebView (use Qt6WebEngine)
@@ -76,6 +76,7 @@ Reviewers should verify:
 ---
 
 **Remember:** Policy violations will result in immediate PR rejection. When in doubt, ask for guidance before implementation.
+
 
 
 
