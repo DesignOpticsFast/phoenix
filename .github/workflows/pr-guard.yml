@@ -25,8 +25,7 @@ jobs:
 
       - name: Fetch base and list changed files
         run: |
-          git init
-          git remote add origin "https://github.com/${{ github.repository }}.git"
+          # Use existing git repository from checkout
           git fetch origin "${{ github.base_ref }}" --depth=1
           git fetch origin "refs/pull/${{ github.event.pull_request.number }}/merge":pr-merge --depth=1
           git checkout pr-merge
@@ -36,8 +35,8 @@ jobs:
       - name: Decide policy
         id: policy
         run: |
-          internal="${{ steps.ctx.outputs.internal }}"
-          labels="${{ steps.ctx.outputs.labels }}"
+          internal="${{ steps.diff.outputs.internal }}"
+          labels="${{ steps.diff.outputs.labels }}"
           allow_ci="false"
           echo "$labels" | grep -qi '\binfra-ci\b' && [ "$internal" = "true" ] && allow_ci="true"
           echo "allow_ci=$allow_ci" >> $GITHUB_OUTPUT
@@ -45,8 +44,8 @@ jobs:
       - name: Validate modified paths
         run: |
           if [ "${{ steps.policy.outputs.allow_ci }}" = "true" ]; then
-            REGEX='^(.github/(?!workflows/(pr-guard\.yml|ci\.yml)).+|.*\.env.*|.*secrets.*|CMakePresets\.json)$'
+            REGEX='^(.github/(?!workflows/(pr-guard\.yml|ci\.yml|policy\.yml)).+|.*\.env.*|.*secrets.*|CMakePresets\.json)$'
           else
-            REGEX='^(.github/(?!workflows/pr-guard\.yml).+|.*\.env.*|.*secrets.*|CMakePresets\.json)$'
+            REGEX='^(.github/(?!workflows/(pr-guard\.yml|policy\.yml)).+|.*\.env.*|.*secrets.*|CMakePresets\.json)$'
           fi
           awk -v re="$REGEX" 'match($0,re){print "Forbidden:", $0; bad=1} END{exit bad}' changed.txt
