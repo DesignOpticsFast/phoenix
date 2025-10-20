@@ -1,6 +1,7 @@
 # Phoenix — GUI/IDE for Bedrock
 
-> **Status**: CI workflows updated and tested ✅
+> **Status**: CI workflows updated and tested ✅  
+> **Smoke Test**: Guard validation in progress 🔍
 
 [![CI](https://github.com/DesignOpticsFast/phoenix/actions/workflows/ci.yml/badge.svg)](https://github.com/DesignOpticsFast/phoenix/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/DesignOpticsFast/phoenix/actions/workflows/codeql.yml/badge.svg)](https://github.com/DesignOpticsFast/phoenix/actions/workflows/codeql.yml)
