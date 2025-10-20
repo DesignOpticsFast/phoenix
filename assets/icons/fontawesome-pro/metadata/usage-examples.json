@@ -1,0 +1,10 @@
+{
+  "font_usage": {
+    "qml": "\n// QML Font Usage\nText {\n    text: \"\\uf0c7\"  // Unicode for save icon\n    font.family: \"Font Awesome 6 Pro\"\n    font.styleName: \"Sharp Solid\"\n    font.pixelSize: 24\n    color: \"#333\"\n}",
+    "cpp": "\n// C++ Font Usage\nQFont font(\"Font Awesome 6 Pro\", 24, QFont::Bold);\nfont.setStyleName(\"Sharp Solid\");\nQString icon = QString::fromUtf8(\"\\uf0c7\");  // Save icon\n"
+  },
+  "svg_usage": {
+    "qml": "\n// QML SVG Usage\nImage {\n    source: \"image://phxicon/save?style=SharpSolid&size=24\"\n    width: 24\n    height: 24\n}",
+    "cpp": "\n// C++ SVG Usage\nQIcon icon(\":/icons/save.svg\");\nQPushButton button;\nbutton.setIcon(icon);\n"
+  }
+}

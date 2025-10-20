@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "fonts": {
+    "sharp-solid": "fa-sharp-solid-900.ttf",
+    "sharp-regular": "fa-sharp-regular-400.ttf",
+    "duotone": "fa-duotone-900.ttf",
+    "brands": "fa-brands-400.ttf",
+    "classic-solid": "fa-solid-900.ttf"
+  },
+  "icon_categories": {
+    "sharp-solid": [
+      "save",
+      "open",
+      "chart-line",
+      "chart-scatter",
+      "wave-sine",
+      "cube",
+      "ruler-combined",
+      "brain",
+      "circle-question"
+    ],
+    "duotone": [
+      "chart-line",
+      "chart-scatter"
+    ],
+    "brands": [
+      "github",
+      "twitter",
+      "linkedin"
+    ]
+  }
+}
