@@ -1,7 +1,8 @@
 # Phoenix — GUI/IDE for Bedrock
 
-> **Status**: CI workflows updated and tested ✅  
-> **Smoke Test**: Guard validation in progress 🔍
+> **Status**: CI workflows stabilized and tested ✅  
+> **Icons**: Font Awesome Pro icon system integrated 🎨  
+> **CI stabilized on**: 2025-01-27
 
 [![CI](https://github.com/DesignOpticsFast/phoenix/actions/workflows/ci.yml/badge.svg)](https://github.com/DesignOpticsFast/phoenix/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/DesignOpticsFast/phoenix/actions/workflows/codeql.yml/badge.svg)](https://github.com/DesignOpticsFast/phoenix/actions/workflows/codeql.yml)
