@@ -26,13 +26,21 @@ add_executable(phoenix_app
   # sources
   src/main.cpp
   src/adapters/bedrock_client.cpp
-  src/app/MainWindow.cpp
-  src/ui/EnvironmentPrefs.cpp
   src/ui/StepViewer.cpp
   src/palantir/PalantirClient.cpp
   src/analysis/XYWindow.cpp
   src/plot/QtGraphsPlotView.cpp
   src/palantir/palantir.pb.cc
+  
+  # New UI structure - MainWindow
+  src/ui/main/MainWindow.cpp
+  
+  # New UI structure - Dialogs
+  src/ui/dialogs/PreferencesDialog.cpp
+  src/ui/dialogs/EnvironmentPage.cpp
+  
+  # New UI structure - Themes
+  src/ui/themes/ThemeManager.cpp
   
   # Icon system sources
   src/ui/icons/IconProvider.cpp
@@ -41,13 +49,21 @@ add_executable(phoenix_app
   src/tools/IconGallery.cpp
 
   # headers with Q_OBJECT for AUTOMOC
-  src/app/MainWindow.hpp
-  src/ui/EnvironmentPrefs.hpp
   src/ui/StepViewer.hpp
   src/palantir/PalantirClient.hpp
   src/analysis/XYWindow.hpp
   src/plot/QtGraphsPlotView.hpp
   src/tools/IconGallery.h
+  
+  # New UI structure - MainWindow
+  src/ui/main/MainWindow.h
+  
+  # New UI structure - Dialogs
+  src/ui/dialogs/PreferencesDialog.h
+  src/ui/dialogs/EnvironmentPage.h
+  
+  # New UI structure - Themes
+  src/ui/themes/ThemeManager.h
 
   # non-Q_OBJECT header (ok to list)
   src/adapters/bedrock_client.hpp
@@ -69,6 +85,10 @@ qt_add_resources(phoenix_app "phoenix_icons"
   FILES
     src/ui/icons/phoenix_icons.qrc
 )
+
+# Add translation files
+# Note: Translation files are created but not compiled in this stage
+# They will be processed in future phases when lupdate/lrelease are available
 
 target_link_libraries(phoenix_app PRIVATE
   Qt6::Widgets

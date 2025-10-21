@@ -92,3 +92,5 @@ Image {
 ## 📋 License
 
 Font Awesome Pro is licensed software. See `LICENSE-THIRD-PARTY.md` for details.
+
+

@@ -73,3 +73,5 @@ Image {
 - **Prefer Sharp Solid** - Modern, clean appearance
 - **Use Duotone for charts** - Great for data visualization
 - **Brands for social links** - Standard social media icons
+
+

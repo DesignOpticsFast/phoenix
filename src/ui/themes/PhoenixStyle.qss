@@ -1,0 +1,233 @@
+/* Phoenix Custom Style Sheet */
+/* This file provides custom styling for Phoenix UI components */
+
+/* Main Window */
+QMainWindow {
+    background-color: palette(window);
+    color: palette(window-text);
+}
+
+/* Menu Bar */
+QMenuBar {
+    background-color: palette(button);
+    color: palette(button-text);
+    border-bottom: 1px solid palette(mid);
+    padding: 2px;
+}
+
+QMenuBar::item {
+    background-color: transparent;
+    padding: 4px 8px;
+    border-radius: 3px;
+}
+
+QMenuBar::item:selected {
+    background-color: palette(highlight);
+    color: palette(highlighted-text);
+}
+
+QMenuBar::item:pressed {
+    background-color: palette(dark);
+}
+
+/* Tool Bar */
+QToolBar {
+    background-color: palette(button);
+    border: 1px solid palette(mid);
+    spacing: 3px;
+    padding: 2px;
+}
+
+QToolBar::separator {
+    background-color: palette(mid);
+    width: 1px;
+    margin: 4px 2px;
+}
+
+/* Status Bar */
+QStatusBar {
+    background-color: palette(button);
+    border-top: 1px solid palette(mid);
+    padding: 2px;
+}
+
+QStatusBar QLabel {
+    color: palette(button-text);
+    padding: 2px 4px;
+}
+
+/* Dock Widgets */
+QDockWidget {
+    background-color: palette(window);
+    border: 1px solid palette(mid);
+    titlebar-close-icon: url(:/icons/close.svg);
+    titlebar-normal-icon: url(:/icons/restore.svg);
+}
+
+QDockWidget::title {
+    background-color: palette(button);
+    color: palette(button-text);
+    padding: 4px 8px;
+    border-bottom: 1px solid palette(mid);
+}
+
+QDockWidget::close-button,
+QDockWidget::float-button {
+    background-color: transparent;
+    border: none;
+    padding: 2px;
+}
+
+QDockWidget::close-button:hover,
+QDockWidget::float-button:hover {
+    background-color: palette(highlight);
+}
+
+/* Buttons */
+QPushButton {
+    background-color: palette(button);
+    color: palette(button-text);
+    border: 1px solid palette(mid);
+    border-radius: 3px;
+    padding: 4px 8px;
+    min-width: 60px;
+}
+
+QPushButton:hover {
+    background-color: palette(light);
+}
+
+QPushButton:pressed {
+    background-color: palette(dark);
+    border: 1px solid palette(shadow);
+}
+
+QPushButton:disabled {
+    background-color: palette(button);
+    color: palette(mid);
+    border: 1px solid palette(mid);
+}
+
+/* Combo Box */
+QComboBox {
+    background-color: palette(base);
+    color: palette(text);
+    border: 1px solid palette(mid);
+    border-radius: 3px;
+    padding: 2px 6px;
+    min-width: 100px;
+}
+
+QComboBox:hover {
+    border-color: palette(highlight);
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 20px;
+}
+
+QComboBox::down-arrow {
+    image: url(:/icons/chevron-down.svg);
+    width: 12px;
+    height: 12px;
+}
+
+/* List Widget */
+QListWidget {
+    background-color: palette(base);
+    color: palette(text);
+    border: 1px solid palette(mid);
+    border-radius: 3px;
+    selection-background-color: palette(highlight);
+    selection-color: palette(highlighted-text);
+}
+
+QListWidget::item {
+    padding: 4px 8px;
+    border-bottom: 1px solid palette(alternate-base);
+}
+
+QListWidget::item:selected {
+    background-color: palette(highlight);
+    color: palette(highlighted-text);
+}
+
+QListWidget::item:hover {
+    background-color: palette(light);
+}
+
+/* Stacked Widget */
+QStackedWidget {
+    background-color: palette(window);
+    border: 1px solid palette(mid);
+    border-radius: 3px;
+}
+
+/* Form Layout */
+QFormLayout {
+    spacing: 8px;
+}
+
+QFormLayout QLabel {
+    color: palette(text);
+    font-weight: bold;
+}
+
+/* Group Box */
+QGroupBox {
+    font-weight: bold;
+    border: 1px solid palette(mid);
+    border-radius: 3px;
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 8px;
+    padding: 0 4px;
+}
+
+/* Scroll Bars */
+QScrollBar:vertical {
+    background-color: palette(button);
+    width: 12px;
+    border: none;
+}
+
+QScrollBar::handle:vertical {
+    background-color: palette(mid);
+    border-radius: 6px;
+    min-height: 20px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: palette(highlight);
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar:horizontal {
+    background-color: palette(button);
+    height: 12px;
+    border: none;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: palette(mid);
+    border-radius: 6px;
+    min-width: 20px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background-color: palette(highlight);
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    width: 0px;
+}
