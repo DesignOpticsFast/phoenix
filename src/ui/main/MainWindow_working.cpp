@@ -298,9 +298,11 @@ void MainWindow::setupStatusBar()
 
 void MainWindow::setupConnections()
 {
-    // Connect theme manager signals - temporarily disabled due to signal signature issues
-    // TODO: Fix signal connection in future iteration
-    // connect(m_themeManager, &ThemeManager::themeChanged, this, &MainWindow::onThemeChanged);
+    // Connect theme manager signals - use lambda to avoid signal signature issues
+    connect(m_themeManager, &ThemeManager::themeChanged, this, [this](ThemeManager::Theme theme) {
+        Q_UNUSED(theme)
+        onThemeChanged();
+    });
 }
 
 void MainWindow::setupTranslations()

@@ -60,6 +60,9 @@ private slots:
     void updateStatusBar();
     void updateDebugInfo();
     
+    // Theme change handler
+    void onThemeChanged();
+    
     // UI retranslation
     void retranslateUi();
 

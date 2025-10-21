@@ -298,9 +298,8 @@ void MainWindow::setupStatusBar()
 
 void MainWindow::setupConnections()
 {
-    // Connect theme manager signals - temporarily disabled due to signal signature issues
-    // TODO: Fix signal connection in future iteration
-    // connect(m_themeManager, &ThemeManager::themeChanged, this, &MainWindow::onThemeChanged);
+    // Connect theme manager signals
+    connect(m_themeManager, &ThemeManager::themeChanged, this, &MainWindow::onThemeChanged);
 }
 
 void MainWindow::setupTranslations()
@@ -312,8 +311,8 @@ void MainWindow::setupTranslations()
 
 void MainWindow::setupTheme()
 {
-    // Apply current theme - use public setTheme method instead of private applyTheme
-    m_themeManager->setTheme(m_themeManager->currentTheme());
+    // Apply current theme
+    m_themeManager->applyTheme(m_themeManager->currentTheme());
     
     // Update theme action states
     switch (m_themeManager->currentTheme()) {
