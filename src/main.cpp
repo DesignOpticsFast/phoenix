@@ -1,5 +1,6 @@
 #include "ui/main/MainWindow.h"
 #include "ui/splash/PhoenixSplashScreen.h"
+#include "ui/icons/IconBootstrap.h"
 #include <QApplication>
 #include <QTimer>
 #include <QIcon>
@@ -15,6 +16,9 @@ int main(int argc, char** argv) {
     
     // Set application icon for Dock on macOS
     app.setWindowIcon(QIcon(":/icons/phoenix-icon.svg"));
+    
+    // Initialize Font Awesome icons
+    IconBootstrap::initializeFonts();
     
     // High DPI scaling is enabled by default in Qt 6
     

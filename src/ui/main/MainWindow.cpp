@@ -53,10 +53,9 @@ MainWindow::MainWindow(QWidget *parent)
     // Set application icon
     setWindowIcon(QIcon(":/icons/phoenix-icon.svg"));
     
-    // macOS: Use native menu bar at top of screen
-#ifdef Q_OS_MACOS
-    menuBar()->setNativeMenuBar(true);
-#endif
+    // Keep menu bar in MainWindow (not at top of screen)
+    // Note: setNativeMenuBar(false) is the default, but being explicit
+    menuBar()->setNativeMenuBar(false);
     
     // Initialize ThemeManager after QApplication is ready
     m_themeManager = ThemeManager::instance();
@@ -493,8 +492,13 @@ void MainWindow::updateDebugInfo()
 QIcon MainWindow::getIcon(const QString& name, const QString& fallback)
 {
     // Use IconProvider to get Font Awesome icons
-    // For now, return a simple icon - this will be enhanced with the icon system
-    return QIcon(); // Placeholder - will be implemented with IconProvider
+    if (m_themeManager) {
+        bool isDark = m_themeManager->isDarkMode();
+        return IconProvider::icon(name, IconStyle::SharpSolid, 16, isDark);
+    } else {
+        // Fallback to default icon if theme manager not ready
+        return IconProvider::icon(name, IconStyle::SharpSolid, 16, false);
+    }
 }
 
 // File menu actions
