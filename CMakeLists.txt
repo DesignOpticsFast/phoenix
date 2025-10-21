@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
 
-# Include policy enforcement first
+# Include policy enforcement first (if available)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-include(policy_no_deprecated)
+if(EXISTS "${CMAKE_SOURCE_DIR}/cmake/policy_no_deprecated.cmake")
+    include(policy_no_deprecated)
+else()
+    message(STATUS "Policy file not found - skipping deprecation checks")
+endif()
 
 project(Phoenix
   VERSION 0.0.1
