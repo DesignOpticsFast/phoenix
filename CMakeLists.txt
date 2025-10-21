@@ -41,6 +41,9 @@ add_executable(phoenix_app
   # New UI structure - Themes
   src/ui/themes/ThemeManager.cpp
   
+  # New UI structure - Splash Screen
+  src/ui/splash/PhoenixSplashScreen.cpp
+  
   # Icon system sources
   src/ui/icons/IconProvider.cpp
   src/ui/icons/IconBootstrap.cpp
@@ -60,6 +63,9 @@ add_executable(phoenix_app
   
   # New UI structure - Themes
   src/ui/themes/ThemeManager.h
+  
+  # New UI structure - Splash Screen
+  src/ui/splash/PhoenixSplashScreen.h
 
   # non-Q_OBJECT header (ok to list)
   src/ui/icons/IconProvider.h
