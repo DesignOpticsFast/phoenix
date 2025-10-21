@@ -19,11 +19,8 @@ set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Concurrent Core Graphs)
 
-# Optionally pull Bedrock in as sibling (only if available and needed)
-option(PHOENIX_WITH_BEDROCK "Build Phoenix with Bedrock integration" OFF)
-if(PHOENIX_WITH_BEDROCK)
-    add_subdirectory(../bedrock ${CMAKE_BINARY_DIR}/_bedrock_build)
-endif()
+# Phoenix is standalone for Sprint 4 Stage 1
+# Bedrock integration will be added in future stages
 
 add_executable(phoenix_app
   # sources
@@ -67,32 +64,15 @@ add_executable(phoenix_app
   src/ui/MainWindow.ui
 )
 
-# Add Bedrock-dependent sources only if Bedrock is enabled
-if(PHOENIX_WITH_BEDROCK)
-  target_sources(phoenix_app PRIVATE
-    src/adapters/bedrock_client.cpp
-    src/palantir/PalantirClient.cpp
-    src/palantir/palantir.pb.cc
-    src/analysis/XYWindow.cpp
-    src/plot/QtGraphsPlotView.cpp
-    src/adapters/bedrock_client.hpp
-    src/palantir/PalantirClient.hpp
-    src/analysis/XYWindow.hpp
-    src/plot/QtGraphsPlotView.hpp
-  )
-endif()
+# Phoenix standalone - no Bedrock-dependent sources for Sprint 4 Stage 1
+# Bedrock integration sources will be added in future stages
 
 target_include_directories(phoenix_app PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-# Add Bedrock include directory only if Bedrock is enabled
-if(PHOENIX_WITH_BEDROCK)
-  target_include_directories(phoenix_app PRIVATE
-    ../bedrock/include
-  )
-endif()
+# Phoenix standalone - no Bedrock includes for Sprint 4 Stage 1
 
 # Add icon resources
 qt_add_resources(phoenix_app "phoenix_icons"
@@ -112,13 +92,7 @@ target_link_libraries(phoenix_app PRIVATE
   Qt6::Graphs
 )
 
-# Add Bedrock dependencies only if Bedrock is enabled
-if(PHOENIX_WITH_BEDROCK)
-  target_link_libraries(phoenix_app PRIVATE
-    bedrock_plugin  # Clean plugin interface without OCCT dependencies
-    protobuf  # Protocol Buffers for Palantir communication
-  )
-endif()
+# Phoenix standalone - no Bedrock dependencies for Sprint 4 Stage 1
 
 if(APPLE)
   set_target_properties(phoenix_app PROPERTIES
