@@ -2,6 +2,7 @@
 #include "ui/splash/PhoenixSplashScreen.h"
 #include <QApplication>
 #include <QTimer>
+#include <QIcon>
 
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
@@ -11,6 +12,9 @@ int main(int argc, char** argv) {
     app.setApplicationVersion("0.0.1");
     app.setOrganizationName("Phoenix");
     app.setOrganizationDomain("phoenix.dev");
+    
+    // Set application icon for Dock on macOS
+    app.setWindowIcon(QIcon(":/icons/phoenix-icon.svg"));
     
     // High DPI scaling is enabled by default in Qt 6
     

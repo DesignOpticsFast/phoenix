@@ -53,6 +53,11 @@ MainWindow::MainWindow(QWidget *parent)
     // Set application icon
     setWindowIcon(QIcon(":/icons/phoenix-icon.svg"));
     
+    // macOS: Use native menu bar at top of screen
+#ifdef Q_OS_MACOS
+    menuBar()->setNativeMenuBar(true);
+#endif
+    
     // Initialize ThemeManager after QApplication is ready
     m_themeManager = ThemeManager::instance();
     
