@@ -43,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_themeGroup(nullptr)
     , m_settings(new QSettings("Phoenix", "Phoenix", this))
     , m_translator(new QTranslator(this))
-    , m_themeManager(ThemeManager::instance())
+    , m_themeManager(nullptr)  // Defer initialization to avoid circular dependency
     , m_debugTimer(new QTimer(this))
 {
     setWindowTitle("Phoenix - Optical Design Studio");
@@ -52,6 +52,9 @@ MainWindow::MainWindow(QWidget *parent)
     
     // Set application icon
     setWindowIcon(QIcon(":/icons/phoenix-icon.svg"));
+    
+    // Initialize ThemeManager after QApplication is ready
+    m_themeManager = ThemeManager::instance();
     
     // Initialize components (defer translations until after UI is ready)
     setupMenuBar();  // This creates all the actions
@@ -400,13 +403,13 @@ void MainWindow::setupTheme()
     QString theme = m_settings->value("theme", "system").toString();
     if (theme == "light") {
         m_lightThemeAction->setChecked(true);
-        m_themeManager->setTheme(ThemeManager::Theme::Light);
+        if (m_themeManager) m_themeManager->setTheme(ThemeManager::Theme::Light);
     } else if (theme == "dark") {
         m_darkThemeAction->setChecked(true);
-        m_themeManager->setTheme(ThemeManager::Theme::Dark);
+        if (m_themeManager) m_themeManager->setTheme(ThemeManager::Theme::Dark);
     } else {
         m_systemThemeAction->setChecked(true);
-        m_themeManager->setTheme(ThemeManager::Theme::System);
+        if (m_themeManager) m_themeManager->setTheme(ThemeManager::Theme::System);
     }
 }
 
@@ -453,7 +456,8 @@ void MainWindow::updateDebugInfo()
     
     // Get current theme
     QString themeStr;
-    switch (m_themeManager->currentTheme()) {
+    if (m_themeManager) {
+        switch (m_themeManager->currentTheme()) {
         case ThemeManager::Theme::Light:
             themeStr = tr("Light");
             break;
@@ -463,6 +467,9 @@ void MainWindow::updateDebugInfo()
         case ThemeManager::Theme::System:
             themeStr = tr("System");
             break;
+        }
+    } else {
+        themeStr = tr("Unknown");
     }
     
     // Get current language
@@ -546,19 +553,19 @@ void MainWindow::show2DPlot()
 // View menu actions
 void MainWindow::setLightTheme()
 {
-    m_themeManager->setTheme(ThemeManager::Theme::Light);
+    if (m_themeManager) m_themeManager->setTheme(ThemeManager::Theme::Light);
     m_settings->setValue("theme", "light");
 }
 
 void MainWindow::setDarkTheme()
 {
-    m_themeManager->setTheme(ThemeManager::Theme::Dark);
+    if (m_themeManager) m_themeManager->setTheme(ThemeManager::Theme::Dark);
     m_settings->setValue("theme", "dark");
 }
 
 void MainWindow::setSystemTheme()
 {
-    m_themeManager->setTheme(ThemeManager::Theme::System);
+    if (m_themeManager) m_themeManager->setTheme(ThemeManager::Theme::System);
     m_settings->setValue("theme", "system");
 }
 
