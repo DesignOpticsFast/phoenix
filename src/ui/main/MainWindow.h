@@ -63,6 +63,9 @@ private slots:
     // Theme change handler
     void onThemeChanged();
     
+    // UI initialization (deferred)
+    void initializeUI();
+    
     // UI retranslation
     void retranslateUi();
 

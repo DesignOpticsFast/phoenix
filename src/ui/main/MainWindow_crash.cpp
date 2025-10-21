@@ -26,40 +26,6 @@ MainWindow::MainWindow(QWidget *parent)
     , m_themeManager(ThemeManager::instance())
     , m_debugTimer(new QTimer(this))
 {
-    // Initialize all member pointers to nullptr first
-    m_menuBar = nullptr;
-    m_statusBar = nullptr;
-    m_toolboxDock = nullptr;
-    m_propertiesDock = nullptr;
-    m_statusLabel = nullptr;
-    m_debugLabel = nullptr;
-    m_newAction = nullptr;
-    m_openAction = nullptr;
-    m_saveAction = nullptr;
-    m_saveAsAction = nullptr;
-    m_preferencesAction = nullptr;
-    m_exitAction = nullptr;
-    m_lensInspectorAction = nullptr;
-    m_systemViewerAction = nullptr;
-    m_xyPlotAction = nullptr;
-    m_2dPlotAction = nullptr;
-    m_lightThemeAction = nullptr;
-    m_darkThemeAction = nullptr;
-    m_systemThemeAction = nullptr;
-    m_themeGroup = nullptr;
-    
-    // Defer all UI setup until after constructor
-    QTimer::singleShot(0, this, &MainWindow::initializeUI);
-}
-
-MainWindow::~MainWindow()
-{
-    saveSettings();
-}
-
-void MainWindow::initializeUI()
-{
-    // Now it's safe to set up the UI
     setWindowTitle("Phoenix - Optical Design Studio");
     setMinimumSize(800, 600);
     resize(1200, 800);
@@ -80,6 +46,11 @@ void MainWindow::initializeUI()
     m_debugTimer->setInterval(1000); // Update every second
     connect(m_debugTimer, &QTimer::timeout, this, &MainWindow::updateDebugInfo);
     m_debugTimer->start();
+}
+
+MainWindow::~MainWindow()
+{
+    saveSettings();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -405,15 +376,11 @@ void MainWindow::updateStatusBar()
 
 void MainWindow::updateStatusMessage(const QString& message)
 {
-    if (m_statusLabel) {
-        m_statusLabel->setText(message);
-    }
+    m_statusLabel->setText(message);
 }
 
 void MainWindow::updateDebugInfo()
 {
-    if (!m_debugLabel) return;
-    
     // Get memory usage (simplified for macOS)
     qint64 memoryMB = 0;
     QProcess process;
