@@ -10,6 +10,7 @@
 #include <QSettings>
 
 class EnvironmentPage;
+class LanguagePage;
 
 class PreferencesDialog : public QDialog
 {
@@ -43,6 +44,7 @@ private:
     
     // Pages
     EnvironmentPage* m_environmentPage;
+    LanguagePage* m_languagePage;
     
     // Settings
     QSettings* m_settings;

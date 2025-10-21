@@ -51,8 +51,8 @@ MainWindow::MainWindow(QWidget *parent)
     resize(1200, 800);
     
     // Initialize components (defer translations until after UI is ready)
-    setupMenuBar();
-    setupToolBar();
+    setupMenuBar();  // This creates all the actions
+    setupToolBar();  // This uses the actions created above
     setupDockWidgets();
     setupStatusBar();
     setupConnections();
@@ -98,9 +98,17 @@ void MainWindow::setupMenuBar()
     QMenu* analysisMenu = createAnalysisMenu();
     m_menuBar->addMenu(analysisMenu);
     
+    // Tools menu
+    QMenu* toolsMenu = createToolsMenu();
+    m_menuBar->addMenu(toolsMenu);
+    
     // View menu
     QMenu* viewMenu = createViewMenu();
     m_menuBar->addMenu(viewMenu);
+    
+    // Help menu
+    QMenu* helpMenu = createHelpMenu();
+    m_menuBar->addMenu(helpMenu);
 }
 
 QMenu* MainWindow::createFileMenu()
@@ -186,6 +194,26 @@ QMenu* MainWindow::createAnalysisMenu()
     return analysisMenu;
 }
 
+QMenu* MainWindow::createToolsMenu()
+{
+    QMenu* toolsMenu = new QMenu(tr("&Tools"), this);
+    
+    // Add tools actions here in the future
+    QAction* iconGalleryAction = new QAction(tr("&Icon Gallery"), this);
+    iconGalleryAction->setStatusTip(tr("Open icon gallery"));
+    connect(iconGalleryAction, &QAction::triggered, this, &MainWindow::showIconGallery);
+    toolsMenu->addAction(iconGalleryAction);
+    
+    toolsMenu->addSeparator();
+    
+    QAction* settingsAction = new QAction(tr("&Settings"), this);
+    settingsAction->setStatusTip(tr("Open application settings"));
+    connect(settingsAction, &QAction::triggered, this, &MainWindow::showPreferences);
+    toolsMenu->addAction(settingsAction);
+    
+    return toolsMenu;
+}
+
 QMenu* MainWindow::createViewMenu()
 {
     QMenu* viewMenu = new QMenu(tr("&View"), this);
@@ -252,6 +280,25 @@ QMenu* MainWindow::createViewMenu()
     viewMenu->addMenu(languageMenu);
     
     return viewMenu;
+}
+
+QMenu* MainWindow::createHelpMenu()
+{
+    QMenu* helpMenu = new QMenu(tr("&Help"), this);
+    
+    QAction* aboutAction = new QAction(getIcon("info-circle", "info"), tr("&About Phoenix"), this);
+    aboutAction->setStatusTip(tr("Show about dialog"));
+    connect(aboutAction, &QAction::triggered, this, &MainWindow::showAbout);
+    helpMenu->addAction(aboutAction);
+    
+    helpMenu->addSeparator();
+    
+    QAction* helpAction = new QAction(tr("&Help Contents"), this);
+    helpAction->setStatusTip(tr("Open help documentation"));
+    connect(helpAction, &QAction::triggered, this, &MainWindow::showHelp);
+    helpMenu->addAction(helpAction);
+    
+    return helpMenu;
 }
 
 void MainWindow::setupToolBar()
@@ -545,4 +592,23 @@ void MainWindow::retranslateUi()
     // This would need to be called for all menu items
     // For now, we'll implement a basic retranslation
     updateStatusMessage(tr("Ready"));
+}
+
+void MainWindow::showAbout()
+{
+    QMessageBox::about(this, tr("About Phoenix"),
+                       QString(tr("Phoenix UI for Bedrock\nVersion %1\n\nBuilt with Qt %2\nRunning on %3"))
+                       .arg(QApplication::applicationVersion())
+                       .arg(QT_VERSION_STR)
+                       .arg(QSysInfo::prettyProductName()));
+}
+
+void MainWindow::showIconGallery()
+{
+    QMessageBox::information(this, tr("Icon Gallery"), tr("This feature is not yet implemented."));
+}
+
+void MainWindow::showHelp()
+{
+    QMessageBox::information(this, tr("Help"), tr("This feature is not yet implemented."));
 }

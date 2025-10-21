@@ -1,5 +1,6 @@
 #include "PreferencesDialog.h"
 #include "EnvironmentPage.h"
+#include "LanguagePage.h"
 #include <QDialog>
 #include <QListWidget>
 #include <QStackedWidget>
@@ -19,6 +20,7 @@ PreferencesDialog::PreferencesDialog(QWidget *parent)
     , m_cancelButton(nullptr)
     , m_applyButton(nullptr)
     , m_environmentPage(nullptr)
+    , m_languagePage(nullptr)
     , m_settings(new QSettings("Phoenix", "Phoenix", this))
 {
     setWindowTitle(tr("Preferences"));
@@ -55,6 +57,7 @@ void PreferencesDialog::setupUI()
     
     // Add categories
     m_categoryList->addItem(tr("Environment"));
+    m_categoryList->addItem(tr("Language"));
     // Future categories can be added here
     
     m_splitter->addWidget(m_categoryList);
@@ -65,6 +68,9 @@ void PreferencesDialog::setupUI()
     // Create pages
     m_environmentPage = new EnvironmentPage(this);
     m_contentStack->addWidget(m_environmentPage);
+    
+    m_languagePage = new LanguagePage(this);
+    m_contentStack->addWidget(m_languagePage);
     
     m_splitter->addWidget(m_contentStack);
     m_splitter->setSizes({200, 600}); // Set initial sizes

@@ -37,6 +37,7 @@ add_executable(phoenix_app
   # New UI structure - Dialogs
   src/ui/dialogs/PreferencesDialog.cpp
   src/ui/dialogs/EnvironmentPage.cpp
+  src/ui/dialogs/LanguagePage.cpp
   
   # New UI structure - Themes
   src/ui/themes/ThemeManager.cpp
@@ -60,6 +61,7 @@ add_executable(phoenix_app
   # New UI structure - Dialogs
   src/ui/dialogs/PreferencesDialog.h
   src/ui/dialogs/EnvironmentPage.h
+  src/ui/dialogs/LanguagePage.h
   
   # New UI structure - Themes
   src/ui/themes/ThemeManager.h

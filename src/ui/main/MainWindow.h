@@ -50,6 +50,13 @@ private slots:
     void showXYPlot();
     void show2DPlot();
     
+    // Tools menu actions
+    void showIconGallery();
+    
+    // Help menu actions
+    void showAbout();
+    void showHelp();
+    
     // View menu actions
     void setLightTheme();
     void setDarkTheme();
@@ -84,7 +91,9 @@ private:
     QMenu* createFileMenu();
     QMenu* createEditorsMenu();
     QMenu* createAnalysisMenu();
+    QMenu* createToolsMenu();
     QMenu* createViewMenu();
+    QMenu* createHelpMenu();
     
     // Toolbar creation helpers
     QToolBar* createMainToolBar();
