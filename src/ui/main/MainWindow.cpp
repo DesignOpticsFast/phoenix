@@ -50,6 +50,9 @@ MainWindow::MainWindow(QWidget *parent)
     setMinimumSize(800, 600);
     resize(1200, 800);
     
+    // Set application icon
+    setWindowIcon(QIcon(":/icons/phoenix-icon.svg"));
+    
     // Initialize components (defer translations until after UI is ready)
     setupMenuBar();  // This creates all the actions
     setupToolBar();  // This uses the actions created above
@@ -85,6 +88,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::setupMenuBar()
 {
     m_menuBar = menuBar();
+    
+    // Increase menu font size
+    QFont menuFont = m_menuBar->font();
+    menuFont.setPointSize(menuFont.pointSize() + 1);
+    m_menuBar->setFont(menuFont);
     
     // File menu
     QMenu* fileMenu = createFileMenu();
@@ -305,6 +313,7 @@ void MainWindow::setupToolBar()
 {
     m_mainToolBar = createMainToolBar();
     addToolBar(m_mainToolBar);
+    qDebug() << "Toolbar created and added:" << m_mainToolBar->isVisible();
 }
 
 QToolBar* MainWindow::createMainToolBar()
@@ -313,6 +322,8 @@ QToolBar* MainWindow::createMainToolBar()
     toolBar->setObjectName("mainToolBar");
     toolBar->setMovable(true);
     toolBar->setFloatable(true);
+    
+    qDebug() << "Creating toolbar with actions:" << m_newAction << m_openAction << m_saveAction;
     
     toolBar->addAction(m_newAction);
     toolBar->addAction(m_openAction);

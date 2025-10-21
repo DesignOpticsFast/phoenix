@@ -15,5 +15,8 @@
         
         <!-- Icon manifest -->
         <file alias="icons/phx-icons.json">src/resources/icons/phx-icons.json</file>
+        
+        <!-- Application icon -->
+        <file alias="icons/phoenix-icon.svg">src/resources/icons/phoenix-icon.svg</file>
     </qresource>
 </RCC>
