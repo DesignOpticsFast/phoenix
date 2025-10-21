@@ -14,6 +14,6 @@
         <file alias="icons/fallback.svg">assets/icons/fontawesome-pro/svgs/fallback.svg</file>
         
         <!-- Icon manifest -->
-        <file alias="icons/phx-icons.json">assets/icons/phx-icons.json</file>
+        <file alias="icons/phx-icons.json">src/resources/icons/phx-icons.json</file>
     </qresource>
 </RCC>

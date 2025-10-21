@@ -1,0 +1,40 @@
+{
+  "icons": {
+    "file-plus": {
+      "svg": ":/icons/file-plus.svg",
+      "unicode": "f0fe"
+    },
+    "folder-open": {
+      "svg": ":/icons/folder-open.svg", 
+      "unicode": "f07c"
+    },
+    "save": {
+      "svg": ":/icons/save.svg",
+      "unicode": "f0c7"
+    },
+    "settings": {
+      "svg": ":/icons/settings.svg",
+      "unicode": "f013"
+    },
+    "search": {
+      "svg": ":/icons/search.svg",
+      "unicode": "f002"
+    },
+    "view": {
+      "svg": ":/icons/view.svg",
+      "unicode": "f06e"
+    },
+    "chart": {
+      "svg": ":/icons/chart.svg",
+      "unicode": "f080"
+    },
+    "info": {
+      "svg": ":/icons/info.svg",
+      "unicode": "f05a"
+    },
+    "close": {
+      "svg": ":/icons/close.svg",
+      "unicode": "f00d"
+    }
+  }
+}

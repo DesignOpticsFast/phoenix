@@ -22,8 +22,12 @@ int main(int argc, char** argv) {
     // Create main window (but don't show it yet)
     MainWindow mainWindow;
     
+    // Ensure splash screen stays visible during initialization
+    splash.raise();
+    splash.activateWindow();
+    
     // Simulate initialization time
-    QTimer::singleShot(2000, [&splash, &mainWindow]() {
+    QTimer::singleShot(3000, [&splash, &mainWindow]() {
         // Hide splash screen
         splash.finish(&mainWindow);
         
