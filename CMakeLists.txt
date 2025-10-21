@@ -19,18 +19,16 @@ set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Concurrent Core Graphs)
 
-# Pull Bedrock in as sibling
-add_subdirectory(../bedrock ${CMAKE_BINARY_DIR}/_bedrock_build)
+# Optionally pull Bedrock in as sibling (only if available and needed)
+option(PHOENIX_WITH_BEDROCK "Build Phoenix with Bedrock integration" OFF)
+if(PHOENIX_WITH_BEDROCK)
+    add_subdirectory(../bedrock ${CMAKE_BINARY_DIR}/_bedrock_build)
+endif()
 
 add_executable(phoenix_app
   # sources
   src/main.cpp
-  src/adapters/bedrock_client.cpp
   src/ui/StepViewer.cpp
-  src/palantir/PalantirClient.cpp
-  src/analysis/XYWindow.cpp
-  src/plot/QtGraphsPlotView.cpp
-  src/palantir/palantir.pb.cc
   
   # New UI structure - MainWindow
   src/ui/main/MainWindow.cpp
@@ -50,9 +48,6 @@ add_executable(phoenix_app
 
   # headers with Q_OBJECT for AUTOMOC
   src/ui/StepViewer.hpp
-  src/palantir/PalantirClient.hpp
-  src/analysis/XYWindow.hpp
-  src/plot/QtGraphsPlotView.hpp
   src/tools/IconGallery.h
   
   # New UI structure - MainWindow
@@ -66,18 +61,38 @@ add_executable(phoenix_app
   src/ui/themes/ThemeManager.h
 
   # non-Q_OBJECT header (ok to list)
-  src/adapters/bedrock_client.hpp
   src/ui/icons/IconProvider.h
   src/ui/icons/IconBootstrap.h
   src/ui/icons/PhxIconImageProvider.h
   src/ui/MainWindow.ui
 )
 
+# Add Bedrock-dependent sources only if Bedrock is enabled
+if(PHOENIX_WITH_BEDROCK)
+  target_sources(phoenix_app PRIVATE
+    src/adapters/bedrock_client.cpp
+    src/palantir/PalantirClient.cpp
+    src/palantir/palantir.pb.cc
+    src/analysis/XYWindow.cpp
+    src/plot/QtGraphsPlotView.cpp
+    src/adapters/bedrock_client.hpp
+    src/palantir/PalantirClient.hpp
+    src/analysis/XYWindow.hpp
+    src/plot/QtGraphsPlotView.hpp
+  )
+endif()
+
 target_include_directories(phoenix_app PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/src
-  ../bedrock/include
 )
+
+# Add Bedrock include directory only if Bedrock is enabled
+if(PHOENIX_WITH_BEDROCK)
+  target_include_directories(phoenix_app PRIVATE
+    ../bedrock/include
+  )
+endif()
 
 # Add icon resources
 qt_add_resources(phoenix_app "phoenix_icons"
@@ -95,9 +110,15 @@ target_link_libraries(phoenix_app PRIVATE
   Qt6::Concurrent
   Qt6::Core
   Qt6::Graphs
-  bedrock_plugin  # Clean plugin interface without OCCT dependencies
-  protobuf  # Protocol Buffers for Palantir communication
 )
+
+# Add Bedrock dependencies only if Bedrock is enabled
+if(PHOENIX_WITH_BEDROCK)
+  target_link_libraries(phoenix_app PRIVATE
+    bedrock_plugin  # Clean plugin interface without OCCT dependencies
+    protobuf  # Protocol Buffers for Palantir communication
+  )
+endif()
 
 if(APPLE)
   set_target_properties(phoenix_app PROPERTIES
