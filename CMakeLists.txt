@@ -86,21 +86,11 @@ target_include_directories(phoenix_app PRIVATE
 
 # Phoenix standalone - no Bedrock includes for Sprint 4 Stage 1
 
-# Add icon resources
+# Add icon resources using QRC file
 qt_add_resources(phoenix_app "phoenix_icons"
   PREFIX "/"
   FILES
-    assets/icons/fontawesome-pro/fonts/fa-sharp-solid-900.ttf
-    assets/icons/fontawesome-pro/fonts/fa-sharp-regular-400.ttf
-    assets/icons/fontawesome-pro/fonts/fa-duotone-900.ttf
-    assets/icons/fontawesome-pro/fonts/fa-brands-400.ttf
-    assets/icons/fontawesome-pro/fonts/fa-solid-900.ttf
-    assets/icons/fontawesome-pro/svgs/save.svg
-    assets/icons/fontawesome-pro/svgs/open.svg
-    assets/icons/fontawesome-pro/svgs/chart-line.svg
-    assets/icons/fontawesome-pro/svgs/fallback.svg
-    src/resources/icons/phoenix-icon.svg
-    src/resources/icons/phx-icons.json
+    src/ui/icons/phoenix_icons.qrc
 )
 
 # Add translation files
