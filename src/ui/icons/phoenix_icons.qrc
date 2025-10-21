@@ -1,11 +1,11 @@
 <RCC>
     <qresource prefix="/">
         <!-- Fonts -->
-        <file alias="fonts/fa-sharp-solid-900.ttf">assets/icons/fontawesome-pro/fonts/fa-sharp-solid-900.ttf</file>
-        <file alias="fonts/fa-sharp-regular-400.ttf">assets/icons/fontawesome-pro/fonts/fa-sharp-regular-400.ttf</file>
-        <file alias="fonts/fa-duotone-900.ttf">assets/icons/fontawesome-pro/fonts/fa-duotone-900.ttf</file>
-        <file alias="fonts/fa-brands-400.ttf">assets/icons/fontawesome-pro/fonts/fa-brands-400.ttf</file>
-        <file alias="fonts/fa-solid-900.ttf">assets/icons/fontawesome-pro/fonts/fa-solid-900.ttf</file>
+        <file alias="fa-sharp-solid-900.ttf">assets/icons/fontawesome-pro/fonts/fa-sharp-solid-900.ttf</file>
+        <file alias="fa-sharp-regular-400.ttf">assets/icons/fontawesome-pro/fonts/fa-sharp-regular-400.ttf</file>
+        <file alias="fa-duotone-900.ttf">assets/icons/fontawesome-pro/fonts/fa-duotone-900.ttf</file>
+        <file alias="fa-brands-400.ttf">assets/icons/fontawesome-pro/fonts/fa-brands-400.ttf</file>
+        <file alias="fa-solid-900.ttf">assets/icons/fontawesome-pro/fonts/fa-solid-900.ttf</file>
         
         <!-- Example SVGs -->
         <file alias="icons/save.svg">assets/icons/fontawesome-pro/svgs/save.svg</file>
@@ -17,6 +17,6 @@
         <file alias="icons/phx-icons.json">src/resources/icons/phx-icons.json</file>
         
         <!-- Application icon -->
-        <file alias="icons/phoenix-icon.svg">src/resources/icons/phoenix-icon.svg</file>
+        <file alias="phoenix-icon.svg">src/resources/icons/phoenix-icon.svg</file>
     </qresource>
 </RCC>
