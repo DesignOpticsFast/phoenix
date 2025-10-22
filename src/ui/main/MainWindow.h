@@ -29,6 +29,9 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
+    
+    // Startup timing
+    void setStartupTime(qint64 startTime);
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -61,9 +64,6 @@ private slots:
     void setDarkTheme();
     void setSystemTheme();
     void setLanguage(const QString& language);
-    
-    // Startup timing
-    void setStartupTime(qint64 startTime);
     
     // Status bar updates
     void updateStatusBar();
