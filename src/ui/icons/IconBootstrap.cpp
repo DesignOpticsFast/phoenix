@@ -12,11 +12,11 @@ QString IconBootstrap::sClassicSolid;
 void IconBootstrap::initializeFonts() {
     qDebug() << "Initializing Font Awesome Pro fonts...";
     
-    sSharpSolid = loadFont(":/fa-sharp-solid-900.ttf");
-    sSharpRegular = loadFont(":/fa-sharp-regular-400.ttf");
-    sDuotone = loadFont(":/fa-duotone-900.ttf");
-    sBrands = loadFont(":/fa-brands-400.ttf");
-    sClassicSolid = loadFont(":/fa-solid-900.ttf");
+    sSharpSolid = loadFont(":/assets/icons/fontawesome-pro/fonts/fa-sharp-solid-900.ttf");
+    sSharpRegular = loadFont(":/assets/icons/fontawesome-pro/fonts/fa-sharp-regular-400.ttf");
+    sDuotone = loadFont(":/assets/icons/fontawesome-pro/fonts/fa-duotone-900.ttf");
+    sBrands = loadFont(":/assets/icons/fontawesome-pro/fonts/fa-brands-400.ttf");
+    sClassicSolid = loadFont(":/assets/icons/fontawesome-pro/fonts/fa-solid-900.ttf");
     
     qDebug() << "Font families loaded:";
     qDebug() << "  Sharp Solid:" << sSharpSolid;
