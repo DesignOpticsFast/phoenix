@@ -1,0 +1,56 @@
+#!/bin/bash
+# Generate macOS .icns file from Phoenix.svg
+# Run this script on macOS to create the proper .icns file
+
+set -e
+
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SVG_FILE="$PROJECT_ROOT/resources/macos/Phoenix.svg"
+ICONSET_DIR="$PROJECT_ROOT/resources/macos/Phoenix.iconset"
+ICNS_FILE="$PROJECT_ROOT/resources/macos/Phoenix.icns"
+
+echo "Generating macOS .icns file from Phoenix.svg"
+echo "Project root: $PROJECT_ROOT"
+echo "SVG file: $SVG_FILE"
+echo "Iconset dir: $ICONSET_DIR"
+echo "ICNS file: $ICNS_FILE"
+
+# Check if SVG exists
+if [ ! -f "$SVG_FILE" ]; then
+    echo "Error: SVG file not found at $SVG_FILE"
+    exit 1
+fi
+
+# Create iconset directory
+mkdir -p "$ICONSET_DIR"
+
+# Generate all required icon sizes
+echo "Generating icon sizes..."
+
+sips -z 16   16   "$SVG_FILE" --out "$ICONSET_DIR/icon_16x16.png"
+sips -z 32   32   "$SVG_FILE" --out "$ICONSET_DIR/icon_16x16@2x.png"
+sips -z 32   32   "$SVG_FILE" --out "$ICONSET_DIR/icon_32x32.png"
+sips -z 64   64   "$SVG_FILE" --out "$ICONSET_DIR/icon_32x32@2x.png"
+sips -z 128  128  "$SVG_FILE" --out "$ICONSET_DIR/icon_128x128.png"
+sips -z 256  256  "$SVG_FILE" --out "$ICONSET_DIR/icon_128x128@2x.png"
+sips -z 256  256  "$SVG_FILE" --out "$ICONSET_DIR/icon_256x256.png"
+sips -z 512  512  "$SVG_FILE" --out "$ICONSET_DIR/icon_256x256@2x.png"
+sips -z 512  512  "$SVG_FILE" --out "$ICONSET_DIR/icon_512x512.png"
+sips -z 1024 1024 "$SVG_FILE" --out "$ICONSET_DIR/icon_512x512@2x.png"
+
+echo "Generated icon sizes:"
+ls -la "$ICONSET_DIR/"
+
+# Create .icns file
+echo "Creating .icns file..."
+iconutil -c icns "$ICONSET_DIR" -o "$ICNS_FILE"
+
+# Clean up iconset directory
+rm -rf "$ICONSET_DIR"
+
+echo "✅ Successfully created $ICNS_FILE"
+echo "File size: $(ls -lh "$ICNS_FILE" | awk '{print $5}')"
+
+# Verify the .icns file
+echo "Verifying .icns file..."
+file "$ICNS_FILE"

@@ -82,6 +82,9 @@ add_executable(phoenix_app
   
   # Resource files (AUTORCC)
   src/ui/icons/phoenix_icons.qrc
+  
+  # macOS bundle icon
+  $<$<PLATFORM_ID:Darwin>:${APP_ICNS}>
 )
 
 # Phoenix standalone - no Bedrock-dependent sources for Sprint 4 Stage 1
@@ -137,11 +140,17 @@ target_link_libraries(phoenix_app PRIVATE
 # Phoenix standalone - no Bedrock dependencies for Sprint 4 Stage 1
 
 if(APPLE)
+  set(APP_BUNDLE_ID com.designopticsfast.phoenix)
+  set(APP_ICNS ${CMAKE_SOURCE_DIR}/resources/macos/Phoenix.icns)
+  
   set_target_properties(phoenix_app PROPERTIES
     MACOSX_BUNDLE TRUE
-    MACOSX_BUNDLE_GUI_IDENTIFIER "dev.phoenix.ui"
-    MACOSX_BUNDLE_BUNDLE_NAME "Phoenix"
+    OUTPUT_NAME "Phoenix"
+    MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_BUNDLE_ID}
+    MACOSX_BUNDLE_ICON_FILE "Phoenix"   # basename only (no .icns)
     MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
-    MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
-    MACOSX_BUNDLE_ICON_FILE "phoenix-icon.icns")
+    MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}")
+    
+  set_source_files_properties(${APP_ICNS} PROPERTIES
+    MACOSX_PACKAGE_LOCATION "Resources")
 endif()
