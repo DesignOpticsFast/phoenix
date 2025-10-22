@@ -1,22 +1,22 @@
 <RCC>
     <qresource prefix="/">
         <!-- Fonts -->
-        <file alias="assets/icons/fontawesome-pro/fonts/fa-sharp-solid-900.ttf">assets/icons/fontawesome-pro/fonts/fa-sharp-solid-900.ttf</file>
-        <file alias="assets/icons/fontawesome-pro/fonts/fa-sharp-regular-400.ttf">assets/icons/fontawesome-pro/fonts/fa-sharp-regular-400.ttf</file>
-        <file alias="assets/icons/fontawesome-pro/fonts/fa-duotone-900.ttf">assets/icons/fontawesome-pro/fonts/fa-duotone-900.ttf</file>
-        <file alias="assets/icons/fontawesome-pro/fonts/fa-brands-400.ttf">assets/icons/fontawesome-pro/fonts/fa-brands-400.ttf</file>
-        <file alias="assets/icons/fontawesome-pro/fonts/fa-solid-900.ttf">assets/icons/fontawesome-pro/fonts/fa-solid-900.ttf</file>
+        <file alias="assets/icons/fontawesome-pro/fonts/fa-sharp-solid-900.ttf">../../../assets/icons/fontawesome-pro/fonts/fa-sharp-solid-900.ttf</file>
+        <file alias="assets/icons/fontawesome-pro/fonts/fa-sharp-regular-400.ttf">../../../assets/icons/fontawesome-pro/fonts/fa-sharp-regular-400.ttf</file>
+        <file alias="assets/icons/fontawesome-pro/fonts/fa-duotone-900.ttf">../../../assets/icons/fontawesome-pro/fonts/fa-duotone-900.ttf</file>
+        <file alias="assets/icons/fontawesome-pro/fonts/fa-brands-400.ttf">../../../assets/icons/fontawesome-pro/fonts/fa-brands-400.ttf</file>
+        <file alias="assets/icons/fontawesome-pro/fonts/fa-solid-900.ttf">../../../assets/icons/fontawesome-pro/fonts/fa-solid-900.ttf</file>
         
         <!-- SVGs -->
-        <file alias="assets/icons/fontawesome-pro/svgs/save.svg">assets/icons/fontawesome-pro/svgs/save.svg</file>
-        <file alias="assets/icons/fontawesome-pro/svgs/open.svg">assets/icons/fontawesome-pro/svgs/open.svg</file>
-        <file alias="assets/icons/fontawesome-pro/svgs/chart-line.svg">assets/icons/fontawesome-pro/svgs/chart-line.svg</file>
-        <file alias="assets/icons/fontawesome-pro/svgs/fallback.svg">assets/icons/fontawesome-pro/svgs/fallback.svg</file>
+        <file alias="assets/icons/fontawesome-pro/svgs/save.svg">../../../assets/icons/fontawesome-pro/svgs/save.svg</file>
+        <file alias="assets/icons/fontawesome-pro/svgs/open.svg">../../../assets/icons/fontawesome-pro/svgs/open.svg</file>
+        <file alias="assets/icons/fontawesome-pro/svgs/chart-line.svg">../../../assets/icons/fontawesome-pro/svgs/chart-line.svg</file>
+        <file alias="assets/icons/fontawesome-pro/svgs/fallback.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
         
         <!-- Icon manifest -->
-        <file alias="src/resources/icons/phx-icons.json">src/resources/icons/phx-icons.json</file>
+        <file alias="src/resources/icons/phx-icons.json">../../resources/icons/phx-icons.json</file>
         
         <!-- Application icon -->
-        <file alias="src/resources/icons/phoenix-icon.svg">src/resources/icons/phoenix-icon.svg</file>
+        <file alias="src/resources/icons/phoenix-icon.svg">../../resources/icons/phoenix-icon.svg</file>
     </qresource>
 </RCC>
