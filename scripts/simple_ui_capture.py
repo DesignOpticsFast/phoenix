@@ -1,40 +1,42 @@
 #!/usr/bin/env python3
 """
-Capture Phoenix UI using Qt screenshot capabilities
+Simple UI Capture for Phoenix
+Captures UI output using basic Xvfb and xwd
 """
 
 import subprocess
 import time
 import os
+import tempfile
 from pathlib import Path
 
-def capture_phoenix_ui():
-    """Capture Phoenix UI using Qt screenshot tool"""
+def capture_ui_screenshot():
+    """Capture screenshot of Phoenix UI"""
     project_root = Path(__file__).parent.parent
     build_dir = project_root / "build-test-mac"
     app_path = build_dir / "phoenix_app"
-    qt_screenshot_path = project_root / "scripts/build/qt_screenshot"
     screenshots_dir = project_root / "screenshots"
     screenshots_dir.mkdir(exist_ok=True)
     
-    print("📸 Capturing Phoenix UI with Qt Screenshot Tool")
-    print("=" * 50)
+    print("📸 Capturing Phoenix UI Screenshot")
+    print("=" * 40)
     
     # Clean up any existing X server
     subprocess.run(["pkill", "-f", "Xvfb"], capture_output=True)
-    subprocess.run(["pkill", "-f", "phoenix_app"], capture_output=True)
     time.sleep(1)
     
     # Remove lock files
     subprocess.run(["rm", "-f", "/tmp/.X*-lock"], shell=True)
     
     try:
-        # Start Xvfb
+        # Start Xvfb with a unique display number
         display_num = ":99"
         xvfb_cmd = ["Xvfb", display_num, "-screen", "0", "1024x768x24", "-ac", "-nolisten", "tcp"]
         
         print(f"Starting Xvfb: {' '.join(xvfb_cmd)}")
         xvfb_process = subprocess.Popen(xvfb_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
+        # Wait for Xvfb to start
         time.sleep(2)
         
         # Set display environment
@@ -51,33 +53,37 @@ def capture_phoenix_ui():
             stderr=subprocess.PIPE
         )
         
-        # Wait for splash screen to finish and main window to appear
-        time.sleep(6)  # Increased wait time for splash screen to finish
+        # Wait for application to start and render
+        time.sleep(3)
         
-        print("Capturing screenshot with Qt tool...")
+        # Try to capture screenshot using xwd
+        screenshot_path = screenshots_dir / "phoenix_ui.xwd"
         
-        # Use Qt screenshot tool
-        qt_result = subprocess.run(
-            [str(qt_screenshot_path)],
-            env=env,
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-        
-        if qt_result.returncode == 0:
-            print("✅ Qt screenshot captured successfully")
-            print("Output:", qt_result.stdout.strip())
+        try:
+            # Capture the root window
+            xwd_cmd = ["xwd", "-root", "-out", str(screenshot_path)]
+            result = subprocess.run(xwd_cmd, env=env, capture_output=True, text=True, timeout=10)
             
-            # Check if screenshot was saved
-            screenshot_path = screenshots_dir / "phoenix_ui_qt.png"
-            if screenshot_path.exists():
-                print(f"✅ Screenshot saved: {screenshot_path}")
-                return str(screenshot_path)
+            if result.returncode == 0 and screenshot_path.exists():
+                print(f"✅ Screenshot captured: {screenshot_path}")
+                
+                # Try to convert to PNG if ImageMagick is available
+                png_path = screenshots_dir / "phoenix_ui.png"
+                try:
+                    convert_cmd = ["convert", str(screenshot_path), str(png_path)]
+                    subprocess.run(convert_cmd, check=True, capture_output=True)
+                    print(f"✅ PNG version saved: {png_path}")
+                    return str(png_path)
+                except (subprocess.CalledProcessError, FileNotFoundError):
+                    print(f"⚠️  ImageMagick not available, keeping XWD format")
+                    return str(screenshot_path)
             else:
-                print("❌ Screenshot file not found")
-        else:
-            print(f"❌ Qt screenshot failed: {qt_result.stderr}")
+                print(f"❌ xwd failed: {result.stderr}")
+                
+        except subprocess.TimeoutExpired:
+            print("⏰ xwd command timed out")
+        except Exception as e:
+            print(f"❌ Error capturing screenshot: {e}")
         
         # Terminate application
         app_process.terminate()
@@ -99,8 +105,8 @@ def capture_phoenix_ui():
     return None
 
 if __name__ == "__main__":
-    screenshot_path = capture_phoenix_ui()
+    screenshot_path = capture_ui_screenshot()
     if screenshot_path:
-        print(f"\n🎉 Phoenix UI Screenshot saved to: {screenshot_path}")
+        print(f"\n🎉 Screenshot saved to: {screenshot_path}")
     else:
         print("\n❌ Screenshot capture failed")
