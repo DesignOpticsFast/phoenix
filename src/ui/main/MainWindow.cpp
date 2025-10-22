@@ -538,7 +538,7 @@ QIcon MainWindow::getIcon(const QString& name, const QString& fallback)
         return QIcon::fromTheme("application-x-executable");
     } else {
         // Fallback to default icon if theme manager not ready
-        return IconProvider::icon(name, IconStyle::SharpSolid, 16, false);
+        return IconProvider::icon(name, IconStyle::SharpSolid, 16, m_themeManager->isDarkMode());
     }
 }
 
