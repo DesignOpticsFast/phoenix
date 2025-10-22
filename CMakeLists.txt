@@ -91,6 +91,34 @@ target_include_directories(phoenix_app PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+# Platform-specific application icon setup
+if(APPLE)
+    # macOS bundle configuration
+    set(APP_BUNDLE_ID "com.designopticsfast.phoenix")
+    set(APP_ICON_SVG "${CMAKE_CURRENT_SOURCE_DIR}/resources/macos/Phoenix.svg")
+    
+    # Add the icon to sources
+    target_sources(phoenix_app PRIVATE ${APP_ICON_SVG})
+    
+    # Set bundle properties
+    set_target_properties(phoenix_app PROPERTIES
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_BUNDLE_ID}
+        MACOSX_BUNDLE_ICON_FILE "Phoenix.svg"
+    )
+    
+    # Put the icon in the bundle Resources/ dir
+    set_source_files_properties(${APP_ICON_SVG} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+    
+elseif(WIN32)
+    # Windows icon setup (when .ico file is available)
+    set(WIN_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/windows/Phoenix.ico")
+    if(EXISTS ${WIN_ICON})
+        target_sources(phoenix_app PRIVATE ${WIN_ICON})
+        set_target_properties(phoenix_app PROPERTIES WIN32_EXECUTABLE TRUE)
+    endif()
+endif()
+
 # Phoenix standalone - no Bedrock includes for Sprint 4 Stage 1
 # Resources are handled by AUTORCC with phoenix_icons.qrc
 

@@ -1,6 +1,7 @@
 #include "ui/main/MainWindow.h"
 #include "ui/splash/PhoenixSplashScreen.h"
 #include "ui/icons/IconBootstrap.h"
+#include "ui/icons/IconProvider.h"
 #include <QApplication>
 #include <QTimer>
 #include <QIcon>
@@ -19,6 +20,9 @@ int main(int argc, char** argv) {
     
     // Initialize Font Awesome icons (must be before any icon rendering)
     IconBootstrap::InitFonts();
+    
+    // Setup automatic cache clearing on theme/DPR changes
+    IconProvider::setupCacheClearing();
     
     // High DPI scaling is enabled by default in Qt 6
     

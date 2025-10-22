@@ -48,6 +48,7 @@ public:
     static void clearCache();
     static int cacheSize();
     static void onThemeChanged(); // Clears cache on theme change
+    static void setupCacheClearing(); // Setup automatic cache clearing on theme/DPR changes
 
 private:
     static QHash<IconKey, QIcon> s_cache;

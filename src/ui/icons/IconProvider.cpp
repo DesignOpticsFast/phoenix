@@ -1,5 +1,6 @@
 #include "IconProvider.h"
 #include "IconBootstrap.h"
+#include "IconTint.h"
 #include <QApplication>
 #include <QFont>
 #include <QFontDatabase>
@@ -10,6 +11,10 @@
 #include <QPainter>
 #include <QPixmap>
 #include <QPalette>
+#include <QScreen>
+#include <QGuiApplication>
+#include <QObject>
+#include <QMetaObject>
 
 QHash<IconKey, QIcon> IconProvider::s_cache;
 QJsonObject IconProvider::s_iconManifest;
@@ -43,6 +48,21 @@ QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool da
     
     if (result.isNull()) {
         result = fallback();
+    }
+    
+    // Apply theme-aware tinting for better visibility
+    if (!result.isNull()) {
+        // Get theme-appropriate color
+        const QPalette pal = QApplication::palette();
+        const QColor iconColor = pal.color(QPalette::WindowText);
+        
+        // Tint the icon
+        QPixmap pm = result.pixmap(size, size);
+        pm.setDevicePixelRatio(dpr);
+        pm = tintPixmap(pm, iconColor);
+        result = QIcon(pm);
+        
+        qInfo().noquote() << "[ICON] tinted color=" << iconColor.name();
     }
     
     // Cache the result
@@ -83,6 +103,17 @@ int IconProvider::cacheSize() {
 
 void IconProvider::onThemeChanged() {
     clearCache();
+}
+
+void IconProvider::setupCacheClearing() {
+    // Clear cache on screen/DPR changes
+    QObject::connect(qApp, &QGuiApplication::primaryScreenChanged, &IconProvider::clearCache);
+    
+    // Connect to all existing screens
+    for (auto* screen : qApp->screens()) {
+        QObject::connect(screen, &QScreen::logicalDotsPerInchChanged, &IconProvider::clearCache);
+        QObject::connect(screen, &QScreen::geometryChanged, &IconProvider::clearCache);
+    }
 }
 
 void IconProvider::loadManifest() {

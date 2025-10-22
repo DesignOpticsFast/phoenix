@@ -1,8 +1,11 @@
 #include "PhxIconImageProvider.h"
 #include "IconProvider.h"
+#include "IconTint.h"
 #include <QGuiApplication>
 #include <QScreen>
 #include <QDebug>
+#include <QApplication>
+#include <QPalette>
 
 PhxIconImageProvider::PhxIconImageProvider() 
     : QQuickImageProvider(QQuickImageProvider::Pixmap) {
