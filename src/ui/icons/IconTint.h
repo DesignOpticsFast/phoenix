@@ -24,3 +24,5 @@ inline QPixmap tintPixmap(const QPixmap& src, const QColor& color) {
     p.end();
     return QPixmap::fromImage(img);
 }
+
+

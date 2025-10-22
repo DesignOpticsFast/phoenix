@@ -97,22 +97,23 @@ target_include_directories(phoenix_app PRIVATE
 
 # Platform-specific application icon setup
 if(APPLE)
-    # macOS bundle configuration
+    # macOS bundle configuration for Dock icon
     set(APP_BUNDLE_ID "com.designopticsfast.phoenix")
-    set(APP_ICON_SVG "${CMAKE_CURRENT_SOURCE_DIR}/resources/macos/Phoenix.svg")
+    set(APP_ICNS "${CMAKE_CURRENT_SOURCE_DIR}/resources/macos/Phoenix.icns")
     
-    # Add the icon to sources
-    target_sources(phoenix_app PRIVATE ${APP_ICON_SVG})
+    # Add the .icns file to sources
+    target_sources(phoenix_app PRIVATE ${APP_ICNS})
     
     # Set bundle properties
     set_target_properties(phoenix_app PROPERTIES
         MACOSX_BUNDLE TRUE
+        OUTPUT_NAME "Phoenix"
         MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_BUNDLE_ID}
-        MACOSX_BUNDLE_ICON_FILE "Phoenix.svg"
+        MACOSX_BUNDLE_ICON_FILE "Phoenix"   # basename only (no .icns)
     )
     
-    # Put the icon in the bundle Resources/ dir
-    set_source_files_properties(${APP_ICON_SVG} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+    # Put the .icns file in the bundle Resources/ dir
+    set_source_files_properties(${APP_ICNS} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
     
 elseif(WIN32)
     # Windows icon setup (when .ico file is available)
@@ -139,18 +140,8 @@ target_link_libraries(phoenix_app PRIVATE
 
 # Phoenix standalone - no Bedrock dependencies for Sprint 4 Stage 1
 
-if(APPLE)
-  set(APP_BUNDLE_ID com.designopticsfast.phoenix)
-  set(APP_ICNS ${CMAKE_SOURCE_DIR}/resources/macos/Phoenix.icns)
-  
-  set_target_properties(phoenix_app PROPERTIES
-    MACOSX_BUNDLE TRUE
-    OUTPUT_NAME "Phoenix"
-    MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_BUNDLE_ID}
-    MACOSX_BUNDLE_ICON_FILE "Phoenix"   # basename only (no .icns)
-    MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
-    MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}")
-    
-  set_source_files_properties(${APP_ICNS} PROPERTIES
-    MACOSX_PACKAGE_LOCATION "Resources")
+# Guard for missing macOS icon
+if(APPLE AND NOT EXISTS ${CMAKE_SOURCE_DIR}/resources/macos/Phoenix.icns)
+  message(FATAL_ERROR "Missing Phoenix.icns — run scripts/generate_macos_icon.sh on macOS.")
 endif()
+
