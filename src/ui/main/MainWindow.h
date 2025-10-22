@@ -62,12 +62,12 @@ private slots:
     void setSystemTheme();
     void setLanguage(const QString& language);
     
+    // Startup timing
+    void setStartupTime(qint64 startTime);
+    
     // Status bar updates
     void updateStatusBar();
     void updateDebugInfo();
-    
-    // Startup timing
-    void setStartupTime(qint64 startTime);
     
     // Theme change handler
     void onThemeChanged();
