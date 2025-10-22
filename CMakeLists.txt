@@ -21,6 +21,10 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
+# Add diagnostic probe for resource testing
+add_executable(qrc_probe tests/qrc_probe.cpp src/ui/icons/phoenix_icons.qrc)
+target_link_libraries(qrc_probe PRIVATE Qt6::Core Qt6::Gui)
+
 find_package(Qt6 REQUIRED COMPONENTS Widgets Concurrent Core Graphs)
 
 # Phoenix is standalone for Sprint 4 Stage 1
