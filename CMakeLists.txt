@@ -25,20 +25,6 @@ set(CMAKE_AUTORCC ON)
 add_executable(icon_audit tools/icon_audit.cpp)
 target_link_libraries(icon_audit PRIVATE Qt6::Core)
 
-# Add theme switching test
-add_executable(theme_test 
-  test_theme_switching.cpp
-  src/ui/themes/ThemeManager.cpp
-  src/ui/themes/ThemeManager.h
-  src/ui/icons/IconProvider.cpp
-  src/ui/icons/IconProvider.h
-  src/ui/icons/IconBootstrap.cpp
-  src/ui/icons/IconBootstrap.h
-  src/ui/icons/IconTint.h
-  src/ui/icons/ThemeColor.h
-  src/ui/icons/phoenix_icons.qrc
-)
-target_link_libraries(theme_test PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Concurrent Core Graphs)
 
