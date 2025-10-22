@@ -1,6 +1,7 @@
 #include "IconProvider.h"
 #include "IconBootstrap.h"
 #include "IconTint.h"
+#include "ThemeColor.h"
 #include <QApplication>
 #include <QFont>
 #include <QFontDatabase>
@@ -52,9 +53,9 @@ QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool da
     
     // Apply theme-aware tinting for better visibility
     if (!result.isNull()) {
-        // Get theme-appropriate color
+        // Get contrast-aware color
         const QPalette pal = QApplication::palette();
-        const QColor iconColor = pal.color(QPalette::WindowText);
+        const QColor iconColor = pickIconColor(pal, dark);
         
         // Tint the icon
         QPixmap pm = result.pixmap(size, size);
