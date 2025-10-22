@@ -65,6 +65,8 @@ private slots:
     // Status bar updates
     void updateStatusBar();
     void updateDebugInfo();
+    
+    // Startup timing
     void setStartupTime(qint64 startTime);
     
     // Theme change handler
