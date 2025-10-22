@@ -45,7 +45,13 @@ QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool da
 }
 
 QString IconProvider::fontFamily(IconStyle style) {
-    return IconBootstrap::getFontFamily(style);
+    switch (style) {
+        case IconStyle::SharpSolid: return IconBootstrap::sharpSolidFamily();
+        case IconStyle::SharpRegular: return IconBootstrap::sharpRegularFamily();
+        case IconStyle::Duotone: return IconBootstrap::duotoneFamily();
+        case IconStyle::Brands: return IconBootstrap::brandsFamily();
+        default: return IconBootstrap::sharpSolidFamily();
+    }
 }
 
 bool IconProvider::isDarkMode(const QWidget* widget) {
@@ -103,7 +109,14 @@ QIcon IconProvider::svgIcon(const QString& alias, int size) {
 }
 
 QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, bool dark) {
-    QString fontFamily = IconBootstrap::getFontFamily(style);
+    QString fontFamily;
+    switch (style) {
+        case IconStyle::SharpSolid: fontFamily = IconBootstrap::sharpSolidFamily(); break;
+        case IconStyle::SharpRegular: fontFamily = IconBootstrap::sharpRegularFamily(); break;
+        case IconStyle::Duotone: fontFamily = IconBootstrap::duotoneFamily(); break;
+        case IconStyle::Brands: fontFamily = IconBootstrap::brandsFamily(); break;
+        default: fontFamily = IconBootstrap::sharpSolidFamily(); break;
+    }
     if (fontFamily.isEmpty()) {
         return fallback();
     }

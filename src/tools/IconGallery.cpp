@@ -59,7 +59,12 @@ void IconGallery::populateIcons() {
     clearIcons();
     
     // Add font family info
-    QLabel* fontInfoLabel = new QLabel("Font families: " + IconBootstrap::loadedFontFamilies().join(", "));
+    QStringList fontFamilies;
+    if (!IconBootstrap::sharpSolidFamily().isEmpty()) fontFamilies << IconBootstrap::sharpSolidFamily();
+    if (!IconBootstrap::sharpRegularFamily().isEmpty()) fontFamilies << IconBootstrap::sharpRegularFamily();
+    if (!IconBootstrap::duotoneFamily().isEmpty()) fontFamilies << IconBootstrap::duotoneFamily();
+    if (!IconBootstrap::brandsFamily().isEmpty()) fontFamilies << IconBootstrap::brandsFamily();
+    QLabel* fontInfoLabel = new QLabel("Font families: " + fontFamilies.join(", "));
     m_iconGrid->addWidget(fontInfoLabel, 0, 0, 1, 6);
     
     // Sample icons to display

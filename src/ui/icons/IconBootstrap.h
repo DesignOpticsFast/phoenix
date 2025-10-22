@@ -1,16 +1,10 @@
 #pragma once
-#include <QStringList>
+#include <QString>
 
-enum class IconStyle; // Forward declaration
-
-class IconBootstrap {
-public:
-    static void initializeFonts();
-    static bool fontsLoaded();
-    static QStringList loadedFontFamilies();
-    static QString getFontFamily(IconStyle style);
-
-private:
-    static QString sSharpSolid, sSharpRegular, sDuotone, sBrands, sClassicSolid;
-    static QString loadFont(const QString& resourcePath);
-};
+namespace IconBootstrap {
+  bool InitFonts();                        // returns true if all loaded
+  const QString& sharpSolidFamily();
+  const QString& sharpRegularFamily();
+  const QString& duotoneFamily();
+  const QString& brandsFamily();
+}

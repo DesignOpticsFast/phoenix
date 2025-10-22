@@ -17,8 +17,8 @@ int main(int argc, char** argv) {
     // Set application icon for Dock on macOS
     app.setWindowIcon(QIcon(":/src/resources/icons/phoenix-icon.svg"));
     
-    // Initialize Font Awesome icons
-    IconBootstrap::initializeFonts();
+    // Initialize Font Awesome icons (must be before any icon rendering)
+    IconBootstrap::InitFonts();
     
     // High DPI scaling is enabled by default in Qt 6
     

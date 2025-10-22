@@ -109,7 +109,12 @@ void EnvironmentPage::updateSystemInfo()
     m_appVersionLabel->setText(appVersion);
     
     // Font Awesome Families
-    QStringList fontFamilies = IconBootstrap::loadedFontFamilies();
+    QStringList fontFamilies;
+    if (!IconBootstrap::sharpSolidFamily().isEmpty()) fontFamilies << IconBootstrap::sharpSolidFamily();
+    if (!IconBootstrap::sharpRegularFamily().isEmpty()) fontFamilies << IconBootstrap::sharpRegularFamily();
+    if (!IconBootstrap::duotoneFamily().isEmpty()) fontFamilies << IconBootstrap::duotoneFamily();
+    if (!IconBootstrap::brandsFamily().isEmpty()) fontFamilies << IconBootstrap::brandsFamily();
+    
     if (fontFamilies.isEmpty()) {
         m_fontAwesomeTextEdit->setPlainText(tr("Font Awesome families not loaded"));
     } else {
