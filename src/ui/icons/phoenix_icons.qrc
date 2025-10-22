@@ -22,9 +22,26 @@
         <file alias="icons/gear.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
         <file alias="icons/xmark.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
         
+        <!-- Additional File menu icons for proper differentiation -->
+        <file alias="icons/file-plus.svg">../../../assets/icons/fontawesome-pro/svgs/open.svg</file>
+        <file alias="icons/folder.svg">../../../assets/icons/fontawesome-pro/svgs/open.svg</file>
+        <file alias="icons/floppy-disk-pen.svg">../../../assets/icons/fontawesome-pro/svgs/save.svg</file>
+        <file alias="icons/sliders.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
+        <file alias="icons/power-off.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
+        
         <!-- Editors menu icons -->
         <file alias="icons/magnifying-glass.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
         <file alias="icons/eye.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
+        
+        <!-- Additional icons for better differentiation -->
+        <file alias="icons/lens.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
+        <file alias="icons/desktop.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
+        
+        <!-- Analysis menu - use different icon for 2D Plot -->
+        <file alias="icons/chart-bar.svg">../../../assets/icons/fontawesome-pro/svgs/chart-line.svg</file>
+        
+        <!-- Info circle for help -->
+        <file alias="icons/info-circle.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
         
         <!-- Icon manifest -->
         <file alias="src/resources/icons/phx-icons.json">../../resources/icons/phx-icons.json</file>

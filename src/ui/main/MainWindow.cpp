@@ -131,13 +131,13 @@ QMenu* MainWindow::createFileMenu()
 {
     QMenu* fileMenu = new QMenu("&File", this);
     
-    m_newAction = new QAction(getIcon("plus", "file-plus"), tr("&New"), this);
+    m_newAction = new QAction(getIcon("file-plus", "file-plus"), tr("&New"), this);
     m_newAction->setShortcut(QKeySequence::New);
     m_newAction->setStatusTip(tr("Create a new file"));
     connect(m_newAction, &QAction::triggered, this, &MainWindow::newFile);
     fileMenu->addAction(m_newAction);
     
-    m_openAction = new QAction(getIcon("folder-open", "folder-open"), tr("&Open"), this);
+    m_openAction = new QAction(getIcon("folder", "folder-open"), tr("&Open"), this);
     m_openAction->setShortcut(QKeySequence::Open);
     m_openAction->setStatusTip(tr("Open an existing file"));
     connect(m_openAction, &QAction::triggered, this, &MainWindow::openFile);
@@ -151,7 +151,7 @@ QMenu* MainWindow::createFileMenu()
     connect(m_saveAction, &QAction::triggered, this, &MainWindow::saveFile);
     fileMenu->addAction(m_saveAction);
     
-    m_saveAsAction = new QAction(getIcon("copy", "save-as"), tr("Save &As"), this);
+    m_saveAsAction = new QAction(getIcon("floppy-disk-pen", "save-as"), tr("Save &As"), this);
     m_saveAsAction->setShortcut(QKeySequence::SaveAs);
     m_saveAsAction->setStatusTip(tr("Save the current file with a new name"));
     connect(m_saveAsAction, &QAction::triggered, this, &MainWindow::saveAsFile);
@@ -159,7 +159,7 @@ QMenu* MainWindow::createFileMenu()
     
     fileMenu->addSeparator();
     
-    m_preferencesAction = new QAction(getIcon("gear", "settings"), tr("&Preferences..."), this);
+    m_preferencesAction = new QAction(getIcon("sliders", "settings"), tr("&Preferences..."), this);
     m_preferencesAction->setShortcut(QKeySequence::Preferences);
     m_preferencesAction->setStatusTip(tr("Open preferences dialog"));
     connect(m_preferencesAction, &QAction::triggered, this, &MainWindow::showPreferences);
@@ -167,7 +167,7 @@ QMenu* MainWindow::createFileMenu()
     
     fileMenu->addSeparator();
     
-    m_exitAction = new QAction(getIcon("xmark", "close"), tr("E&xit"), this);
+    m_exitAction = new QAction(getIcon("power-off", "close"), tr("E&xit"), this);
     m_exitAction->setShortcut(QKeySequence::Quit);
     m_exitAction->setStatusTip(tr("Exit the application"));
     connect(m_exitAction, &QAction::triggered, this, &MainWindow::exitApplication);
@@ -180,12 +180,12 @@ QMenu* MainWindow::createEditorsMenu()
 {
     QMenu* editorsMenu = new QMenu(tr("&Editors"), this);
     
-    m_lensInspectorAction = new QAction(getIcon("magnifying-glass", "search"), tr("&Lens Inspector"), this);
+    m_lensInspectorAction = new QAction(getIcon("lens", "search"), tr("&Lens Inspector"), this);
     m_lensInspectorAction->setStatusTip(tr("Open lens inspector"));
     connect(m_lensInspectorAction, &QAction::triggered, this, &MainWindow::showLensInspector);
     editorsMenu->addAction(m_lensInspectorAction);
     
-    m_systemViewerAction = new QAction(getIcon("eye", "view"), tr("&System Viewer"), this);
+    m_systemViewerAction = new QAction(getIcon("desktop", "view"), tr("&System Viewer"), this);
     m_systemViewerAction->setStatusTip(tr("Open system viewer"));
     connect(m_systemViewerAction, &QAction::triggered, this, &MainWindow::showSystemViewer);
     editorsMenu->addAction(m_systemViewerAction);
@@ -202,7 +202,7 @@ QMenu* MainWindow::createAnalysisMenu()
     connect(m_xyPlotAction, &QAction::triggered, this, &MainWindow::showXYPlot);
     analysisMenu->addAction(m_xyPlotAction);
     
-    m_2dPlotAction = new QAction(getIcon("chart-area", "chart"), tr("&2D Plot"), this);
+    m_2dPlotAction = new QAction(getIcon("chart-bar", "chart"), tr("&2D Plot"), this);
     m_2dPlotAction->setStatusTip(tr("Open 2D plot analysis"));
     connect(m_2dPlotAction, &QAction::triggered, this, &MainWindow::show2DPlot);
     analysisMenu->addAction(m_2dPlotAction);
