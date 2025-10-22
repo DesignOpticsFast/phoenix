@@ -484,11 +484,20 @@ void MainWindow::updateDebugInfo()
     // Get current language
     QString langStr = m_currentLocale.name().left(2);
     
-    // Calculate startup time if available
+    // Show startup time if available (constant, not updating)
     QString startupInfo;
     if (m_startupTime > 0) {
-        qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
-        qint64 startupDuration = currentTime - m_startupTime;
+        // Use static variable to store calculated startup time
+        static qint64 startupDuration = 0;
+        static bool startupCalculated = false;
+        
+        if (!startupCalculated) {
+            // Calculate startup duration once when first called
+            qint64 mainWindowReadyTime = QDateTime::currentMSecsSinceEpoch();
+            startupDuration = mainWindowReadyTime - m_startupTime;
+            startupCalculated = true;
+        }
+        
         startupInfo = tr(" | Startup: %1ms").arg(startupDuration);
     }
     
