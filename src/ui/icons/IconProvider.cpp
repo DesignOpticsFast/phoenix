@@ -18,6 +18,13 @@ bool IconProvider::s_manifestLoaded = false;
 QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool dark, qreal dpr) {
     IconKey key{name, style, size, dark, dpr};
     
+    // Trace once per request
+    qInfo().noquote() << "[ICON] req"
+                      << "name=" << name
+                      << "style=" << int(style)
+                      << "px=" << size
+                      << "dark=" << dark;
+    
     // Check cache first
     if (s_cache.contains(key)) {
         return *s_cache.object(key);
@@ -92,9 +99,11 @@ void IconProvider::loadManifest() {
 QIcon IconProvider::svgIcon(const QString& alias, int size) {
     const QString path = QString(":/icons/%1.svg").arg(alias);
     if (!QFile::exists(path)) {
+        qInfo().noquote() << "[ICON] svg" << path << "MISS";
         return QIcon(); // Return null icon, let caller fallback
     }
     
+    qInfo().noquote() << "[ICON] svg" << path << "FOUND";
     QIcon icon(path);
     if (icon.isNull()) {
         return QIcon(); // Return null icon, let caller fallback

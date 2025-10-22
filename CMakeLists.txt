@@ -21,7 +21,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-# Diagnostic probe removed - was only needed for troubleshooting
+# Add icon audit tool for systematic icon checking
+add_executable(icon_audit tools/icon_audit.cpp)
+target_link_libraries(icon_audit PRIVATE Qt6::Core)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Concurrent Core Graphs)
 

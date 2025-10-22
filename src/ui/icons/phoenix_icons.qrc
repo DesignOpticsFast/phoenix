@@ -14,6 +14,18 @@
         <file alias="icons/chart-area.svg">../../../assets/icons/fontawesome-pro/svgs/chart-scatter.svg</file>
         <file alias="icons/circle-question.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
         
+        <!-- File menu icons -->
+        <file alias="icons/plus.svg">../../../assets/icons/fontawesome-pro/svgs/open.svg</file>
+        <file alias="icons/folder-open.svg">../../../assets/icons/fontawesome-pro/svgs/open.svg</file>
+        <file alias="icons/floppy-disk.svg">../../../assets/icons/fontawesome-pro/svgs/save.svg</file>
+        <file alias="icons/copy.svg">../../../assets/icons/fontawesome-pro/svgs/save.svg</file>
+        <file alias="icons/gear.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
+        <file alias="icons/xmark.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
+        
+        <!-- Editors menu icons -->
+        <file alias="icons/magnifying-glass.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
+        <file alias="icons/eye.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
+        
         <!-- Icon manifest -->
         <file alias="src/resources/icons/phx-icons.json">../../resources/icons/phx-icons.json</file>
         
