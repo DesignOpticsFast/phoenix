@@ -390,8 +390,9 @@ void MainWindow::setupStatusBar()
 
 void MainWindow::setupConnections()
 {
-    // Connect theme manager signals - simplified for now
-    // TODO: Implement proper signal connections when ThemeManager signals are working
+    // Connect theme manager signals
+    connect(m_themeManager, &ThemeManager::darkModeChanged, this, &MainWindow::applyIcons);
+    connect(m_themeManager, QOverload<ThemeManager::Theme>::of(&ThemeManager::themeChanged), this, &MainWindow::onThemeChanged);
 }
 
 void MainWindow::setupTranslations()
@@ -642,6 +643,27 @@ void MainWindow::onThemeChanged()
 {
     // Handle theme changes
     updateDebugInfo();
+}
+
+void MainWindow::applyIcons()
+{
+    const bool dark = m_themeManager->isDarkMode();
+    
+    // File menu actions
+    m_newAction->setIcon(getIcon("file-plus", "file-plus"));
+    m_openAction->setIcon(getIcon("folder", "folder-open"));
+    m_saveAction->setIcon(getIcon("floppy-disk", "save"));
+    m_saveAsAction->setIcon(getIcon("floppy-disk-pen", "save-as"));
+    m_preferencesAction->setIcon(getIcon("sliders", "settings"));
+    m_exitAction->setIcon(getIcon("power-off", "close"));
+    
+    // Editors menu actions
+    m_lensInspectorAction->setIcon(getIcon("lens", "search"));
+    m_systemViewerAction->setIcon(getIcon("desktop", "view"));
+    
+    // Analysis menu actions
+    m_xyPlotAction->setIcon(getIcon("chart-line", "chart"));
+    m_2dPlotAction->setIcon(getIcon("chart-bar", "chart"));
 }
 
 void MainWindow::initializeUI()

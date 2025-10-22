@@ -71,6 +71,7 @@ private slots:
     
     // Theme change handler
     void onThemeChanged();
+    void applyIcons();
     
     // UI initialization (deferred)
     void initializeUI();

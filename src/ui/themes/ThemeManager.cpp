@@ -34,6 +34,12 @@ void ThemeManager::setTheme(Theme theme)
     emit darkModeChanged(isDarkMode());
 }
 
+void ThemeManager::setDarkMode(bool dark)
+{
+    Theme newTheme = dark ? Theme::Dark : Theme::Light;
+    setTheme(newTheme);
+}
+
 ThemeManager::Theme ThemeManager::currentTheme() const
 {
     return m_currentTheme;

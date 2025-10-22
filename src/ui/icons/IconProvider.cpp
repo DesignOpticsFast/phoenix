@@ -16,6 +16,9 @@
 #include <QGuiApplication>
 #include <QObject>
 #include <QMetaObject>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(phxIcons, "phx.icons")
 
 QHash<IconKey, QIcon> IconProvider::s_cache;
 QJsonObject IconProvider::s_iconManifest;
@@ -63,7 +66,11 @@ QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool da
         pm = tintPixmap(pm, iconColor);
         result = QIcon(pm);
         
-        qInfo().noquote() << "[ICON] tinted color=" << iconColor.name();
+        qCInfo(phxIcons).noquote() 
+            << "[ICON] returning name=" << name
+            << "px=" << size
+            << "dark=" << dark
+            << "color=" << iconColor.name();
     }
     
     // Cache the result

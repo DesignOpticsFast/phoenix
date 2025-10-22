@@ -22,6 +22,7 @@ public:
     
     // Theme management
     void setTheme(Theme theme);
+    void setDarkMode(bool dark);
     Theme currentTheme() const;
     bool isDarkMode() const;
     
