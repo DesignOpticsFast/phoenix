@@ -90,14 +90,14 @@ void IconProvider::loadManifest() {
 }
 
 QIcon IconProvider::svgIcon(const QString& alias, int size) {
-    const QString path = QString(":/assets/icons/fontawesome-pro/svgs/%1").arg(alias);
+    const QString path = QString(":/icons/%1.svg").arg(alias);
     if (!QFile::exists(path)) {
-        return fallback();
+        return QIcon(); // Return null icon, let caller fallback
     }
     
     QIcon icon(path);
     if (icon.isNull()) {
-        return fallback();
+        return QIcon(); // Return null icon, let caller fallback
     }
     
     if (size > 0) {
@@ -144,14 +144,6 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, boo
 }
 
 QIcon IconProvider::fallback() {
-    // Return a simple fallback icon
-    QPixmap pixmap(16, 16);
-    pixmap.fill(Qt::transparent);
-    
-    QPainter painter(&pixmap);
-    painter.setPen(Qt::red);
-    painter.drawEllipse(2, 2, 12, 12);
-    painter.drawText(pixmap.rect(), Qt::AlignCenter, "?");
-    
-    return QIcon(pixmap);
+    // Return question mark SVG icon
+    return QIcon(":/icons/circle-question.svg");
 }
