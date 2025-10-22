@@ -14,10 +14,10 @@ static QString load(const char* res) {
 }
 
 bool IconBootstrap::InitFonts() {
-  g_ss  = load(":/assets/icons/fontawesome-pro/fonts/fa-sharp-solid-900.ttf");
-  g_sr  = load(":/assets/icons/fontawesome-pro/fonts/fa-sharp-regular-400.ttf");
-  g_duo = load(":/assets/icons/fontawesome-pro/fonts/fa-duotone-900.ttf");
-  g_br  = load(":/assets/icons/fontawesome-pro/fonts/fa-brands-400.ttf");
+  g_ss  = load(":/fonts/fa-sharp-solid-900.ttf");
+  g_sr  = load(":/fonts/fa-sharp-regular-400.ttf");
+  g_duo = load(":/fonts/fa-duotone-900.ttf");
+  g_br  = load(":/fonts/fa-brands-400.ttf");
   return !g_ss.isEmpty(); // at minimum, solid available
 }
 const QString& IconBootstrap::sharpSolidFamily()   { return g_ss; }

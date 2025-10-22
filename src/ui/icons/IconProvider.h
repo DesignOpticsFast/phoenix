@@ -1,6 +1,6 @@
 #pragma once
 #include <QIcon>
-#include <QCache>
+#include <QHash>
 #include <QJsonObject>
 #include <QString>
 
@@ -34,13 +34,9 @@ struct IconKey {
     }
 };
 
-// Hash function for IconKey
-inline uint qHash(const IconKey& key, uint seed = 0) {
-    return qHash(key.name, seed) ^ 
-           qHash(static_cast<int>(key.style), seed) ^ 
-           qHash(key.size, seed) ^ 
-           qHash(key.dark, seed) ^ 
-           qHash(key.dpr, seed);
+// Hash function for IconKey - using qHashMulti for better distribution
+inline size_t qHash(const IconKey& key, size_t seed = 0) noexcept {
+    return qHashMulti(seed, key.name, static_cast<int>(key.style), key.size, key.dark, qRound64(key.dpr * 1000));
 }
 
 class IconProvider {
@@ -54,7 +50,7 @@ public:
     static void onThemeChanged(); // Clears cache on theme change
 
 private:
-    static QCache<IconKey, QIcon> s_cache;
+    static QHash<IconKey, QIcon> s_cache;
     static QJsonObject s_iconManifest;
     static bool s_manifestLoaded;
     

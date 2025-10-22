@@ -11,7 +11,7 @@
 #include <QPixmap>
 #include <QPalette>
 
-QCache<IconKey, QIcon> IconProvider::s_cache(512);
+QHash<IconKey, QIcon> IconProvider::s_cache;
 QJsonObject IconProvider::s_iconManifest;
 bool IconProvider::s_manifestLoaded = false;
 
@@ -27,7 +27,7 @@ QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool da
     
     // Check cache first
     if (s_cache.contains(key)) {
-        return *s_cache.object(key);
+        return s_cache.value(key);
     }
     
     // Load manifest if needed
@@ -46,7 +46,7 @@ QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool da
     }
     
     // Cache the result
-    s_cache.insert(key, new QIcon(result));
+    s_cache.insert(key, result);
     
     return result;
 }
@@ -86,7 +86,7 @@ void IconProvider::onThemeChanged() {
 }
 
 void IconProvider::loadManifest() {
-    QFile manifestFile(":/src/resources/icons/phx-icons.json");
+    QFile manifestFile(":/resources/icons/phx-icons.json");
     if (manifestFile.open(QIODevice::ReadOnly)) {
         QJsonDocument doc = QJsonDocument::fromJson(manifestFile.readAll());
         s_iconManifest = doc.object();

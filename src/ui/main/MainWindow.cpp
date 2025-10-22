@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent)
     resize(1200, 800);
     
     // Set application icon
-    setWindowIcon(QIcon(":/src/resources/icons/phoenix-icon.svg"));
+    setWindowIcon(QIcon(":/phoenix-icon.svg"));
     
     // Keep menu bar in MainWindow (not at top of screen)
     // Note: setNativeMenuBar(false) is the default, but being explicit

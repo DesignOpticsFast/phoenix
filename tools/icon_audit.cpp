@@ -8,11 +8,11 @@
 
 int main(int argc, char** argv) {
   QCoreApplication app(argc, argv);
-  // Minimal canonical semantics we know exist in menus; add others as needed or read from JSON.
+  // Test the actual semantics we have in our .qrc file
   QStringList semantics = {
-    "plus", "folder-open", "floppy-disk", "copy", "gear", "xmark",
-    "magnifying-glass", "eye",
-    "chart-line", "chart-area" // already working, should report FOUND
+    "file-plus", "folder", "floppy-disk", "floppy-disk-pen", "sliders", "power-off",
+    "lens", "desktop",
+    "chart-line", "chart-bar", "save", "open", "info-circle", "circle-question"
   };
 
   int missing = 0;
