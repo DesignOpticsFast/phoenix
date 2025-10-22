@@ -151,7 +151,7 @@ QMenu* MainWindow::createFileMenu()
     connect(m_saveAction, &QAction::triggered, this, &MainWindow::saveFile);
     fileMenu->addAction(m_saveAction);
     
-    m_saveAsAction = new QAction(getIcon("floppy-disk", "save"), tr("Save &As"), this);
+    m_saveAsAction = new QAction(getIcon("copy", "save-as"), tr("Save &As"), this);
     m_saveAsAction->setShortcut(QKeySequence::SaveAs);
     m_saveAsAction->setStatusTip(tr("Save the current file with a new name"));
     connect(m_saveAsAction, &QAction::triggered, this, &MainWindow::saveAsFile);
@@ -517,18 +517,25 @@ QIcon MainWindow::getIcon(const QString& name, const QString& fallback)
     // Use IconProvider to get Font Awesome icons
     if (m_themeManager) {
         bool isDark = m_themeManager->isDarkMode();
-        // Simple fallback icons for now
-    if (name == "plus") return QIcon::fromTheme("document-new");
-    if (name == "folder-open") return QIcon::fromTheme("document-open");
-    if (name == "floppy-disk") return QIcon::fromTheme("document-save");
-    if (name == "gear") return QIcon::fromTheme("preferences-system");
-    if (name == "xmark") return QIcon::fromTheme("application-exit");
-    if (name == "magnifying-glass") return QIcon::fromTheme("edit-find");
-    if (name == "eye") return QIcon::fromTheme("view-refresh");
-    if (name == "chart-line") return QIcon::fromTheme("office-chart-line");
-    if (name == "chart-area") return QIcon::fromTheme("office-chart-area");
-    if (name == "info-circle") return QIcon::fromTheme("help-about");
-    return QIcon::fromTheme("application-x-executable");
+        // Try Font Awesome icon first
+        QIcon faIcon = IconProvider::icon(name, IconStyle::SharpSolid, 16, isDark);
+        if (!faIcon.isNull()) {
+            return faIcon;
+        }
+        
+        // Fallback to system theme icons
+        if (name == "plus") return QIcon::fromTheme("document-new");
+        if (name == "folder-open") return QIcon::fromTheme("document-open");
+        if (name == "floppy-disk") return QIcon::fromTheme("document-save");
+        if (name == "copy") return QIcon::fromTheme("edit-copy");
+        if (name == "gear") return QIcon::fromTheme("preferences-system");
+        if (name == "xmark") return QIcon::fromTheme("application-exit");
+        if (name == "magnifying-glass") return QIcon::fromTheme("edit-find");
+        if (name == "eye") return QIcon::fromTheme("view-refresh");
+        if (name == "chart-line") return QIcon::fromTheme("office-chart-line");
+        if (name == "chart-area") return QIcon::fromTheme("office-chart-area");
+        if (name == "info-circle") return QIcon::fromTheme("help-about");
+        return QIcon::fromTheme("application-x-executable");
     } else {
         // Fallback to default icon if theme manager not ready
         return IconProvider::icon(name, IconStyle::SharpSolid, 16, false);

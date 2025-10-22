@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
     app.setOrganizationDomain("phoenix.dev");
     
     // Set application icon for Dock on macOS
-    app.setWindowIcon(QIcon(":/src/resources/icons/phoenix-icon.svg"));
+    app.setWindowIcon(QIcon(":/phoenix-icon.svg"));
     
     // Initialize Font Awesome icons
     IconBootstrap::initializeFonts();
