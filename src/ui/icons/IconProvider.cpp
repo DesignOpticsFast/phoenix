@@ -73,7 +73,7 @@ void IconProvider::onThemeChanged() {
 }
 
 void IconProvider::loadManifest() {
-    QFile manifestFile(":/icons/phx-icons.json");
+    QFile manifestFile(":/phx-icons.json");
     if (manifestFile.open(QIODevice::ReadOnly)) {
         QJsonDocument doc = QJsonDocument::fromJson(manifestFile.readAll());
         s_iconManifest = doc.object();
@@ -84,7 +84,7 @@ void IconProvider::loadManifest() {
 }
 
 QIcon IconProvider::svgIcon(const QString& alias, int size) {
-    const QString path = QString(":/icons/%1").arg(alias);
+    const QString path = QString(":/%1").arg(alias);
     if (!QFile::exists(path)) {
         return fallback();
     }
