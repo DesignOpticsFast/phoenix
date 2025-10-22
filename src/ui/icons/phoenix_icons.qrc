@@ -11,6 +11,7 @@
         <file alias="icons/save.svg">../../../assets/icons/fontawesome-pro/svgs/save.svg</file>
         <file alias="icons/open.svg">../../../assets/icons/fontawesome-pro/svgs/open.svg</file>
         <file alias="icons/chart-line.svg">../../../assets/icons/fontawesome-pro/svgs/chart-line.svg</file>
+        <file alias="icons/chart-area.svg">../../../assets/icons/fontawesome-pro/svgs/chart-scatter.svg</file>
         <file alias="icons/circle-question.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
         
         <!-- Icon manifest -->
