@@ -51,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent)
     resize(1200, 800);
     
     // Set application icon
-    setWindowIcon(QIcon(":/phoenix-icon.svg"));
+    setWindowIcon(QIcon(":/src/resources/icons/phoenix-icon.svg"));
     
     // Keep menu bar in MainWindow (not at top of screen)
     // Note: setNativeMenuBar(false) is the default, but being explicit
@@ -329,6 +329,9 @@ QToolBar* MainWindow::createMainToolBar()
     toolBar->setObjectName("mainToolBar");
     toolBar->setMovable(true);
     toolBar->setFloatable(true);
+    toolBar->setVisible(true);
+    toolBar->show();
+    qDebug() << "Toolbar created, visible:" << toolBar->isVisible() << "size:" << toolBar->size();
     
     qDebug() << "Creating toolbar with actions:" << m_newAction << m_openAction << m_saveAction;
     
@@ -337,6 +340,13 @@ QToolBar* MainWindow::createMainToolBar()
     toolBar->addAction(m_saveAction);
     toolBar->addSeparator();
     toolBar->addAction(m_preferencesAction);
+    
+    // Force toolbar to be visible and have content
+    toolBar->setVisible(true);
+    toolBar->show();
+    toolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    toolBar->setIconSize(QSize(24, 24));
+    qDebug() << "Toolbar final state - visible:" << toolBar->isVisible() << "size:" << toolBar->size() << "actions:" << toolBar->actions().size();
     
     return toolBar;
 }
@@ -494,7 +504,18 @@ QIcon MainWindow::getIcon(const QString& name, const QString& fallback)
     // Use IconProvider to get Font Awesome icons
     if (m_themeManager) {
         bool isDark = m_themeManager->isDarkMode();
-        return IconProvider::icon(name, IconStyle::SharpSolid, 16, isDark);
+        // Simple fallback icons for now
+    if (name == "plus") return QIcon::fromTheme("document-new");
+    if (name == "folder-open") return QIcon::fromTheme("document-open");
+    if (name == "floppy-disk") return QIcon::fromTheme("document-save");
+    if (name == "gear") return QIcon::fromTheme("preferences-system");
+    if (name == "xmark") return QIcon::fromTheme("application-exit");
+    if (name == "magnifying-glass") return QIcon::fromTheme("edit-find");
+    if (name == "eye") return QIcon::fromTheme("view-refresh");
+    if (name == "chart-line") return QIcon::fromTheme("office-chart-line");
+    if (name == "chart-area") return QIcon::fromTheme("office-chart-area");
+    if (name == "info-circle") return QIcon::fromTheme("help-about");
+    return QIcon::fromTheme("application-x-executable");
     } else {
         // Fallback to default icon if theme manager not ready
         return IconProvider::icon(name, IconStyle::SharpSolid, 16, false);

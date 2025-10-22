@@ -1,40 +1,72 @@
 {
   "icons": {
-    "file-plus": {
-      "svg": ":/icons/file-plus.svg",
-      "unicode": "f0fe"
+    "plus": {
+      "unicode": "f067",
+      "font": "fa-sharp-solid-900"
     },
     "folder-open": {
-      "svg": ":/icons/folder-open.svg", 
-      "unicode": "f07c"
+      "unicode": "f07c",
+      "font": "fa-sharp-solid-900"
     },
     "save": {
-      "svg": ":/icons/save.svg",
-      "unicode": "f0c7"
+      "unicode": "f0c7",
+      "font": "fa-sharp-solid-900"
     },
     "settings": {
-      "svg": ":/icons/settings.svg",
-      "unicode": "f013"
+      "unicode": "f013",
+      "font": "fa-sharp-solid-900"
     },
     "search": {
-      "svg": ":/icons/search.svg",
-      "unicode": "f002"
+      "unicode": "f002",
+      "font": "fa-sharp-solid-900"
     },
     "view": {
-      "svg": ":/icons/view.svg",
-      "unicode": "f06e"
+      "unicode": "f06e",
+      "font": "fa-sharp-solid-900"
     },
     "chart": {
-      "svg": ":/icons/chart.svg",
-      "unicode": "f080"
+      "unicode": "f080",
+      "font": "fa-sharp-solid-900"
     },
     "info": {
-      "svg": ":/icons/info.svg",
-      "unicode": "f05a"
+      "unicode": "f05a",
+      "font": "fa-sharp-solid-900"
     },
     "close": {
-      "svg": ":/icons/close.svg",
-      "unicode": "f00d"
+      "unicode": "f00d",
+      "font": "fa-sharp-solid-900"
+    },
+    "floppy-disk": {
+      "unicode": "f0c7",
+      "font": "fa-sharp-solid-900"
+    },
+    "gear": {
+      "unicode": "f013",
+      "font": "fa-sharp-solid-900"
+    },
+    "xmark": {
+      "unicode": "f00d",
+      "font": "fa-sharp-solid-900"
+    },
+    "magnifying-glass": {
+      "unicode": "f002",
+      "font": "fa-sharp-solid-900"
+    },
+    "eye": {
+      "unicode": "f06e",
+      "font": "fa-sharp-solid-900"
+    },
+    "chart-line": {
+      "unicode": "f201",
+      "font": "fa-sharp-solid-900"
+    },
+    "chart-area": {
+      "unicode": "f1fe",
+      "font": "fa-sharp-solid-900"
+    },
+    "info-circle": {
+      "unicode": "f05a",
+      "font": "fa-sharp-solid-900"
     }
   }
 }
