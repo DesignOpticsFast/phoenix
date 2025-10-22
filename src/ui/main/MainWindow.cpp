@@ -45,6 +45,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_translator(new QTranslator(this))
     , m_themeManager(nullptr)  // Defer initialization to avoid circular dependency
     , m_debugTimer(new QTimer(this))
+    , m_startupTime(0)
 {
     setWindowTitle("Phoenix - Optical Design Studio");
     setMinimumSize(800, 600);
@@ -214,13 +215,6 @@ QMenu* MainWindow::createToolsMenu()
     QMenu* toolsMenu = new QMenu(tr("&Tools"), this);
     
     // Add tools actions here in the future
-    QAction* iconGalleryAction = new QAction(tr("&Icon Gallery"), this);
-    iconGalleryAction->setStatusTip(tr("Open icon gallery"));
-    connect(iconGalleryAction, &QAction::triggered, this, &MainWindow::showIconGallery);
-    toolsMenu->addAction(iconGalleryAction);
-    
-    toolsMenu->addSeparator();
-    
     QAction* settingsAction = new QAction(tr("&Settings"), this);
     settingsAction->setStatusTip(tr("Open application settings"));
     connect(settingsAction, &QAction::triggered, this, &MainWindow::showPreferences);
@@ -261,35 +255,35 @@ QMenu* MainWindow::createViewMenu()
     QMenu* languageMenu = new QMenu(tr("&Language"), this);
     
     QAction* englishAction = new QAction(tr("&English"), this);
-    connect(englishAction, &QAction::triggered, [this]() { setLanguage("en"); });
+    connect(englishAction, &QAction::triggered, this, [this]() { setLanguage("en"); });
     languageMenu->addAction(englishAction);
     
     QAction* germanAction = new QAction(tr("&German"), this);
-    connect(germanAction, &QAction::triggered, [this]() { setLanguage("de"); });
+    connect(germanAction, &QAction::triggered, this, [this]() { setLanguage("de"); });
     languageMenu->addAction(germanAction);
     
     QAction* frenchAction = new QAction(tr("&French"), this);
-    connect(frenchAction, &QAction::triggered, [this]() { setLanguage("fr"); });
+    connect(frenchAction, &QAction::triggered, this, [this]() { setLanguage("fr"); });
     languageMenu->addAction(frenchAction);
     
     QAction* spanishAction = new QAction(tr("&Spanish"), this);
-    connect(spanishAction, &QAction::triggered, [this]() { setLanguage("es"); });
+    connect(spanishAction, &QAction::triggered, this, [this]() { setLanguage("es"); });
     languageMenu->addAction(spanishAction);
     
     QAction* chineseTradAction = new QAction(tr("Chinese (&Traditional)"), this);
-    connect(chineseTradAction, &QAction::triggered, [this]() { setLanguage("zh_TW"); });
+    connect(chineseTradAction, &QAction::triggered, this, [this]() { setLanguage("zh_TW"); });
     languageMenu->addAction(chineseTradAction);
     
     QAction* chineseSimpAction = new QAction(tr("Chinese (&Simplified)"), this);
-    connect(chineseSimpAction, &QAction::triggered, [this]() { setLanguage("zh_CN"); });
+    connect(chineseSimpAction, &QAction::triggered, this, [this]() { setLanguage("zh_CN"); });
     languageMenu->addAction(chineseSimpAction);
     
     QAction* koreanAction = new QAction(tr("&Korean"), this);
-    connect(koreanAction, &QAction::triggered, [this]() { setLanguage("ko"); });
+    connect(koreanAction, &QAction::triggered, this, [this]() { setLanguage("ko"); });
     languageMenu->addAction(koreanAction);
     
     QAction* japaneseAction = new QAction(tr("&Japanese"), this);
-    connect(japaneseAction, &QAction::triggered, [this]() { setLanguage("ja"); });
+    connect(japaneseAction, &QAction::triggered, this, [this]() { setLanguage("ja"); });
     languageMenu->addAction(japaneseAction);
     
     viewMenu->addMenu(languageMenu);
@@ -320,7 +314,6 @@ void MainWindow::setupToolBar()
 {
     m_mainToolBar = createMainToolBar();
     addToolBar(m_mainToolBar);
-    qDebug() << "Toolbar created and added:" << m_mainToolBar->isVisible();
 }
 
 QToolBar* MainWindow::createMainToolBar()
@@ -331,9 +324,7 @@ QToolBar* MainWindow::createMainToolBar()
     toolBar->setFloatable(true);
     toolBar->setVisible(true);
     toolBar->show();
-    qDebug() << "Toolbar created, visible:" << toolBar->isVisible() << "size:" << toolBar->size();
     
-    qDebug() << "Creating toolbar with actions:" << m_newAction << m_openAction << m_saveAction;
     
     toolBar->addAction(m_newAction);
     toolBar->addAction(m_openAction);
@@ -346,7 +337,6 @@ QToolBar* MainWindow::createMainToolBar()
     toolBar->show();
     toolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
     toolBar->setIconSize(QSize(24, 24));
-    qDebug() << "Toolbar final state - visible:" << toolBar->isVisible() << "size:" << toolBar->size() << "actions:" << toolBar->actions().size();
     
     return toolBar;
 }
@@ -454,6 +444,11 @@ void MainWindow::updateStatusMessage(const QString& message)
     }
 }
 
+void MainWindow::setStartupTime(qint64 startTime)
+{
+    m_startupTime = startTime;
+}
+
 void MainWindow::updateDebugInfo()
 {
     if (!m_debugLabel) return;
@@ -489,12 +484,21 @@ void MainWindow::updateDebugInfo()
     // Get current language
     QString langStr = m_currentLocale.name().left(2);
     
+    // Calculate startup time if available
+    QString startupInfo;
+    if (m_startupTime > 0) {
+        qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+        qint64 startupDuration = currentTime - m_startupTime;
+        startupInfo = tr(" | Startup: %1ms").arg(startupDuration);
+    }
+    
     // Update debug label
-    QString debugText = tr("Memory: %1MB | Threads: %2 | Theme: %3 | Lang: %4")
+    QString debugText = tr("Memory: %1MB | Threads: %2 | Theme: %3 | Lang: %4%5")
                        .arg(memoryMB)
                        .arg(threadCount)
                        .arg(themeStr)
-                       .arg(langStr);
+                       .arg(langStr)
+                       .arg(startupInfo);
     
     m_debugLabel->setText(debugText);
 }
@@ -651,10 +655,6 @@ void MainWindow::showAbout()
                        .arg(QSysInfo::prettyProductName()));
 }
 
-void MainWindow::showIconGallery()
-{
-    QMessageBox::information(this, tr("Icon Gallery"), tr("This feature is not yet implemented."));
-}
 
 void MainWindow::showHelp()
 {

@@ -51,7 +51,6 @@ private slots:
     void show2DPlot();
     
     // Tools menu actions
-    void showIconGallery();
     
     // Help menu actions
     void showAbout();
@@ -66,6 +65,7 @@ private slots:
     // Status bar updates
     void updateStatusBar();
     void updateDebugInfo();
+    void setStartupTime(qint64 startTime);
     
     // Theme change handler
     void onThemeChanged();
@@ -147,6 +147,9 @@ private:
     
     // Debug info timer
     QTimer* m_debugTimer;
+    
+    // Startup timing
+    qint64 m_startupTime;
     
     // Performance tracking
     QElapsedTimer m_actionTimer;

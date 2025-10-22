@@ -17,6 +17,7 @@ public:
 
     void setProgress(int value);
     void setMessage(const QString& message);
+    qint64 getStartTime() const { return m_startTime; }
 
 protected:
     void drawContents(QPainter *painter) override;
@@ -37,4 +38,7 @@ private:
     QString m_currentMessage;
     QStringList m_loadingMessages;
     int m_messageIndex;
+    
+    // Startup timing
+    qint64 m_startTime;
 };

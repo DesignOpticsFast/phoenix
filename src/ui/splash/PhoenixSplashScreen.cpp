@@ -5,6 +5,7 @@
 #include <QFontMetrics>
 #include <QLinearGradient>
 #include <QScreen>
+#include <QDateTime>
 #include <QDebug>
 
 PhoenixSplashScreen::PhoenixSplashScreen(QWidget *parent)
@@ -15,6 +16,7 @@ PhoenixSplashScreen::PhoenixSplashScreen(QWidget *parent)
     , m_progressTimer(nullptr)
     , m_currentProgress(0)
     , m_messageIndex(0)
+    , m_startTime(QDateTime::currentMSecsSinceEpoch())
 {
     setupUI();
     createProgressWidget();

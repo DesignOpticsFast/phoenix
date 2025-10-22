@@ -10,7 +10,6 @@ QString IconBootstrap::sBrands;
 QString IconBootstrap::sClassicSolid;
 
 void IconBootstrap::initializeFonts() {
-    qDebug() << "Initializing Font Awesome Pro fonts...";
     
     sSharpSolid = loadFont(":/assets/icons/fontawesome-pro/fonts/fa-sharp-solid-900.ttf");
     sSharpRegular = loadFont(":/assets/icons/fontawesome-pro/fonts/fa-sharp-regular-400.ttf");
@@ -18,12 +17,6 @@ void IconBootstrap::initializeFonts() {
     sBrands = loadFont(":/assets/icons/fontawesome-pro/fonts/fa-brands-400.ttf");
     sClassicSolid = loadFont(":/assets/icons/fontawesome-pro/fonts/fa-solid-900.ttf");
     
-    qDebug() << "Font families loaded:";
-    qDebug() << "  Sharp Solid:" << sSharpSolid;
-    qDebug() << "  Sharp Regular:" << sSharpRegular;
-    qDebug() << "  Duotone:" << sDuotone;
-    qDebug() << "  Brands:" << sBrands;
-    qDebug() << "  Classic Solid:" << sClassicSolid;
 }
 
 bool IconBootstrap::fontsLoaded() {

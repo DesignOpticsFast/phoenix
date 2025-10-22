@@ -35,7 +35,10 @@ int main(int argc, char** argv) {
     splash.activateWindow();
     
     // Simulate initialization time
-    QTimer::singleShot(3000, [&splash, &mainWindow]() {
+    QTimer::singleShot(3000, &app, [&splash, &mainWindow]() {
+        // Pass startup time to main window
+        mainWindow.setStartupTime(splash.getStartTime());
+        
         // Hide splash screen
         splash.finish(&mainWindow);
         
