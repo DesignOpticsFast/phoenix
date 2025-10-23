@@ -19,7 +19,7 @@ jobs:
 
       - name: Guard - no stale macOS check references
         run: |
-          if git grep -n 'macOS build (Qt 6.9.3 + Bedrock sibling)' -- ':!README.md' ; then
+          if git grep -n 'macOS build (Qt 6.9.3 + Bedrock sibling)' -- ':!README.md' -- ':!.github/workflows/policy-guard.yml' -- ':!.underlord/' ; then
             echo "❌ Stale macOS check reference found in repo files."
             echo "This check was removed because dev-01 is our canonical build environment."
             echo "Do not add it back to rulesets or branch protection rules."
