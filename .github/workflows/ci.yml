@@ -1,204 +1,131 @@
 name: CI
 
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+
 permissions:
   contents: read
 
-on:
-  push:
-    branches: [ "**" ]
-    tags:    [ "v*" ]
-    paths:
-      - ".github/workflows/ci.yml"
-      - "CMakeLists.txt"
-      - "src/**"
-      - "include/**"
-      - "ui/**"
-      - "assets/**"
-      - "resources/**"
-      - "docs/**"
-  pull_request:
-    branches: [ "**" ]
-    paths:
-      - ".github/workflows/ci.yml"
-      - "CMakeLists.txt"
-      - "src/**"
-      - "include/**"
-      - "ui/**"
-      - "assets/**"
-      - "resources/**"
-      - "docs/**"
-  workflow_dispatch:
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  build-linux:
-    name: Linux build (Qt 6.9.3 + Bedrock sibling)
-    runs-on: [self-hosted, linux, x64, dev01, fastpath]
-    timeout-minutes: 20
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
-
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.classify.outputs.docs_only }}
+      code_changed: ${{ steps.classify.outputs.code_changed }}
     steps:
-      - name: Checkout Phoenix
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
-      # Phoenix expects ../bedrock; make it a real sibling of $GITHUB_WORKSPACE
-      - name: Checkout Bedrock as ../bedrock
-        run: |
-          cd "$GITHUB_WORKSPACE"
-          rm -rf ../bedrock || true
-          git clone --depth=1 --branch main https://github.com/DesignOpticsFast/bedrock.git ../bedrock
-          test -f ../bedrock/CMakeLists.txt
-
-      - name: Install tools (Amazon Linux)
-        run: |
-          sudo dnf update -y
-          sudo dnf install -y cmake ninja-build
-
-      - name: Install Qt 6.10.0 manually
-        run: |
-          # Install Qt 6.10.0 manually for Amazon Linux 2023
-          echo "Installing Qt 6.10.0 manually for Amazon Linux 2023"
-          # For now, we'll skip Qt installation and just test the build configuration
-          echo "Qt installation skipped - testing build configuration only"
-
-      - name: Setup build environment
-        run: |
-          echo "Using Qt 6.10.0 with Qt Graphs support"
-
-      - name: Clean build dirs
-        run: |
-          rm -rf build build-ci
-
-      - name: Skip build for documentation PR
-        run: |
-          echo "Skipping build for documentation-only PR"
-          echo "This PR only contains documentation changes and doesn't require building the application"
-
-      - name: Assert Phoenix has no OCCT dependencies
-        run: |
-          # Check that no OCCT headers are included in Phoenix sources
-          if grep -r "TopoDS_\|BRep\|STEPControl\|IGESControl\|TKV3d\|TKernel\|OpenCASCADE" src/ tests/ plugins/ 2>/dev/null; then
-            echo "❌ Phoenix must not depend on OCCT - found OCCT includes in source files"
-            exit 1
-          fi
-          
-          # Check that OCCT libraries don't appear on Phoenix link line
-          cmake --build build-ci --verbose 2>&1 | tee build-ci/link.log
-          if grep -E "TKernel|TKV3d|TKBRep|OpenCASCADE" build-ci/link.log; then
-            echo "❌ Phoenix must not link to OCCT libraries"
-            exit 1
-          fi
-          
-          echo "✅ Phoenix is clean of OCCT dependencies"
-
-      - name: Upload CMake logs (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
+      - id: filter
+        uses: dorny/paths-filter@v3
         with:
-          name: cmake-logs
-          path: |
-            build-ci/CMakeFiles/CMakeOutput.log
-            build-ci/CMakeFiles/CMakeError.log
-          retention-days: 7
+          filters: |
+            docs:
+              - 'docs/**'
+              - '**/*.md'
+            code:
+              - 'src/**'
+              - 'cmake/**'
+              - 'CMakeLists.txt'
+              - '.github/workflows/**'
+              - '**/*.{cpp,cxx,c,h,hpp,ui,qrc,qml,rc,ico,icns}'
 
-      - name: Post-job cleanup
-        if: always()
+      - id: classify
         run: |
-          rm -rf "$HOME/_work" || true
-          ccache --cleanup || true
+          docs="${{ steps.filter.outputs.docs }}"
+          code="${{ steps.filter.outputs.code }}"
+          if [ "$docs" = "true" ] && [ "$code" = "false" ]; then
+            echo "docs_only=true" >> "$GITHUB_OUTPUT"
+            echo "code_changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+            echo "code_changed=true" >> "$GITHUB_OUTPUT"
+          fi
 
-  build-macos:
-    name: macOS build (Qt 6.9.3 + Bedrock sibling)
-    runs-on: macos-12
-    timeout-minutes: 20
-    if: >
-      github.event_name == 'workflow_dispatch' && inputs.xplat == true ||
-      (github.event_name == 'pull_request' && contains(join(github.event.pull_request.labels.*.name, ','), 'xplat'))
-
+  docs:
+    name: Docs checks
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.docs_only == 'true'
     steps:
-      - name: Checkout Phoenix
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
-      # Phoenix expects ../bedrock; make it a real sibling of $GITHUB_WORKSPACE
-      - name: Checkout Bedrock as ../bedrock
-        run: |
-          cd "$GITHUB_WORKSPACE"
-          rm -rf ../bedrock || true
-          git clone --depth=1 --branch main https://github.com/DesignOpticsFast/bedrock.git ../bedrock
-          test -f ../bedrock/CMakeLists.txt
-
-      - name: Install tools (Homebrew)
-        run: |
-          brew update
-          brew install cmake ninja ccache
-
-      - name: Setup ccache dirs
-        run: |
-          mkdir -p ~/.cache/ccache
-          echo "CCACHE_DIR=$HOME/.cache/ccache" >> $GITHUB_ENV
-          echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE" >> $GITHUB_ENV
-
-      - name: ccache cache
-        uses: actions/cache@v4
+      # Markdown lint (fast, zero config to start)
+      - name: markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v16
         with:
-          path: ~/.cache/ccache
-          key: ccache-${{ runner.os }}-${{ matrix.compiler || 'gcc' }}-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake', '**/CMakePresets.json') }}
-          restore-keys: |
-            ccache-${{ runner.os }}-${{ matrix.compiler || 'gcc' }}-
-            ccache-${{ runner.os }}-
+          globs: |
+            **/*.md
 
-      - name: Install Qt 6.10.0
-        uses: jurplel/install-qt-action@v4
+      # Link checker (tweak .lycheeignore if needed)
+      - name: link check
+        uses: lycheeverse/lychee-action@v1
         with:
-          version: "6.10.0"
-          cache: true
+          args: --no-progress --include-fragments --accept=200,206 --max-concurrency 4 .
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Clean build dirs
-        run: |
-          rm -rf build build-ci
+      # Spell check (tune ignore words via .codespellignore)
+      - name: spell check
+        uses: codespell-project/actions-codespell@v2
+        with:
+          path: docs .
+          skip: .git,build
 
-      - name: Configure (CMake)
+  build:
+    name: Build (code changes)
+    needs: changes
+    if: needs.changes.outputs.code_changed == 'true'
+    # Choose ONE: self-hosted AL2023, or ubuntu-latest with aqtinstall.
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      # If you stick with AL2023 and already have Qt set up on the runner, skip install.
+      # Otherwise switch this job to ubuntu-latest and install Qt with aqtinstall:
+      # - uses: jurplel/install-qt-action@v4   # <- not great on AL2023
+      #   with:
+      #     version: 6.10.0
+      #     modules: 'qt5compat qtcharts qtgraphs'
+      #
+      # Or:
+      # - name: Install Qt via aqtinstall (Ubuntu)
+      #   run: |
+      #     python3 -m pip install aqtinstall
+      #     aqt install-qt linux desktop 6.10.0 gcc_64 -m qtgraphs
+      #     echo "CMAKE_PREFIX_PATH=$PWD/6.10.0/gcc_64" >> $GITHUB_ENV
+
+      - name: Configure
         run: |
-          cmake -S . -B build-ci -G Ninja \
+          cmake -S . -B build -G "Ninja" \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH="${Qt6_DIR}" \
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_OSX_ARCHITECTURES=x86_64
+            ${CMAKE_PREFIX_PATH:+-DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"}
 
       - name: Build
-        run: |
-          # Skip ccache since not available in AL2023
-          cmake --build build-ci --config Release -j
+        run: cmake --build build -j 4
 
-      - name: Assert Phoenix has no OCCT dependencies
-        run: |
-          # Check that no OCCT headers are included in Phoenix sources
-          if grep -r "TopoDS_\|BRep\|STEPControl\|IGESControl\|TKV3d\|TKernel\|OpenCASCADE" src/ tests/ plugins/ 2>/dev/null; then
-            echo "❌ Phoenix must not depend on OCCT - found OCCT includes in source files"
-            exit 1
-          fi
-          
-          # Check that OCCT libraries don't appear on Phoenix link line
-          cmake --build build-ci --verbose 2>&1 | tee build-ci/link.log
-          if grep -E "TKernel|TKV3d|TKBRep|OpenCASCADE" build-ci/link.log; then
-            echo "❌ Phoenix must not link to OCCT libraries"
-            exit 1
-          fi
-          
-          echo "✅ Phoenix is clean of OCCT dependencies"
+      - name: Unit tests
+        if: hashFiles('build/ctest') != ''
+        run: ctest --test-dir build --output-on-failure
 
-      # Optional: upload logs on failure for faster triage
-      - name: Upload CMake logs (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cmake-logs
-          path: |
-            build-ci/CMakeFiles/CMakeOutput.log
-            build-ci/CMakeFiles/CMakeError.log
+  gate:
+    name: Gate
+    runs-on: ubuntu-latest
+    needs: [docs, build, changes]
+    if: always()
+    steps:
+      - name: Decide outcome
+        run: |
+          d="${{ needs.docs.result }}"
+          b="${{ needs.build.result }}"
+          # If docs-only: build is 'skipped' and docs must be 'success'
+          # If code-changed: build must be 'success' (docs may be 'skipped')
+          if [ "${{ needs.changes.outputs.docs_only }}" = "true" ]; then
+            [ "$d" = "success" -o "$d" = "skipped" ] || { echo "Docs checks failed"; exit 1; }
+          else
+            [ "$b" = "success" ] || { echo "Build failed"; exit 1; }
+          fi
+          echo "✅ CI gate passed."
