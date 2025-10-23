@@ -156,7 +156,8 @@ jobs:
       cancel-in-progress: false
     env:
       QT_VERSION: 6.10.0
-      QT_PATH: /opt/Qt/${QT_VERSION}/gcc_64
+      QT_PATH: /opt/Qt/6.10.0/gcc_64
+      CMAKE_PREFIX_PATH: /opt/Qt/6.10.0/gcc_64
       QTFRAMEWORK_BYPASS_LICENSE_CHECK: "1"
     steps:
       - uses: actions/checkout@v4
@@ -179,16 +180,16 @@ jobs:
         shell: bash
         run: |
           set -e
-          cmake -P - <<'EOF'
-          if(NOT DEFINED ENV{CMAKE_PREFIX_PATH})
-            message(FATAL_ERROR "Qt probe: CMAKE_PREFIX_PATH not set")
-          endif()
-          file(GLOB qtcmake "$ENV{CMAKE_PREFIX_PATH}/lib/cmake/Qt6/Qt6Config.cmake")
-          if(NOT qtcmake)
-            message(FATAL_ERROR "Qt probe: Qt6Config.cmake not found under $ENV{CMAKE_PREFIX_PATH}")
-          endif()
-          message(STATUS "Qt probe OK: $ENV{CMAKE_PREFIX_PATH}")
-          EOF
+          echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH"
+          if [[ -z "$CMAKE_PREFIX_PATH" ]]; then
+            echo "❌ CMAKE_PREFIX_PATH not set"
+            exit 1
+          fi
+          if [[ ! -f "$CMAKE_PREFIX_PATH/lib/cmake/Qt6/Qt6Config.cmake" ]]; then
+            echo "❌ Qt6Config.cmake not found at $CMAKE_PREFIX_PATH/lib/cmake/Qt6/Qt6Config.cmake"
+            exit 1
+          fi
+          echo "✅ Qt probe OK: $CMAKE_PREFIX_PATH"
 
       - name: Clean configure
         run: |
