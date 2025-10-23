@@ -150,44 +150,71 @@ jobs:
       (github.event_name == 'pull_request' &&
        github.event.pull_request.head.repo.full_name == github.repository &&
        needs.changes.outputs.code_changed == 'true')
-    runs-on: [self-hosted, linux, x64, dev-01, qt6]
+    runs-on: [self-hosted, Linux, X64, dev-01, qt6]
     concurrency:
       group: dev01-build
       cancel-in-progress: false
     env:
-      QT_VERSION: 6.9.3
-      QT_PATH: /opt/Qt/${QT_VERSION}/gcc_64
+      QT_VERSION: 6.10.0
+      QT_PATH: /opt/Qt/6.10.0/gcc_64
+      CMAKE_PREFIX_PATH: /opt/Qt/6.10.0/gcc_64
+      QTFRAMEWORK_BYPASS_LICENSE_CHECK: "1"
     steps:
       - uses: actions/checkout@v4
       
-      - name: Verify dev-01 environment
-        run: |
-          echo "labels: ${{ toJson(runner.labels) }}"
-          echo "QT_VERSION=$QT_VERSION"
-          echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH"
-          cmake -P - <<'EOF'
-          if(NOT DEFINED ENV{CMAKE_PREFIX_PATH})
-            message(FATAL_ERROR "CMAKE_PREFIX_PATH not set")
-          endif()
-          file(GLOB qtcmake "$ENV{CMAKE_PREFIX_PATH}/lib/cmake/Qt6/Qt6Config.cmake")
-          if(NOT qtcmake)
-            message(FATAL_ERROR "Qt6Config.cmake not found under $ENV{CMAKE_PREFIX_PATH}")
-          endif()
-          message(STATUS "Qt OK at $ENV{CMAKE_PREFIX_PATH}")
-          EOF
-
-      - name: Configure
+      - name: Verify dev-01 labels & env
         shell: bash
         run: |
-          cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release \
+          echo "labels = ${{ toJson(runner.labels) }}"
+          echo "QT_VERSION=${QT_VERSION:-<unset>}"
+          echo "CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH:-<unset>}"
+          echo "QTFRAMEWORK_BYPASS_LICENSE_CHECK=${QTFRAMEWORK_BYPASS_LICENSE_CHECK:-<unset>}"
+          
+          # Hard guards to fail fast if environment regresses
+          if [[ -z "${CMAKE_PREFIX_PATH:-}" ]]; then
+            echo "❌ CMAKE_PREFIX_PATH is empty"; exit 1
+          fi
+          if [[ "${QT_VERSION:-}" != "6.10.0" ]]; then
+            echo "❌ QT_VERSION must be 6.10.0, got: ${QT_VERSION:-<unset>}"; exit 1
+          fi
+          if [[ "${QTFRAMEWORK_BYPASS_LICENSE_CHECK:-}" != "1" ]]; then
+            echo "❌ QTFRAMEWORK_BYPASS_LICENSE_CHECK must be 1, got: ${QTFRAMEWORK_BYPASS_LICENSE_CHECK:-<unset>}"; exit 1
+          fi
+
+      - name: Guard - no stale LogCategories includes
+        run: |
+          if git grep -n 'LogCategories.h' -- 'src/**' ; then
+            echo "❌ Found stale include of LogCategories.h"; exit 1;
+          fi
+
+      - name: Qt probe
+        shell: bash
+        run: |
+          set -e
+          echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH"
+          if [[ -z "$CMAKE_PREFIX_PATH" ]]; then
+            echo "❌ CMAKE_PREFIX_PATH not set"
+            exit 1
+          fi
+          if [[ ! -f "$CMAKE_PREFIX_PATH/lib/cmake/Qt6/Qt6Config.cmake" ]]; then
+            echo "❌ Qt6Config.cmake not found at $CMAKE_PREFIX_PATH/lib/cmake/Qt6/Qt6Config.cmake"
+            exit 1
+          fi
+          echo "✅ Qt probe OK: $CMAKE_PREFIX_PATH"
+
+      - name: Clean configure
+        run: |
+          rm -rf build/dev-01-relwithdebinfo
+          cmake -S . -B build/dev-01-relwithdebinfo -G "Ninja" \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"
 
       - name: Build
-        run: cmake --build build -j $(nproc || echo 4)
+        run: cmake --build build/dev-01-relwithdebinfo -j $(nproc || echo 4)
 
       - name: Unit tests
-        if: hashFiles('build/CTestTestfile.cmake') != ''
-        run: ctest --test-dir build --output-on-failure
+        if: hashFiles('build/dev-01-relwithdebinfo/CTestTestfile.cmake') != ''
+        run: ctest --test-dir build/dev-01-relwithdebinfo --output-on-failure
 
   ci_checks:
     needs: changes

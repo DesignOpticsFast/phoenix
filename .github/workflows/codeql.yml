@@ -2,11 +2,9 @@ name: CodeQL
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: [ main ]    # only run CodeQL when we merge to main
   schedule:
-    - cron: '0 6 * * 1'
+    - cron: '0 6 * * 1'   # weekly security scan
 
 permissions:
   actions: read

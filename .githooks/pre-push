@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "$(hostname)" != *"dev-01"* && "$(hostname)" != *"ip-10-0-8-68"* ]]; then
+  echo "[pre-push] Not on dev-01; skipping local build gate."
+  exit 0
+fi
+
+echo "[pre-push] Running dev-01 preflight build…"
+scripts/dev01-preflight.sh
+
+echo "[pre-push] ✅ Preflight OK — proceeding with push."

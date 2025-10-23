@@ -1,2 +1,10 @@
-# Default owner for all files
-*   @MarkBedrock
+# Global owners
+* @DesignOpticsFast/maintainers
+
+# Workflow files require maintainer review
+.github/workflows/* @DesignOpticsFast/maintainers
+
+# CI configuration files
+.github/workflows/ci.yml @DesignOpticsFast/maintainers
+.github/workflows/policy.yml @DesignOpticsFast/maintainers
+.github/workflows/pr-guard.yml @DesignOpticsFast/maintainers
