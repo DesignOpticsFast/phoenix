@@ -48,6 +48,14 @@ git push
 - **Build Tools**: Ninja, CMake, GCC
 - **License**: QTFRAMEWORK_BYPASS_LICENSE_CHECK=1 (automatically set)
 
+### Build Environment Policy
+
+**dev-01 is the canonical build environment** - macOS builds are intentionally not required because:
+- dev-01 provides consistent, fast builds (25 seconds)
+- All developers can access dev-01 for validation
+- CI runs exclusively on dev-01 for reliability
+- No macOS-specific dependencies or workflows needed
+
 ### Build Directory
 
 All dev-01 builds use `build/dev-01-relwithdebinfo` to:

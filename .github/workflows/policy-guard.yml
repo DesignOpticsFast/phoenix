@@ -1,0 +1,28 @@
+name: Policy Guard
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  guard:
+    name: Prevent stale macOS check from reappearing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Guard - no stale macOS check references
+        run: |
+          if git grep -n 'macOS build (Qt 6.9.3 + Bedrock sibling)' -- ':!README.md' ; then
+            echo "❌ Stale macOS check reference found in repo files."
+            echo "This check was removed because dev-01 is our canonical build environment."
+            echo "Do not add it back to rulesets or branch protection rules."
+            exit 1;
+          fi
+          echo "✅ No stale macOS check references found"
