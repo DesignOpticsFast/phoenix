@@ -4,6 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: [ main ]        # ensure main is included
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [ main ]
   push:
     branches: [ main ]        # always build on main pushes
   workflow_dispatch:           # manual trigger (helpful for debugging)
