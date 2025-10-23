@@ -1,0 +1,37 @@
+name: Policy Enforcement
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/**'
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+
+jobs:
+  no-deprecated-libraries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: List changed files
+        id: files
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+          git diff --name-only origin/${{ github.base_ref }}...HEAD \
+            | grep -E '^(src/|cmake/|CMakeLists\.txt|\.github/workflows/)' || true \
+            > changed.txt
+          cat changed.txt
+
+      - name: Scan for banned tokens (Qt Charts, QGLWidget, etc.)
+        run: |
+          if [ -s changed.txt ]; then
+            xargs -a changed.txt -r grep -nE 'Qt.?Charts|qt6-charts-dev|Qt5::Charts|QGLWidget' \
+              && { echo '❌ Deprecated/blocked tokens found'; exit 1; }
+          fi
+          echo '✅ Policy clean'

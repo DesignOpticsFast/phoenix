@@ -1,0 +1,64 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+      timezone: "America/Los_Angeles"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(actions)"
+      include: "scope"
+    groups:
+      gha-all:
+        patterns:
+          - "*"
+    rebase-strategy: "auto"
+    # Auto-merge safe dependency updates
+    allow:
+      - dependency-type: "all"
+    # Auto-merge when CI passes
+    reviewers:
+      - "MarkBedrock"
+    assignees:
+      - "MarkBedrock"
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+      timezone: "America/Los_Angeles"
+    commit-message:
+      prefix: "deps(pip)"
+      include: "scope"
+    groups:
+      pip-all:
+        patterns:
+          - "*"
+    rebase-strategy: "auto"
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+      timezone: "America/Los_Angeles"
+    commit-message:
+      prefix: "deps(submodule)"
+      include: "scope"
+    groups:
+      submodule-all:
+        patterns:
+          - "*"
+    rebase-strategy: "auto"
+    # Auto-merge safe submodule updates
+    allow:
+      - dependency-type: "all"
+    # Auto-merge when CI passes
+    reviewers:
+      - "MarkBedrock"
+    assignees:
+      - "MarkBedrock"

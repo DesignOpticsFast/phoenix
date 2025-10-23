@@ -1,0 +1,19 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "data": {
+    "name": "tol_hist"
+  },
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "field": "bin_center",
+      "type": "quantitative",
+      "title": "Operand"
+    },
+    "y": {
+      "field": "count",
+      "type": "quantitative",
+      "title": "Count"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+name: PR Guard (Internal + Labeled CI Edits)
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  guard:
+    if: >
+      !contains(github.event.pull_request.labels.*.name, 'ci-internal-ok') &&
+      github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: List changed files (from PR head, via API — no checkout of PR code)
+        id: files
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/${{ github.repository }}/pulls/$PR_NUMBER/files --paginate \
+          | jq -r '.[].filename' | sort | tee changed.txt
+
+      - name: Fail on unauthorized workflow edits
+        run: |
+          ALLOW_REGEX='^\.github/workflows/(policy\.yml|dependabot\.ya?ml|auto-merge\.ya?ml|codeql\.ya?ml)$'
+          if grep -E '^\.github/workflows/' changed.txt | grep -vE "$ALLOW_REGEX" ; then
+            echo "❌ Unauthorized workflow edits detected"; exit 1
+          fi
+          echo "✅ Guard passed"

@@ -1,0 +1,3 @@
+# Ignore rate-limited or flaky external sites
+https://github.com/DesignOpticsFast/*
+https://raw.githubusercontent.com/*
