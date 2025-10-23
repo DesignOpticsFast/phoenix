@@ -1,0 +1,22 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "data": {
+    "name": "wf_tiles"
+  },
+  "mark": "rect",
+  "encoding": {
+    "x": {
+      "field": "col",
+      "type": "ordinal"
+    },
+    "y": {
+      "field": "row",
+      "type": "ordinal"
+    },
+    "fill": {
+      "field": "value",
+      "type": "quantitative",
+      "title": "OPD (waves)"
+    }
+  }
+}

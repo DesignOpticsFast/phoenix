@@ -1,0 +1,162 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [ main ]        # ensure main is included
+  push:
+    branches: [ main ]        # always build on main pushes
+  workflow_dispatch:           # manual trigger (helpful for debugging)
+  schedule:
+    - cron: "0 9 * * 1"       # every Monday 09:00 UTC - weekly self-audit
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.classify.outputs.docs_only }}
+      code_changed: ${{ steps.classify.outputs.code_changed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Guard: no conflict markers in workflows
+      - name: Guard: no conflict markers in workflows
+        run: |
+          if grep -R -nE '^<<<<<<<|^>>>>>>>' .github/workflows ; then
+            echo "❌ Conflict markers found in workflow files"; exit 1;
+          fi
+
+      # Lint workflows
+      - name: Lint workflows
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: .github/workflows
+
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            docs:
+              - 'docs/**'
+              - '**/*.md'
+              - 'assets/docs/**'
+              - 'docs-assets/**'
+            code:
+              - 'src/**'
+              - 'cmake/**'
+              - 'CMakeLists.txt'
+              - '.github/workflows/**'
+              - '**/*.{cpp,cxx,c,h,hpp,ui,qrc,qml,rc,ico,icns}'
+
+      - id: classify
+        run: |
+          docs="${{ steps.filter.outputs.docs }}"
+          code="${{ steps.filter.outputs.code }}"
+          if [ "$docs" = "true" ] && [ "$code" = "false" ]; then
+            echo "docs_only=true" >> "$GITHUB_OUTPUT"
+            echo "code_changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+            echo "code_changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  docs:
+    name: Docs checks
+    runs-on: ubuntu-latest
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.docs_only == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      # Markdown lint (fast, zero config to start)
+      - name: markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: |
+            **/*.md
+
+      # Link checker (tweak .lycheeignore if needed)
+      - name: link check
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: >
+            --no-progress --include-fragments
+            --max-concurrency 4 --max-redirects 5
+            --retry-wait-time 2 --retry-count 1
+            --timeout 20
+            --accept 200,206 .
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Spell check (tune ignore words via .codespellignore)
+      - name: spell check
+        uses: codespell-project/actions-codespell@v2
+        with:
+          path: docs .
+          skip: .git,build
+
+  build:
+    name: Build (code changes)
+    needs: changes
+    if: github.event_name == 'push' || needs.changes.outputs.code_changed == 'true'
+    # Choose ONE: self-hosted AL2023, or ubuntu-latest with aqtinstall.
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      # If you stick with AL2023 and already have Qt set up on the runner, skip install.
+      # Otherwise switch this job to ubuntu-latest and install Qt with aqtinstall:
+      # - uses: jurplel/install-qt-action@v4   # <- not great on AL2023
+      #   with:
+      #     version: 6.10.0
+      #     modules: 'qt5compat qtcharts qtgraphs'
+      #
+      # Or:
+      # - name: Install Qt via aqtinstall (Ubuntu)
+      #   run: |
+      #     python3 -m pip install aqtinstall
+      #     aqt install-qt linux desktop 6.10.0 gcc_64 -m qtgraphs
+      #     echo "CMAKE_PREFIX_PATH=$PWD/6.10.0/gcc_64" >> $GITHUB_ENV
+
+      - name: Configure
+        shell: bash
+        run: |
+          cmake -S . -B build -G "Ninja" \
+            -DCMAKE_BUILD_TYPE=Release \
+            ${CMAKE_PREFIX_PATH:+-DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"}
+
+      - name: Build
+        run: cmake --build build -j 4
+
+      - name: Unit tests
+        if: hashFiles('build/CTestTestfile.cmake') != ''
+        run: ctest --test-dir build --output-on-failure
+
+  gate:
+    name: Gate
+    runs-on: ubuntu-latest
+    needs: [docs, build, changes]
+    if: always()
+    steps:
+      - name: Decide outcome
+        run: |
+          echo "docs_only=${{ needs.changes.outputs.docs_only }}"
+          echo "docs=${{ needs.docs.result }}"
+          echo "build=${{ needs.build.result }}"
+          if [ "${{ needs.changes.outputs.docs_only }}" = "true" ]; then
+            # docs-only: build is skipped; docs must succeed
+            [ "${{ needs.docs.result }}" = "success" ] || { echo "Docs checks failed"; exit 1; }
+          else
+            # code changed: build must succeed (docs may be skipped)
+            [ "${{ needs.build.result }}" = "success" ] || { echo "Build failed"; exit 1; }
+          fi
+          echo "✅ CI gate passed."

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "data": {
+    "name": "mtf_data"
+  },
+  "mark": "line",
+  "encoding": {
+    "x": {
+      "field": "frequency_cyc_per_mm",
+      "type": "quantitative",
+      "title": "Spatial Frequency (cycles/mm)"
+    },
+    "y": {
+      "field": "mtf",
+      "type": "quantitative",
+      "title": "MTF",
+      "scale": {
+        "domain": [
+          0,
+          1
+        ]
+      }
+    },
+    "color": {
+      "field": "wavelength_nm",
+      "type": "nominal"
+    }
+  },
+  "phoenix": {
+    "version": "1.0.0",
+    "optical": {
+      "units": {
+        "frequency_cyc_per_mm": "cycles/mm",
+        "mtf": "ratio"
+      }
+    },
+    "rendering": {
+      "decimation_strategy": "PERCEPTUAL",
+      "max_points": 20000
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "data": {
+    "name": "spot_points"
+  },
+  "mark": {
+    "type": "point",
+    "filled": true,
+    "size": 10
+  },
+  "encoding": {
+    "x": {
+      "field": "x_um",
+      "type": "quantitative",
+      "title": "X (\u00b5m)"
+    },
+    "y": {
+      "field": "y_um",
+      "type": "quantitative",
+      "title": "Y (\u00b5m)"
+    },
+    "color": {
+      "field": "wavelength_nm",
+      "type": "nominal"
+    }
+  }
+}

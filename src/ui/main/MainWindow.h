@@ -32,9 +32,14 @@ public:
     
     // Startup timing
     void setStartupTime(qint64 startTime);
+    void setStartupTimeMs(qint64 ms);
+
+signals:
+    void firstShown();
 
 protected:
     void closeEvent(QCloseEvent *event) override;
+    void showEvent(QShowEvent* ev) override;
 
 private slots:
     // File menu actions
@@ -153,6 +158,8 @@ private:
     
     // Startup timing
     qint64 m_startupTime;
+    qint64 m_startupMs = -1;
+    bool m_firstShowEmitted = false;
     
     // Performance tracking
     QElapsedTimer m_actionTimer;
