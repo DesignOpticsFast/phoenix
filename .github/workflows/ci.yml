@@ -58,35 +58,29 @@ jobs:
         run: |
           sudo dnf update -y
           sudo dnf install -y cmake ninja-build
-          # Note: Qt6 and ccache not available in Amazon Linux 2023 - using basic toolchain for now
+
+      - name: Install Qt 6.10.0
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.10.0"
+          cache: true
 
       - name: Setup build environment
         run: |
-          # Skip ccache setup since not available in AL2023
-          echo "Using basic build environment without ccache"
+          echo "Using Qt 6.10.0 with Qt Graphs support"
 
       - name: Clean build dirs
         run: |
           rm -rf build build-ci
 
-      - name: Configure (CMake - basic build)
+      - name: Configure (CMake)
         run: |
-          # Skip Qt-dependent build for now - just test basic CMake configuration
-          echo "Testing basic CMake configuration without Qt dependencies"
-          # Create a minimal CMakeLists.txt for testing
-          cat > CMakeLists_test.txt << 'EOF'
-cmake_minimum_required(VERSION 3.20)
-project(PhoenixTest)
-add_executable(test_app main.cpp)
-EOF
-          echo 'int main() { return 0; }' > main.cpp
           cmake -S . -B build-ci -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -f CMakeLists_test.txt
+            -DCMAKE_PREFIX_PATH="${Qt6_DIR}"
 
       - name: Build
         run: |
-          # Skip ccache since not available in AL2023
           cmake --build build-ci --config Release -j
 
       - name: Assert Phoenix has no OCCT dependencies
@@ -162,10 +156,10 @@ EOF
             ccache-${{ runner.os }}-${{ matrix.compiler || 'gcc' }}-
             ccache-${{ runner.os }}-
 
-      - name: Install Qt 6.9.3
+      - name: Install Qt 6.10.0
         uses: jurplel/install-qt-action@v4
         with:
-          version: "6.9.3"
+          version: "6.10.0"
           cache: true
 
       - name: Clean build dirs
