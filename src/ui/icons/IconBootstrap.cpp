@@ -1,5 +1,5 @@
 #include "IconBootstrap.h"
-#include "LogCategories.h"
+#include "PhxLogCategories.h"
 #include <QFontDatabase>
 #include <QDebug>
 

@@ -2,7 +2,7 @@
 #include "IconBootstrap.h"
 #include "IconTint.h"
 #include "ThemeColor.h"
-#include "LogCategories.h"
+#include "PhxLogCategories.h"
 #include <QApplication>
 #include <QFont>
 #include <QFontDatabase>

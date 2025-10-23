@@ -60,8 +60,7 @@ add_executable(phoenix_app
 
   # Icon system sources
   src/ui/icons/IconProvider.cpp
-          src/ui/icons/LogCategories.cpp
-  src/ui/icons/LogCategories.cpp
+          src/ui/icons/PhxLogCategories.cpp
   src/ui/icons/IconBootstrap.cpp
   src/ui/icons/PhxIconImageProvider.cpp
   src/tools/IconGallery.cpp

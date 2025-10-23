@@ -2,7 +2,7 @@
 #include "ui/splash/PhoenixSplashScreen.h"
 #include "ui/icons/IconBootstrap.h"
 #include "ui/icons/IconProvider.h"
-#include "ui/icons/LogCategories.h"
+#include "ui/icons/PhxLogCategories.h"
 #include <QApplication>
 #include <QTimer>
 #include <QIcon>
