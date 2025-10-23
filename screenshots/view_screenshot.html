@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phoenix UI Screenshot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 1200px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .screenshot {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            max-width: 100%;
+            height: auto;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .status {
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖥️ Phoenix UI Screenshot</h1>
+        
+        <div class="info">
+            <p><strong>Status:</strong> <span class="status">✅ Successfully Captured</span></p>
+            <p><strong>Resolution:</strong> 1024 x 768 pixels</p>
+            <p><strong>Format:</strong> PNG (RGB, 8-bit)</p>
+            <p><strong>Size:</strong> 12.7 KB</p>
+            <p><strong>Method:</strong> Qt Screen Capture with Xvfb Virtual Display</p>
+        </div>
+        
+        <img src="phoenix_ui_qt.png" alt="Phoenix UI Screenshot" class="screenshot">
+        
+        <div class="info">
+            <h3>🎯 What You Should See:</h3>
+            <ul>
+                <li><strong>MainWindow:</strong> Phoenix - Optical Design Studio</li>
+                <li><strong>Menu Bar:</strong> File, Editors, Analysis, Tools, View, Help</li>
+                <li><strong>Toolbar:</strong> New, Open, Save, Preferences buttons</li>
+                <li><strong>Dock Widgets:</strong> Toolbox (left) and Properties (right)</li>
+                <li><strong>Status Bar:</strong> "Ready" message and debug info</li>
+                <li><strong>Central Widget:</strong> Empty placeholder area</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

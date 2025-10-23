@@ -1,0 +1,72 @@
+{
+  "icons": {
+    "plus": {
+      "unicode": "f067",
+      "font": "fa-sharp-solid-900"
+    },
+    "folder-open": {
+      "unicode": "f07c",
+      "font": "fa-sharp-solid-900"
+    },
+    "save": {
+      "unicode": "f0c7",
+      "font": "fa-sharp-solid-900"
+    },
+    "settings": {
+      "unicode": "f013",
+      "font": "fa-sharp-solid-900"
+    },
+    "search": {
+      "unicode": "f002",
+      "font": "fa-sharp-solid-900"
+    },
+    "view": {
+      "unicode": "f06e",
+      "font": "fa-sharp-solid-900"
+    },
+    "chart": {
+      "unicode": "f080",
+      "font": "fa-sharp-solid-900"
+    },
+    "info": {
+      "unicode": "f05a",
+      "font": "fa-sharp-solid-900"
+    },
+    "close": {
+      "unicode": "f00d",
+      "font": "fa-sharp-solid-900"
+    },
+    "floppy-disk": {
+      "unicode": "f0c7",
+      "font": "fa-sharp-solid-900"
+    },
+    "gear": {
+      "unicode": "f013",
+      "font": "fa-sharp-solid-900"
+    },
+    "xmark": {
+      "unicode": "f00d",
+      "font": "fa-sharp-solid-900"
+    },
+    "magnifying-glass": {
+      "unicode": "f002",
+      "font": "fa-sharp-solid-900"
+    },
+    "eye": {
+      "unicode": "f06e",
+      "font": "fa-sharp-solid-900"
+    },
+    "chart-line": {
+      "unicode": "f201",
+      "font": "fa-sharp-solid-900"
+    },
+    "chart-area": {
+      "unicode": "f1fe",
+      "font": "fa-sharp-solid-900"
+    },
+    "info-circle": {
+      "unicode": "f05a",
+      "font": "fa-sharp-solid-900"
+    }
+  }
+}
