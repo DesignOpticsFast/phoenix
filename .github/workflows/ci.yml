@@ -174,12 +174,11 @@ jobs:
           if grep -R -nE '^<<<<<<<|^>>>>>>>' .github/workflows ; then
             echo "❌ Conflict markers found in workflow files"; exit 1;
           fi
-      # Optional (recommended once stable): re-enable lint with a pragmatic config
-      # - name: Lint workflows
-      #   uses: ibiqlik/action-yamllint@v3
-      #   with:
-      #     file_or_dir: .github/workflows
-      #     config_file: .yamllint.yml
+      - name: Lint workflows
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: .github/workflows
+          config_file: .yamllint.yml
 
   gate:
     needs: [changes, docs, build, ci_checks]
