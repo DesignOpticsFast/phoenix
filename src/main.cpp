@@ -5,9 +5,18 @@
 #include <QApplication>
 #include <QTimer>
 #include <QIcon>
+#include <QSplashScreen>
+#include <QElapsedTimer>
+#include <QLoggingCategory>
 
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
+    
+    // Disable verbose icon/font logs by default (still toggleable via QT_LOGGING_RULES)
+    QLoggingCategory::setFilterRules(QStringLiteral(
+        "phx.icons.debug=false\n"
+        "phx.fonts.debug=false\n"
+    ));
     
     // Set application properties
     app.setApplicationName("Phoenix");
@@ -18,6 +27,15 @@ int main(int argc, char** argv) {
     // Set application icon for Dock on macOS
     app.setWindowIcon(QIcon(":/phoenix-icon.svg"));
     
+    // Start timing immediately
+    QElapsedTimer timer;
+    timer.start();
+    
+    // Show splash screen immediately
+    PhoenixSplashScreen splash;
+    splash.show();
+    app.processEvents(); // Process splash screen display
+    
     // Initialize Font Awesome icons (must be before any icon rendering)
     IconBootstrap::InitFonts();
     
@@ -26,31 +44,20 @@ int main(int argc, char** argv) {
     
     // High DPI scaling is enabled by default in Qt 6
     
-    // Show splash screen immediately
-    PhoenixSplashScreen splash;
-    splash.show();
-    app.processEvents(); // Process splash screen display
-    
     // Create main window (but don't show it yet)
     MainWindow mainWindow;
     
-    // Ensure splash screen stays visible during initialization
-    splash.raise();
-    splash.activateWindow();
-    
-    // Simulate initialization time
-    QTimer::singleShot(3000, &app, [&splash, &mainWindow]() {
-        // Pass startup time to main window
-        mainWindow.setStartupTime(splash.getStartTime());
-        
-        // Hide splash screen
+    // Connect splash finish to firstShown signal
+    QObject::connect(&mainWindow, &MainWindow::firstShown, [&]() {
+        const qint64 elapsed = timer.elapsed();
+        mainWindow.setStartupTimeMs(elapsed);
         splash.finish(&mainWindow);
-        
-        // Show main window
-        mainWindow.show();
-        mainWindow.raise();
-        mainWindow.activateWindow();
     });
+    
+    // Show main window (triggers showEvent → firstShown → finish splash)
+    mainWindow.show();
+    mainWindow.raise();
+    mainWindow.activateWindow();
     
     return app.exec();
 }

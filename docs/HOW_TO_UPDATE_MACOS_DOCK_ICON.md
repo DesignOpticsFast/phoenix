@@ -184,3 +184,4 @@ cp your_new_icon.svg resources/macos/Phoenix.svg
 
 
 
+

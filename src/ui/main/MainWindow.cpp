@@ -17,6 +17,8 @@
 #include <QProcess>
 #include <QThread>
 #include <QDebug>
+#include <QShowEvent>
+#include <QStatusBar>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -448,6 +450,24 @@ void MainWindow::updateStatusMessage(const QString& message)
 void MainWindow::setStartupTime(qint64 startTime)
 {
     m_startupTime = startTime;
+}
+
+void MainWindow::setStartupTimeMs(qint64 ms)
+{
+    m_startupMs = ms;
+    if (m_firstShowEmitted && statusBar())
+        statusBar()->showMessage(QString("Startup: %1 ms").arg(m_startupMs), 5000);
+}
+
+void MainWindow::showEvent(QShowEvent* ev)
+{
+    QMainWindow::showEvent(ev);
+    if (!m_firstShowEmitted && isVisible()) {
+        m_firstShowEmitted = true;
+        emit firstShown();
+        if (m_startupMs >= 0 && statusBar())
+            statusBar()->showMessage(QString("Startup: %1 ms").arg(m_startupMs), 5000);
+    }
 }
 
 void MainWindow::updateDebugInfo()
