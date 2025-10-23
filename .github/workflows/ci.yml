@@ -7,10 +7,6 @@ on:
   push:
     branches: [ main ]        # always build on main pushes
   workflow_dispatch:
-    inputs:
-      pr:
-        description: 'PR number (optional)'
-        required: false
   schedule:
     - cron: "0 9 * * 1"       # every Monday 09:00 UTC - weekly self-audit
 
@@ -30,7 +26,12 @@ jobs:
       docs_only: ${{ steps.classify.outputs.docs_only }}
       code_changed: ${{ steps.classify.outputs.code_changed }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # For PRs, point at the head ref explicitly to avoid shallow/detached surprises
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       # Guard: no conflict markers in workflows
       - name: Guard - no conflict markers in workflows
@@ -46,9 +47,11 @@ jobs:
       #     file_or_dir: .github/workflows
       #     config_file: .yamllint.yml
 
-      - id: filter
+      - name: Detect changed paths
+        id: filter
         uses: dorny/paths-filter@v3
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           filters: |
             docs:
               - 'docs/**'
@@ -62,98 +65,81 @@ jobs:
               - '.github/workflows/**'
               - '**/*.{cpp,cxx,c,h,hpp,ui,qrc,qml,rc,ico,icns}'
 
-      - id: classify
+      # OPTIONAL but hugely helpful: print what matched
+      - name: Debug - show classification
+        shell: bash
         run: |
+          echo "docs=${{ steps.filter.outputs.docs }}"
+          echo "code=${{ steps.filter.outputs.code }}"
+          echo "docs_files:"
+          echo "${{ steps.filter.outputs.docs_files }}"
+          echo "code_files:"
+          echo "${{ steps.filter.outputs.code_files }}"
+
+      - name: Classify (docs-only vs code-changed)
+        id: classify
+        shell: bash
+        run: |
+          set -euo pipefail
           docs="${{ steps.filter.outputs.docs }}"
           code="${{ steps.filter.outputs.code }}"
-          if [ "$docs" = "true" ] && [ "$code" = "false" ]; then
-            echo "docs_only=true" >> "$GITHUB_OUTPUT"
-            echo "code_changed=false" >> "$GITHUB_OUTPUT"
+
+          if [[ "$docs" == "true" && "$code" == "false" ]]; then
+            echo "docs_only=true"  >>"$GITHUB_OUTPUT"
+            echo "code_changed=false" >>"$GITHUB_OUTPUT"
           else
-            echo "docs_only=false" >> "$GITHUB_OUTPUT"
-            echo "code_changed=true" >> "$GITHUB_OUTPUT"
+            echo "docs_only=false" >>"$GITHUB_OUTPUT"
+            echo "code_changed=true" >>"$GITHUB_OUTPUT"
           fi
 
   docs:
-    name: Docs checks
-    runs-on: ubuntu-latest
     needs: changes
+    runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && needs.changes.outputs.docs_only == 'true'
     steps:
       - uses: actions/checkout@v4
-
-      # Markdown lint (fast, zero config to start)
-      - name: markdownlint
-        uses: DavidAnson/markdownlint-cli2-action@v16
+      - uses: DavidAnson/markdownlint-cli2-action@v16
         with:
           globs: |
             **/*.md
-
-      # Link checker (tweak .lycheeignore if needed)
       - name: link check
-        uses: lycheeverse/lychee-action@v2.0.2
+        uses: lycheeverse/lychee-action@v1   # pin to v1 while stabilizing
         with:
           args: >
             --no-progress --include-fragments
             --max-concurrency 4 --max-redirects 5
-            --retry-wait-time 2 --retry-count 1
-            --timeout 20
+            --retry-wait-time 2 --retry-count 1 --timeout 20
             --accept 200,206 .
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Spell check (tune ignore words via .codespellignore)
-      - name: spell check
-        uses: codespell-project/actions-codespell@v2
+      - uses: codespell-project/actions-codespell@v2
         with:
           path: docs .
           skip: .git,build
 
   build:
-    name: Build (code changes)
     needs: changes
-    if: github.event_name == 'push' || needs.changes.outputs.code_changed == 'true'
-    # Choose ONE: self-hosted AL2023, or ubuntu-latest with aqtinstall.
     runs-on: self-hosted
+    if: github.event_name == 'push' || needs.changes.outputs.code_changed == 'true'
     steps:
       - uses: actions/checkout@v4
-
-      # If you stick with AL2023 and already have Qt set up on the runner, skip install.
-      # Otherwise switch this job to ubuntu-latest and install Qt with aqtinstall:
-      # - uses: jurplel/install-qt-action@v4   # <- not great on AL2023
-      #   with:
-      #     version: 6.10.0
-      #     modules: 'qt5compat qtcharts qtgraphs'
-      #
-      # Or:
-      # - name: Install Qt via aqtinstall (Ubuntu)
-      #   run: |
-      #     python3 -m pip install aqtinstall
-      #     aqt install-qt linux desktop 6.10.0 gcc_64 -m qtgraphs
-      #     echo "CMAKE_PREFIX_PATH=$PWD/6.10.0/gcc_64" >> $GITHUB_ENV
-
       - name: Configure
         shell: bash
         run: |
-          cmake -S . -B build -G "Ninja" \
-            -DCMAKE_BUILD_TYPE=Release \
+          cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release \
             ${CMAKE_PREFIX_PATH:+-DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"}
-
       - name: Build
         run: cmake --build build -j 4
-
       - name: Unit tests
         if: hashFiles('build/CTestTestfile.cmake') != ''
         run: ctest --test-dir build --output-on-failure
 
   gate:
-    name: Gate
-    runs-on: ubuntu-latest
-    needs: [docs, build, changes]
+    needs: [changes, docs, build]
     if: always()
+    runs-on: ubuntu-latest
     steps:
       - name: Decide outcome (Gate)
-        if: always()
         shell: bash
         run: |
           set -euo pipefail
@@ -168,24 +154,17 @@ jobs:
           build_res="${{ needs.build.result || 'skipped' }}"
 
           if [[ "$docs_only" == "true" && "$code_changed" == "false" ]]; then
-            # Docs-only PR: docs must pass; build may be skipped
             [[ "$docs_res" == "success" ]] || { echo "Docs checks failed"; exit 1; }
             echo "✅ Gate: docs-only path passed."
             exit 0
           fi
 
           if [[ "$code_changed" == "true" ]]; then
-            # Code changed: build must pass; docs may be skipped
             [[ "$build_res" == "success" ]] || { echo "Build failed"; exit 1; }
             echo "✅ Gate: code path passed."
             exit 0
           fi
 
-          # Fallback: neither docs nor code changed (should be rare; treat as docs)
-          if [[ "$docs_res" == "success" || "$docs_res" == "skipped" ]]; then
-            echo "ℹ️ No code or docs detected; treating as pass."
-            exit 0
-          fi
-
-          echo "❌ Gate: unexpected state (docs=$docs_res build=$build_res)."
-          exit 1
+          # Fallback for "neither matched" (e.g., only meta changes)
+          echo "ℹ️ Gate: neither docs nor code matched; treating as pass."
+          exit 0
