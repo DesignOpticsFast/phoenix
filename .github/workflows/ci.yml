@@ -91,7 +91,7 @@ jobs:
 
       # Link checker (tweak .lycheeignore if needed)
       - name: link check
-        uses: lycheeverse/lychee-action@v1
+        uses: lycheeverse/lychee-action@v2.0.2
         with:
           args: >
             --no-progress --include-fragments
