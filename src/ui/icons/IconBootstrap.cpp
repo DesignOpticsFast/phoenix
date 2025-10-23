@@ -8,8 +8,8 @@ static QString load(const char* res) {
   int id = QFontDatabase::addApplicationFont(res);
   if (id < 0) { qWarning() << "FA font load FAIL:" << res; return {}; }
   auto fams = QFontDatabase::applicationFontFamilies(id);
-  if (fams.isEmpty()) { qCWarning(phxFonts) << "FA font no families:" << res; return {}; }
-  qCInfo(phxFonts) << "FA font OK" << res << "families" << fams;
+  if (fams.isEmpty()) { qWarning() << "FA font no families:" << res; return {}; }
+  qInfo() << "FA font OK" << res << "families" << fams;
   return fams.first(); // Use actual runtime family
 }
 
