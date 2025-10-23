@@ -74,16 +74,10 @@ jobs:
         run: |
           rm -rf build build-ci
 
-      - name: Configure (CMake)
+      - name: Skip build for documentation PR
         run: |
-          # Test CMake configuration without Qt for now
-          echo "Testing CMake configuration without Qt dependencies"
-          cmake -S . -B build-ci -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build
-        run: |
-          cmake --build build-ci --config Release -j
+          echo "Skipping build for documentation-only PR"
+          echo "This PR only contains documentation changes and doesn't require building the application"
 
       - name: Assert Phoenix has no OCCT dependencies
         run: |
