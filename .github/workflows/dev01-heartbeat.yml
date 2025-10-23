@@ -1,0 +1,17 @@
+name: dev-01 heartbeat
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: [self-hosted, dev-01, qt6]
+    timeout-minutes: 5
+    steps:
+      - name: Check dev-01 health
+        run: |
+          echo "dev-01 online at $(date)"
+          echo "QT_VERSION=$QT_VERSION"
+          echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH"
+          test -f $CMAKE_PREFIX_PATH/lib/cmake/Qt6/Qt6Config.cmake && echo "Qt OK" || echo "Qt MISSING"
