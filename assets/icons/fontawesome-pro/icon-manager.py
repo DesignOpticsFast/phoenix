@@ -15,14 +15,14 @@ class FontAwesomeManager:
         self.fonts_path = self.base_path / "fonts"
         self.svgs_path = self.base_path / "svgs"
         self.metadata_path = self.base_path / "metadata"
-        
+
     def create_icon_index(self):
         """Create a lightweight index of available icons"""
         index = {
             "version": "1.0.0",
             "fonts": {
                 "sharp-solid": "fa-sharp-solid-900.ttf",
-                "sharp-regular": "fa-sharp-regular-400.ttf", 
+                "sharp-regular": "fa-sharp-regular-400.ttf",
                 "duotone": "fa-duotone-900.ttf",
                 "brands": "fa-brands-400.ttf",
                 "classic-solid": "fa-solid-900.ttf"
@@ -40,49 +40,49 @@ class FontAwesomeManager:
                 ]
             }
         }
-        
+
         # Save lightweight index
         with open(self.metadata_path / "icon-index.json", "w") as f:
             json.dump(index, f, indent=2)
-            
+
         return index
-    
+
     def add_icon(self, name, style="sharp-solid", unicode=None):
         """Add an icon to the index"""
         index_file = self.metadata_path / "icon-index.json"
-        
+
         if index_file.exists():
             with open(index_file, "r") as f:
                 index = json.load(f)
         else:
             index = self.create_icon_index()
-            
+
         if style not in index["icon_categories"]:
             index["icon_categories"][style] = []
-            
+
         if name not in index["icon_categories"][style]:
             index["icon_categories"][style].append(name)
-            
+
         with open(index_file, "w") as f:
             json.dump(index, f, indent=2)
-            
+
         print(f"Added icon '{name}' to style '{style}'")
-    
+
     def get_available_icons(self, style=None):
         """Get list of available icons"""
         index_file = self.metadata_path / "icon-index.json"
-        
+
         if not index_file.exists():
             return {}
-            
+
         with open(index_file, "r") as f:
             index = json.load(f)
-            
+
         if style:
             return index["icon_categories"].get(style, [])
         else:
             return index["icon_categories"]
-    
+
     def generate_usage_examples(self):
         """Generate usage examples for developers"""
         examples = {
@@ -119,50 +119,48 @@ button.setIcon(icon);
 """
             }
         }
-        
+
         with open(self.metadata_path / "usage-examples.json", "w") as f:
             json.dump(examples, f, indent=2)
-    
+
     def create_gitignore(self):
         """Create .gitignore to exclude large files"""
         gitignore_content = """# Font Awesome Pro - Exclude large files
 metadata/icon-families.json
 metadata/icons.json
 metadata/icon-metadata.json
-metadata/*.json.bak
-
 # Keep only essential files
 !metadata/icon-index.json
 !metadata/usage-examples.json
 !fonts/*.ttf
 !svgs/*.svg
 """
-        
+
         with open(self.base_path / ".gitignore", "w") as f:
             f.write(gitignore_content)
 
 if __name__ == "__main__":
     manager = FontAwesomeManager()
-    
+
     if len(sys.argv) > 1:
         command = sys.argv[1]
-        
+
         if command == "init":
             manager.create_icon_index()
             manager.generate_usage_examples()
             manager.create_gitignore()
             print("✅ Font Awesome Pro manager initialized")
-            
+
         elif command == "add" and len(sys.argv) > 2:
             icon_name = sys.argv[2]
             style = sys.argv[3] if len(sys.argv) > 3 else "sharp-solid"
             manager.add_icon(icon_name, style)
-            
+
         elif command == "list":
             style = sys.argv[2] if len(sys.argv) > 2 else None
             icons = manager.get_available_icons(style)
             print(json.dumps(icons, indent=2))
-            
+
     else:
         print("Font Awesome Pro Icon Manager")
         print("Usage:")

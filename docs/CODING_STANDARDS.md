@@ -1,29 +1,82 @@
 # Coding Standards - Phoenix (TypeScript/React)
 
-**Version:** 1.0.0  
-**Last Updated:** 2025-01-14  
+**Version:** 2.0.0  
+**Last Updated:** 2025-01-21  
 **Language:** TypeScript 5.0+  
 **Framework:** React 18+  
-**Build Tool:** Vite
+**Build Tool:** Vite  
+**Development Environment:** dev-01 (Primary) + Local Machines (Secondary)
 
 ---
 
 ## Core Principles
 
-### 1. User Experience First
+### 1. Development Environment First
+**ALL CODE CHANGES MUST BE DONE ON DEV-01 FIRST**
+- ✅ Build and test on dev-01 before local development
+- ✅ Use Tailscale for secure connection to dev-01
+- ✅ Test GUI with Xvfb on dev-01
+- ✅ Debug resource loading on dev-01
+- ✅ Commit changes from dev-01
+
+### 2. User Experience First
 Performance, accessibility, and mobile responsiveness are non-negotiable.
 
-### 2. Component Thinking
+### 3. Component Thinking
 Build small, reusable components with single responsibility.
 
-### 3. Type Safety
+### 4. Type Safety
 TypeScript everywhere. No `any` types without explicit justification.
 
-### 4. Predictable State
+### 5. Predictable State
 Immutable state updates with clear data flow.
 
-### 5. Ship with Confidence
+### 6. Ship with Confidence
 Test user interactions, not implementation details.
+
+---
+
+## Development Workflow
+
+### **Phase 1: Development on dev-01**
+```bash
+# Connect to dev-01 via Tailscale
+ssh -i ~/.ssh/github_phoenix mark@100.97.54.75
+cd /home/ec2-user/workspace/phoenix
+
+# Make code changes
+# Test build
+mkdir -p build && cd build
+cmake .. -G Ninja
+ninja -k0
+
+# Test GUI with Xvfb
+xvfb-run -a ./phoenix_app
+
+# Commit and push
+git add .
+git commit -m "feat(ui): add new feature"
+git push origin feature-branch
+```
+
+### **Phase 2: Local Machine Testing**
+```bash
+# On local machine
+git pull origin feature-branch
+
+# Build and test locally
+mkdir -p build && cd build
+cmake .. -G Ninja
+ninja -k0
+./phoenix_app
+```
+
+### **Key Requirements**
+- ✅ **All changes on dev-01 first**
+- ✅ **Test with Xvfb on dev-01**
+- ✅ **Debug resource loading on dev-01**
+- ✅ **Commit from dev-01**
+- ✅ **Test locally after sync**
 
 ---
 
@@ -770,6 +823,14 @@ npm run type-check && npm run lint && npm run test
 ---
 
 ## Version History
+
+### 2.0.0 (2025-01-21)
+- **MAJOR UPDATE**: Added dev-01-first development policy
+- **NEW**: Tailscale integration for secure development
+- **NEW**: Xvfb GUI testing on dev-01
+- **NEW**: Resource debugging workflow
+- **UPDATED**: Development workflow requirements
+- **UPDATED**: Quality assurance standards
 
 ### 1.0.0 (2025-01-14)
 - Initial TypeScript/React coding standards

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" fill="#FF6B35" stroke="#E55A2B" stroke-width="2"/>
+  
+  <!-- Phoenix bird silhouette -->
+  <path d="M20 45 Q32 25 44 45 Q32 35 20 45" fill="#FFD700" stroke="#FFA500" stroke-width="1.5"/>
+  
+  <!-- Wings -->
+  <path d="M25 40 Q32 30 39 40 Q32 35 25 40" fill="#FFA500" opacity="0.8"/>
+  
+  <!-- Head -->
+  <circle cx="32" cy="28" r="6" fill="#FFD700"/>
+  
+  <!-- Eye -->
+  <circle cx="32" cy="26" r="2" fill="#000"/>
+  
+  <!-- Beak -->
+  <path d="M32 32 L28 30 L32 28 L36 30 Z" fill="#FF8C00"/>
+  
+  <!-- Tail feathers -->
+  <path d="M20 45 Q15 50 20 55 Q25 50 20 45" fill="#FFD700"/>
+  <path d="M22 45 Q17 52 22 58 Q27 52 22 45" fill="#FFA500"/>
+  <path d="M24 45 Q19 54 24 60 Q29 54 24 45" fill="#FF8C00"/>
+</svg>

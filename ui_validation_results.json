@@ -1,0 +1,59 @@
+{
+  "menu_structure": {
+    "found_menus": [
+      "createFileMenu",
+      "createEditorsMenu",
+      "createAnalysisMenu",
+      "createToolsMenu",
+      "createViewMenu",
+      "createHelpMenu"
+    ],
+    "missing_menus": [],
+    "setup_menu_found": true,
+    "file_actions_found": [
+      "m_newAction",
+      "m_openAction",
+      "m_saveAction",
+      "m_saveAsAction",
+      "m_exitAction"
+    ],
+    "file_actions_missing": []
+  },
+  "toolbar": {
+    "setupToolBar": true,
+    "createMainToolBar": true,
+    "addToolBar": true,
+    "toolbar_actions": true,
+    "toolbar_movable": true,
+    "toolbar_floating": true
+  },
+  "dock_widgets": {
+    "setupDockWidgets": true,
+    "QDockWidget": true,
+    "addDockWidget": true,
+    "toolbox_dock": true,
+    "properties_dock": true,
+    "object_names": true
+  },
+  "icon_system": {
+    "icon_files": {
+      "src/resources/icons/phoenix-icon.svg": true,
+      "src/resources/icons/phx-icons.json": true
+    },
+    "qrc_checks": {
+      "phoenix_icon": true,
+      "phx_icons_json": true,
+      "font_files": true
+    }
+  },
+  "preferences": {
+    "language_files": {
+      "language_page_h": true,
+      "language_page_cpp": true
+    },
+    "cmake_includes": {
+      "language_page_cpp": true,
+      "language_page_h": true
+    }
+  }
+}

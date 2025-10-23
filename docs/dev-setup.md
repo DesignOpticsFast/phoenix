@@ -2,7 +2,64 @@ Developer Environment Setup — Amazon Linux 2023 + Qt 6.10.0
 
 This guide provides complete steps for setting up a development environment for Phoenix/Bedrock/Rosetta. It covers installing prerequisites, downloading Qt from S3, verifying integrity, configuring environment variables, and running a smoke test build.
 
-> ⚠️ **Updated for Phase 0.5 Gate PASS (2025-10-18): Qt 6.10.0 + Qt Graphs / gRPC UDS foundation.**
+> ⚠️ **Updated for Phase 0.5 Gate PASS (2025-10-18): Qt 6.10.0 + Qt Graphs / gRPC UDS foundation.**  
+> 🚀 **NEW (2025-01-21): Tailscale integration for secure development workflow.**
+
+---
+
+## 🎯 **Development Policy**
+
+### **ALL CODE CHANGES MUST BE DONE ON DEV-01 FIRST**
+
+**Rationale:**
+- ✅ **Consistent build environment** - Linux-based development
+- ✅ **Automated testing** - CI/CD pipelines run on dev-01
+- ✅ **Resource debugging** - Can test GUI with Xvfb
+- ✅ **Version control** - All changes tracked in Git
+- ✅ **Collaboration** - Team can access and review changes
+- ✅ **Quality assurance** - Automated tests and validation
+
+**Workflow:**
+1. **Develop on dev-01** - Make all code changes
+2. **Test on dev-01** - Build and test with Xvfb
+3. **Commit from dev-01** - Push changes to repository
+4. **Test locally** - Pull changes and test on local machine
+
+⸻
+
+## 🔗 **Tailscale Integration**
+
+### **Connection Setup**
+```bash
+# Install Tailscale on dev-01 (already configured)
+# Install Tailscale on local machine
+# Join same Tailscale network
+
+# Connect via Tailscale IP
+ssh -i ~/.ssh/github_phoenix mark@100.97.54.75
+```
+
+### **Benefits of Tailscale**
+- ✅ **Direct connection** - No NAT issues
+- ✅ **Secure** - Encrypted tunnel
+- ✅ **Reliable** - No port forwarding needed
+- ✅ **Fast** - Low latency connection
+- ✅ **Persistent** - Always available
+
+### **Development Commands**
+```bash
+# Connect to dev-01
+ssh -i ~/.ssh/github_phoenix mark@100.97.54.75
+cd /home/ec2-user/workspace/phoenix
+
+# Test GUI with Xvfb
+xvfb-run -a ./phoenix_app
+
+# Capture screenshots
+xvfb-run -a ./phoenix_app &
+sleep 5
+import -window root screenshot.png
+```
 
 ⸻
 
