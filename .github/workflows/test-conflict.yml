@@ -1,0 +1,16 @@
+name: Test Conflict Guard
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test step
+        run: echo 'This workflow has conflict markers'
+<<<<<<< HEAD
+        # This is a conflict marker test
+=======
+        # This should trigger the conflict guard
+>>>>>>> origin/main
