@@ -66,7 +66,7 @@ jobs:
               - '**/*.{cpp,cxx,c,h,hpp,ui,qrc,qml,rc,ico,icns}'
 
       # OPTIONAL but hugely helpful: print what matched
-      - name: Debug: show classification
+      - name: Debug - show classification
         shell: bash
         run: |
           echo "docs=${{ steps.filter.outputs.docs }}"
