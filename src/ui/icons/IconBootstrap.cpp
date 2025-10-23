@@ -1,5 +1,4 @@
 #include "IconBootstrap.h"
-#include "LogCategories.h"
 #include <QFontDatabase>
 #include <QDebug>
 
