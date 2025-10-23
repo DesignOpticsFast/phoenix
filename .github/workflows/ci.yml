@@ -150,7 +150,7 @@ jobs:
       (github.event_name == 'pull_request' &&
        github.event.pull_request.head.repo.full_name == github.repository &&
        needs.changes.outputs.code_changed == 'true')
-    runs-on: [self-hosted, linux, x64, dev-01, qt6]
+    runs-on: [self-hosted, Linux, X64, dev-01, qt6]
     concurrency:
       group: dev01-build
       cancel-in-progress: false
