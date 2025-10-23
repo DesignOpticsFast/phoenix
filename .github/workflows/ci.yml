@@ -77,10 +77,13 @@ jobs:
         run: |
           echo "docs=${{ steps.filter.outputs.docs }}"
           echo "code=${{ steps.filter.outputs.code }}"
+          echo "ci=${{ steps.filter.outputs.ci }}"
           echo "docs_files:"
           echo "${{ steps.filter.outputs.docs_files }}"
           echo "code_files:"
           echo "${{ steps.filter.outputs.code_files }}"
+          echo "ci_files:"
+          echo "${{ steps.filter.outputs.ci_files }}"
 
       - name: Classify (docs/code/ci)
         id: classify
