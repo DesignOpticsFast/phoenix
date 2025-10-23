@@ -2,6 +2,7 @@
 #include "IconBootstrap.h"
 #include "IconTint.h"
 #include "ThemeColor.h"
+#include "PhxLogging.h"
 #include <QApplication>
 #include <QFont>
 #include <QFontDatabase>
@@ -26,7 +27,7 @@ QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool da
     IconKey key{name, style, size, dark, dpr};
     
     // Trace once per request
-    qInfo().noquote() << "[ICON] req"
+    qCInfo(phxIcons).noquote() << "[ICON] req"
                       << "name=" << name
                       << "style=" << int(style)
                       << "px=" << size
@@ -64,7 +65,7 @@ QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool da
         pm = tintPixmap(pm, iconColor);
         result = QIcon(pm);
         
-        qInfo().noquote() 
+        qCInfo(phxIcons).noquote() 
             << "[ICON] returning name=" << name
             << "px=" << size
             << "dark=" << dark
@@ -129,18 +130,18 @@ void IconProvider::loadManifest() {
         s_iconManifest = doc.object();
         s_manifestLoaded = true;
     } else {
-        qWarning() << "Could not load icon manifest";
+        qCWarning(phxIcons) << "Could not load icon manifest";
     }
 }
 
 QIcon IconProvider::svgIcon(const QString& alias, int size) {
     const QString path = QString(":/icons/%1.svg").arg(alias);
     if (!QFile::exists(path)) {
-        qInfo().noquote() << "[ICON] svg" << path << "MISS";
+        qCInfo(phxIcons).noquote() << "[ICON] svg" << path << "MISS";
         return QIcon(); // Return null icon, let caller fallback
     }
     
-    qInfo().noquote() << "[ICON] svg" << path << "FOUND";
+    qCInfo(phxIcons).noquote() << "[ICON] svg" << path << "FOUND";
     QIcon icon(path);
     if (icon.isNull()) {
         return QIcon(); // Return null icon, let caller fallback
