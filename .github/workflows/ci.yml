@@ -6,7 +6,11 @@ on:
     branches: [ main ]        # ensure main is included
   push:
     branches: [ main ]        # always build on main pushes
-  workflow_dispatch:           # manual trigger (helpful for debugging)
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: 'PR number (optional)'
+        required: false
   schedule:
     - cron: "0 9 * * 1"       # every Monday 09:00 UTC - weekly self-audit
 
@@ -35,11 +39,12 @@ jobs:
             echo "❌ Conflict markers found in workflow files"; exit 1;
           fi
 
-      # Lint workflows (disabled for now due to strict linting rules)
-      # - name: Lint workflows
-      #   uses: ibiqlik/action-yamllint@v3
-      #   with:
-      #     file_or_dir: .github/workflows
+      # Lint workflows
+      - name: Lint workflows
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: .github/workflows
+          config_file: .yamllint.yml
 
       - id: filter
         uses: dorny/paths-filter@v3
@@ -147,24 +152,40 @@ jobs:
     needs: [docs, build, changes]
     if: always()
     steps:
-      - name: Decide outcome
+      - name: Decide outcome (Gate)
+        if: always()
+        shell: bash
         run: |
+          set -euo pipefail
           echo "docs_only=${{ needs.changes.outputs.docs_only }}"
-          echo "docs=${{ needs.docs.result }}"
-          echo "build=${{ needs.build.result }}"
-          if [ "${{ needs.changes.outputs.docs_only }}" = "true" ]; then
-            # docs-only: build is skipped; docs must succeed
-            if [ "${{ needs.docs.result }}" = "skipped" ]; then
-              echo "⚠️ Docs job was skipped - this shouldn't happen for docs-only changes"
-              exit 1
-            fi
-            [ "${{ needs.docs.result }}" = "success" ] || { echo "Docs checks failed"; exit 1; }
-          else
-            # code changed: build must succeed (docs may be skipped)
-            if [ "${{ needs.build.result }}" = "skipped" ]; then
-              echo "⚠️ Build job was skipped - this shouldn't happen for code changes"
-              exit 1
-            fi
-            [ "${{ needs.build.result }}" = "success" ] || { echo "Build failed"; exit 1; }
+          echo "code_changed=${{ needs.changes.outputs.code_changed }}"
+          echo "docs=${{ needs.docs.result || 'skipped' }}"
+          echo "build=${{ needs.build.result || 'skipped' }}"
+
+          docs_only="${{ needs.changes.outputs.docs_only }}"
+          code_changed="${{ needs.changes.outputs.code_changed }}"
+          docs_res="${{ needs.docs.result || 'skipped' }}"
+          build_res="${{ needs.build.result || 'skipped' }}"
+
+          if [[ "$docs_only" == "true" && "$code_changed" == "false" ]]; then
+            # Docs-only PR: docs must pass; build may be skipped
+            [[ "$docs_res" == "success" ]] || { echo "Docs checks failed"; exit 1; }
+            echo "✅ Gate: docs-only path passed."
+            exit 0
           fi
-          echo "✅ CI gate passed."
+
+          if [[ "$code_changed" == "true" ]]; then
+            # Code changed: build must pass; docs may be skipped
+            [[ "$build_res" == "success" ]] || { echo "Build failed"; exit 1; }
+            echo "✅ Gate: code path passed."
+            exit 0
+          fi
+
+          # Fallback: neither docs nor code changed (should be rare; treat as docs)
+          if [[ "$docs_res" == "success" || "$docs_res" == "skipped" ]]; then
+            echo "ℹ️ No code or docs detected; treating as pass."
+            exit 0
+          fi
+
+          echo "❌ Gate: unexpected state (docs=$docs_res build=$build_res)."
+          exit 1

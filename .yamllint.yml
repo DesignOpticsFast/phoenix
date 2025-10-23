@@ -1,0 +1,20 @@
+# .yamllint.yml — pragmatic rules
+extends: default
+
+rules:
+  # Cosmetic rules that often add churn with no value
+  line-length:
+    max: 200
+    level: warning
+  document-start: disable         # don't force '---' in GH Actions
+  trailing-spaces: enable
+  truthy: disable                 # GH Actions often uses on/off-ish strings
+  brackets: enable
+  indentation:
+    indent-sequences: consistent
+  new-line-at-end-of-file:
+    level: warning
+
+ignore: |
+  .git/
+  build/
