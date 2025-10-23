@@ -8,6 +8,11 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   changes:
@@ -26,6 +31,8 @@ jobs:
             docs:
               - 'docs/**'
               - '**/*.md'
+              - 'assets/docs/**'
+              - 'docs-assets/**'
             code:
               - 'src/**'
               - 'cmake/**'
@@ -64,7 +71,10 @@ jobs:
       - name: link check
         uses: lycheeverse/lychee-action@v1
         with:
-          args: --no-progress --include-fragments --accept=200,206 --max-concurrency 4 .
+          args: >
+            --no-progress --include-fragments
+            --max-concurrency 4 --max-redirects 5 --retry-wait-time 2 --retry-count 1
+            --accept 200,206 .
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -119,13 +129,14 @@ jobs:
     steps:
       - name: Decide outcome
         run: |
-          d="${{ needs.docs.result }}"
-          b="${{ needs.build.result }}"
-          # If docs-only: build is 'skipped' and docs must be 'success'
-          # If code-changed: build must be 'success' (docs may be 'skipped')
+          echo "docs_only=${{ needs.changes.outputs.docs_only }}"
+          echo "docs=${{ needs.docs.result }}"
+          echo "build=${{ needs.build.result }}"
           if [ "${{ needs.changes.outputs.docs_only }}" = "true" ]; then
-            [ "$d" = "success" -o "$d" = "skipped" ] || { echo "Docs checks failed"; exit 1; }
+            # docs-only: build is skipped; docs must succeed
+            [ "${{ needs.docs.result }}" = "success" ] || { echo "Docs checks failed"; exit 1; }
           else
-            [ "$b" = "success" ] || { echo "Build failed"; exit 1; }
+            # code changed: build must succeed (docs may be skipped)
+            [ "${{ needs.build.result }}" = "success" ] || { echo "Build failed"; exit 1; }
           fi
           echo "✅ CI gate passed."
