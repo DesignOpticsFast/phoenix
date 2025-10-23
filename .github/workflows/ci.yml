@@ -13,6 +13,9 @@ on:
       - "src/**"
       - "include/**"
       - "ui/**"
+      - "assets/**"
+      - "resources/**"
+      - "docs/**"
   pull_request:
     branches: [ "**" ]
     paths:
@@ -21,6 +24,9 @@ on:
       - "src/**"
       - "include/**"
       - "ui/**"
+      - "assets/**"
+      - "resources/**"
+      - "docs/**"
   workflow_dispatch:
 
 concurrency:
