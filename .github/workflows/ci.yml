@@ -7,6 +7,10 @@ on:
   push:
     branches: [ main ]        # always build on main pushes
   workflow_dispatch:
+    inputs:
+      pr:
+        description: 'PR number (optional)'
+        required: false
   schedule:
     - cron: "0 9 * * 1"       # every Monday 09:00 UTC - weekly self-audit
 
@@ -25,6 +29,7 @@ jobs:
     outputs:
       docs_only: ${{ steps.classify.outputs.docs_only }}
       code_changed: ${{ steps.classify.outputs.code_changed }}
+      ci_only: ${{ steps.classify.outputs.ci_only }}
     steps:
       - name: Checkout (full history)
         uses: actions/checkout@v4
@@ -62,8 +67,9 @@ jobs:
               - 'src/**'
               - 'cmake/**'
               - 'CMakeLists.txt'
-              - '.github/workflows/**'
               - '**/*.{cpp,cxx,c,h,hpp,ui,qrc,qml,rc,ico,icns}'
+            ci:
+              - '.github/workflows/**'
 
       # OPTIONAL but hugely helpful: print what matched
       - name: Debug - show classification
@@ -76,20 +82,27 @@ jobs:
           echo "code_files:"
           echo "${{ steps.filter.outputs.code_files }}"
 
-      - name: Classify (docs-only vs code-changed)
+      - name: Classify (docs/code/ci)
         id: classify
         shell: bash
         run: |
           set -euo pipefail
           docs="${{ steps.filter.outputs.docs }}"
           code="${{ steps.filter.outputs.code }}"
+          ci="${{ steps.filter.outputs.ci }}"
 
-          if [[ "$docs" == "true" && "$code" == "false" ]]; then
-            echo "docs_only=true"  >>"$GITHUB_OUTPUT"
+          if [[ "$docs" == "true" && "$code" == "false" && "$ci" == "false" ]]; then
+            echo "docs_only=true"     >>"$GITHUB_OUTPUT"
             echo "code_changed=false" >>"$GITHUB_OUTPUT"
+            echo "ci_only=false"      >>"$GITHUB_OUTPUT"
+          elif [[ "$ci" == "true" && "$code" == "false" && "$docs" == "false" ]]; then
+            echo "docs_only=false"    >>"$GITHUB_OUTPUT"
+            echo "code_changed=false" >>"$GITHUB_OUTPUT"
+            echo "ci_only=true"       >>"$GITHUB_OUTPUT"
           else
-            echo "docs_only=false" >>"$GITHUB_OUTPUT"
-            echo "code_changed=true" >>"$GITHUB_OUTPUT"
+            echo "docs_only=false"    >>"$GITHUB_OUTPUT"
+            echo "code_changed=true"  >>"$GITHUB_OUTPUT"
+            echo "ci_only=false"      >>"$GITHUB_OUTPUT"
           fi
 
   docs:
@@ -120,7 +133,12 @@ jobs:
   build:
     needs: changes
     runs-on: self-hosted
-    if: github.event_name == 'push' || needs.changes.outputs.code_changed == 'true'
+    if: >
+      (github.event_name == 'push') ||
+      (github.event_name == 'pull_request' &&
+       needs.changes.outputs.ci_only != 'true' &&
+       needs.changes.outputs.docs_only != 'true' &&
+       needs.changes.outputs.code_changed == 'true')
     steps:
       - uses: actions/checkout@v4
       - name: Configure
@@ -134,8 +152,26 @@ jobs:
         if: hashFiles('build/CTestTestfile.cmake') != ''
         run: ctest --test-dir build --output-on-failure
 
+  ci_checks:
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.ci_only == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Guard - no conflict markers in workflows
+        run: |
+          if grep -R -nE '<<<<<<<|>>>>>>>' .github/workflows ; then
+            echo "❌ Conflict markers found in workflow files"; exit 1;
+          fi
+      # Optional (recommended once stable): re-enable lint with a pragmatic config
+      # - name: Lint workflows
+      #   uses: ibiqlik/action-yamllint@v3
+      #   with:
+      #     file_or_dir: .github/workflows
+      #     config_file: .yamllint.yml
+
   gate:
-    needs: [changes, docs, build]
+    needs: [changes, docs, build, ci_checks]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -145,26 +181,24 @@ jobs:
           set -euo pipefail
           echo "docs_only=${{ needs.changes.outputs.docs_only }}"
           echo "code_changed=${{ needs.changes.outputs.code_changed }}"
+          echo "ci_only=${{ needs.changes.outputs.ci_only }}"
           echo "docs=${{ needs.docs.result || 'skipped' }}"
           echo "build=${{ needs.build.result || 'skipped' }}"
+          echo "ci=${{ needs.ci_checks.result || 'skipped' }}"
 
-          docs_only="${{ needs.changes.outputs.docs_only }}"
-          code_changed="${{ needs.changes.outputs.code_changed }}"
-          docs_res="${{ needs.docs.result || 'skipped' }}"
-          build_res="${{ needs.build.result || 'skipped' }}"
-
-          if [[ "$docs_only" == "true" && "$code_changed" == "false" ]]; then
-            [[ "$docs_res" == "success" ]] || { echo "Docs checks failed"; exit 1; }
-            echo "✅ Gate: docs-only path passed."
-            exit 0
+          if [[ "${{ needs.changes.outputs.ci_only }}" == "true" ]]; then
+            [[ "${{ needs.ci_checks.result }}" == "success" ]] || { echo "CI checks failed"; exit 1; }
+            echo "✅ Gate: CI-only path passed."; exit 0
           fi
 
-          if [[ "$code_changed" == "true" ]]; then
-            [[ "$build_res" == "success" ]] || { echo "Build failed"; exit 1; }
-            echo "✅ Gate: code path passed."
-            exit 0
+          if [[ "${{ needs.changes.outputs.docs_only }}" == "true" ]]; then
+            [[ "${{ needs.docs.result }}" == "success" ]] || { echo "Docs checks failed"; exit 1; }
+            echo "✅ Gate: docs-only path passed."; exit 0
           fi
 
-          # Fallback for "neither matched" (e.g., only meta changes)
-          echo "ℹ️ Gate: neither docs nor code matched; treating as pass."
-          exit 0
+          if [[ "${{ needs.changes.outputs.code_changed }}" == "true" ]]; then
+            [[ "${{ needs.build.result }}" == "success" ]] || { echo "Build failed"; exit 1; }
+            echo "✅ Gate: code path passed."; exit 0
+          fi
+
+          echo "ℹ️ Gate: no docs/code/ci matched; treating as pass."; exit 0
