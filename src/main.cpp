@@ -3,6 +3,7 @@
 #include "ui/icons/IconBootstrap.h"
 #include "ui/icons/IconProvider.h"
 #include "ui/icons/PhxLogging.h"
+#include "version.h"
 #include <QApplication>
 #include <QTimer>
 #include <QIcon>
@@ -21,7 +22,7 @@ int main(int argc, char** argv) {
     
     // Set application properties
     app.setApplicationName("Phoenix");
-    app.setApplicationVersion("0.0.1");
+    app.setApplicationVersion(QStringLiteral(PHOENIX_VERSION));
     app.setOrganizationName("Phoenix");
     app.setOrganizationDomain("phoenix.dev");
     
