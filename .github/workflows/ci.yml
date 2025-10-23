@@ -64,6 +64,7 @@ jobs:
         with:
           version: "6.10.0"
           cache: true
+          setup-python: false
 
       - name: Setup build environment
         run: |
