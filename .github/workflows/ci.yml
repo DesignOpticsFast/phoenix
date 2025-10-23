@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v4
 
       # Guard: no conflict markers in workflows
-      - name: Guard: no conflict markers in workflows
+      - name: Guard - no conflict markers in workflows
         run: |
           if grep -R -nE '^<<<<<<<|^>>>>>>>' .github/workflows ; then
             echo "❌ Conflict markers found in workflow files"; exit 1;
