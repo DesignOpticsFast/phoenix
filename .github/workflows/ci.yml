@@ -3,8 +3,10 @@ name: CI
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    branches: [ main ]        # ensure main is included
   push:
-    branches: [main]
+    branches: [ main ]        # always build on main pushes
+  workflow_dispatch:           # manual trigger (helpful for debugging)
 
 permissions:
   contents: read
