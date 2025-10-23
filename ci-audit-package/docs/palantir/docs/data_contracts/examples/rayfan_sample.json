@@ -1,0 +1,36 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "data": {
+    "name": "rayfan"
+  },
+  "mark": "line",
+  "encoding": {
+    "x": {
+      "field": "pupil_coord",
+      "type": "quantitative",
+      "scale": {
+        "domain": [
+          -1,
+          1
+        ]
+      }
+    },
+    "y": {
+      "field": "transverse_um",
+      "type": "quantitative",
+      "title": "Transverse (\u00b5m)"
+    },
+    "color": {
+      "field": "wavelength_nm",
+      "type": "nominal"
+    }
+  },
+  "phoenix": {
+    "version": "1.0.0",
+    "optical": {
+      "units": {
+        "transverse_um": "\u00b5m"
+      }
+    }
+  }
+}

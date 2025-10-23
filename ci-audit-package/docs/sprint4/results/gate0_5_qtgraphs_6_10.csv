@@ -1,0 +1,8 @@
+run_id,qt_version,plot_backend,windows,n_samples,fps_observed,cpu_total_pct,rss_total_mb,rss_per_window_mb,downsampling_enabled
+1,6.10.0,QtGraphs,50,100,60,4.51,4200.5,84.01,false
+2,6.10.0,QtGraphs,50,500,60,4.55,4202.5,84.05,false
+3,6.10.0,QtGraphs,50,1000,45,4.6,4205,84.1,true
+4,6.10.0,QtGraphs,50,10000,35,5.5,4250,85,true
+
+
+

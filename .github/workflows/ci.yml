@@ -142,23 +142,49 @@ jobs:
           skip: .git,build
 
   build:
+    name: Build (Qt on dev-01)
     needs: changes
-    runs-on: self-hosted
+    timeout-minutes: 30
     if: >
       (github.event_name == 'push') ||
       (github.event_name == 'pull_request' &&
-       needs.changes.outputs.ci_only != 'true' &&
-       needs.changes.outputs.docs_only != 'true' &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
        needs.changes.outputs.code_changed == 'true')
+    runs-on: [self-hosted, linux, x64, dev-01, qt6]
+    concurrency:
+      group: dev01-build
+      cancel-in-progress: false
+    env:
+      QT_VERSION: 6.9.3
+      QT_PATH: /opt/Qt/${QT_VERSION}/gcc_64
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Verify dev-01 environment
+        run: |
+          echo "labels: ${{ toJson(runner.labels) }}"
+          echo "QT_VERSION=$QT_VERSION"
+          echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH"
+          cmake -P - <<'EOF'
+          if(NOT DEFINED ENV{CMAKE_PREFIX_PATH})
+            message(FATAL_ERROR "CMAKE_PREFIX_PATH not set")
+          endif()
+          file(GLOB qtcmake "$ENV{CMAKE_PREFIX_PATH}/lib/cmake/Qt6/Qt6Config.cmake")
+          if(NOT qtcmake)
+            message(FATAL_ERROR "Qt6Config.cmake not found under $ENV{CMAKE_PREFIX_PATH}")
+          endif()
+          message(STATUS "Qt OK at $ENV{CMAKE_PREFIX_PATH}")
+          EOF
+
       - name: Configure
         shell: bash
         run: |
           cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release \
-            ${CMAKE_PREFIX_PATH:+-DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"}
+            -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"
+
       - name: Build
-        run: cmake --build build -j 4
+        run: cmake --build build -j $(nproc || echo 4)
+
       - name: Unit tests
         if: hashFiles('build/CTestTestfile.cmake') != ''
         run: ctest --test-dir build --output-on-failure
