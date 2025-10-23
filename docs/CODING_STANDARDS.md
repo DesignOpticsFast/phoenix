@@ -824,6 +824,15 @@ npm run type-check && npm run lint && npm run test
 
 ## Version History
 
+### 2.1.0 (2025-01-23)
+- **MAJOR UPDATE**: Added comprehensive CI workflow protection
+- **NEW**: Self-healing CI system with conflict prevention
+- **NEW**: Pre-commit hooks for conflict marker detection
+- **NEW**: YAML linting and workflow validation
+- **NEW**: CODEOWNERS protection for workflow changes
+- **NEW**: Weekly self-audit cron triggers
+- **UPDATED**: CI workflow documentation and standards
+
 ### 2.0.0 (2025-01-21)
 - **MAJOR UPDATE**: Added dev-01-first development policy
 - **NEW**: Tailscale integration for secure development

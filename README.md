@@ -12,7 +12,7 @@
 [![Policy](https://github.com/DesignOpticsFast/phoenix/actions/workflows/policy.yml/badge.svg)](https://github.com/DesignOpticsFast/phoenix/actions/workflows/policy.yml)
 [![Auto-merge Dependabot](https://github.com/DesignOpticsFast/phoenix/actions/workflows/auto-merge-dependabot.yml/badge.svg)](https://github.com/DesignOpticsFast/phoenix/actions/workflows/auto-merge-dependabot.yml)
 
-📋 **[Workflow Dependencies](docs/workflow-dependencies.md)** | 🎨 **[Icon System](docs/icons.md)** | 🚀 **[Development Workflow](docs/DEVELOPMENT_WORKFLOW.md)** | 📚 **[API Documentation](docs/)**
+📋 **[Workflow Dependencies](docs/workflow-dependencies.md)** | 🎨 **[Icon System](docs/icons.md)** | 🚀 **[Development Workflow](docs/DEVELOPMENT_WORKFLOW.md)** | 🛡️ **[CI Workflow System](docs/CI_WORKFLOW_SYSTEM.md)** | 📚 **[API Documentation](docs/)**
 
 **Phoenix** is the Qt-based GUI that orchestrates **Bedrock** primitives:
 visualization, tolerancing, reporting, and (eventually) AI-assisted workflows.
@@ -137,6 +137,14 @@ Use conventional style:
 - ✅ **Icon manifest updated** - Font Awesome Unicode characters
 - ✅ **Build process optimized** - CMake configuration improved
 - ✅ **Quality assurance** - Automated testing on dev-01
+
+### **CI Workflow System (2025-01-23)**
+- ✅ **Self-healing CI system** - Comprehensive conflict prevention
+- ✅ **Smart change detection** - Docs vs code change classification
+- ✅ **Protection layers** - Pre-commit hooks, conflict guards, YAML linting
+- ✅ **Access control** - CODEOWNERS protection for workflow changes
+- ✅ **Automated monitoring** - Weekly health checks and status badges
+- ✅ **Production-ready** - Bulletproof CI workflow with guardrails
 
 ---
 

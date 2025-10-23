@@ -238,12 +238,22 @@ git pull origin feature-branch
 - ✅ **Local platform testing**
 - ✅ **Code review approved**
 - ✅ **CI/CD pipeline passes**
+- ✅ **CI workflow protection active**
+
+### **CI Workflow Protection (2025-01-23)**
+- ✅ **Conflict marker detection** - Prevents merge conflicts in workflows
+- ✅ **YAML linting** - Validates workflow syntax
+- ✅ **CODEOWNERS protection** - Requires maintainer review for workflow changes
+- ✅ **Weekly self-audit** - Automated health checks every Monday
+- ✅ **Pre-commit hooks** - Prevents conflict markers from being committed
+- ✅ **Single Gate job** - Simplified branch protection logic
 
 ### **Failure Scenarios**
 - ❌ **Build fails on dev-01** → Fix on dev-01
 - ❌ **Resource loading fails** → Debug on dev-01
 - ❌ **Local build fails** → Sync latest changes
 - ❌ **Platform-specific issues** → Test on local machine
+- ❌ **CI workflow conflicts** → Resolve merge conflicts in `.github/workflows/`
 
 ---
 
@@ -282,6 +292,44 @@ ninja -k0
 # Test locally
 ./phoenix_app
 ```
+
+---
+
+## 🛡️ **CI Workflow Protection (2025-01-23)**
+
+### **Self-Healing CI System**
+The CI workflow now includes comprehensive protection against common issues:
+
+#### **Conflict Prevention**
+- **Pre-commit hook** - Prevents conflict markers from being committed
+- **Conflict marker guard** - Fails CI loudly if conflicts detected in workflows
+- **YAML linting** - Validates workflow syntax before execution
+
+#### **Access Control**
+- **CODEOWNERS** - Requires maintainer review for workflow changes
+- **Single Gate job** - Simplified branch protection logic
+- **Manual triggers** - `workflow_dispatch` for debugging
+
+#### **Automated Monitoring**
+- **Weekly self-audit** - Runs every Monday at 09:00 UTC
+- **Status badges** - Visible CI health indicators in README
+- **Smart job execution** - Docs vs code change detection
+
+#### **Protection Layers**
+| Layer | Purpose | Status |
+|-------|---------|--------|
+| Pre-commit hook | Stops conflict markers before GitHub | ✅ Active |
+| Conflict guard | Detects conflicts and halts CI | ✅ Active |
+| YAML linting | Validates workflow syntax | ✅ Active |
+| CODEOWNERS | Requires maintainer review | ✅ Active |
+| Weekly audit | Automated health checks | ✅ Active |
+
+### **CI Workflow Features**
+- **Smart change detection** - Uses `dorny/paths-filter` for docs vs code
+- **Lightweight docs checks** - markdownlint, link checker, spell check
+- **Conditional job execution** - Build only for code changes, docs only for documentation
+- **Single required status** - Gate job prevents deadlocks
+- **Manual debugging** - `workflow_dispatch` trigger available
 
 ---
 

@@ -3,8 +3,12 @@ name: CI
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    branches: [ main ]        # ensure main is included
   push:
-    branches: [main]
+    branches: [ main ]        # always build on main pushes
+  workflow_dispatch:           # manual trigger (helpful for debugging)
+  schedule:
+    - cron: "0 9 * * 1"       # every Monday 09:00 UTC - weekly self-audit
 
 permissions:
   contents: read
@@ -23,6 +27,19 @@ jobs:
       code_changed: ${{ steps.classify.outputs.code_changed }}
     steps:
       - uses: actions/checkout@v4
+
+      # Guard: no conflict markers in workflows
+      - name: Guard: no conflict markers in workflows
+        run: |
+          if grep -R -nE '^<<<<<<<|^>>>>>>>' .github/workflows ; then
+            echo "❌ Conflict markers found in workflow files"; exit 1;
+          fi
+
+      # Lint workflows
+      - name: Lint workflows
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: .github/workflows
 
       - id: filter
         uses: dorny/paths-filter@v3
