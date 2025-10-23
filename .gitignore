@@ -103,3 +103,9 @@ coverage/
 
 # Optional: ignore Bedrock sub-builds if they appear inside Phoenix
 _bedrock_build/build/
+
+# Safety: ignore CI audit artifacts and local workflow tweaks
+phoenix_ci_audit/
+ci-audit-package/
+*.zip
+
