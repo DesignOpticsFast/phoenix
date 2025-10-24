@@ -1,19 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# One-time opt-out if urgently needed:
 [[ "${SKIP_PREFLIGHT:-}" == "1" ]] && { echo "[pre-push] Skipping preflight"; exit 0; }
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# shellcheck disable=SC1091
+source "$ROOT/scripts/lib/preflight_common.sh"
 
 if [[ "$(hostname)" != *"dev-01"* ]]; then
   echo "[pre-push] Not on dev-01; skipping enforced build gate."
   exit 0
 fi
 
-echo "[pre-push] Running dev-01 preflight build…"
-ROOT="$(git rev-parse --show-toplevel)"
-# shellcheck disable=SC1091
-source "$ROOT/scripts/lib/preflight_common.sh"
-
-print_truth_lines
+echo "[pre-push] Running enforced preflight on dev-01…"
 preflight_configure_build "build/dev-01-relwithdebinfo"
 echo "[pre-push] ✅ Preflight OK — proceeding with push."
