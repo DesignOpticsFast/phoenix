@@ -12,6 +12,7 @@ if ! is_dev01; then
   exit 0
 fi
 
+echo "[pre-push] Detected dev-01 via ${_DEV01_SRC:-unknown}"
 echo "[pre-push] Running enforced preflight on dev-01…"
 preflight_configure_build "build/dev-01-relwithdebinfo"
 echo "[pre-push] ✅ Preflight OK — proceeding with push."
