@@ -73,6 +73,9 @@ MainWindow::MainWindow(QWidget *parent)
     setupTheme();
     loadSettings();
     
+    // Ensure ribbons are visible after state restoration
+    restoreRibbonState();
+    
     // Setup translations after UI is ready
     setupTranslations();
     
@@ -353,6 +356,10 @@ void MainWindow::setupRibbons()
     // Right ribbon (vertical)
     m_rightRibbon = createRightRibbon();
     addToolBar(Qt::RightToolBarArea, m_rightRibbon);
+    
+    // Ensure ribbons are visible by default
+    m_topRibbon->setVisible(true);
+    m_rightRibbon->setVisible(true);
 }
 
 QToolBar* MainWindow::createTopRibbon()
@@ -568,6 +575,73 @@ void MainWindow::setupTheme()
     } else {
         m_systemThemeAction->setChecked(true);
         if (m_themeManager) m_themeManager->setTheme(ThemeManager::Theme::System);
+    }
+}
+
+void MainWindow::restoreRibbonState()
+{
+    // Ensure ribbons are visible after state restoration
+    if (m_topRibbon) {
+        m_topRibbon->setVisible(true);
+        // If the ribbon was hidden by state restoration, make it visible
+        if (!m_topRibbon->isVisible()) {
+            m_topRibbon->show();
+        }
+    }
+    
+    if (m_rightRibbon) {
+        m_rightRibbon->setVisible(true);
+        // If the ribbon was hidden by state restoration, make it visible
+        if (!m_rightRibbon->isVisible()) {
+            m_rightRibbon->show();
+        }
+    }
+}
+
+void MainWindow::updateRibbonIcons()
+{
+    // Update top ribbon icons
+    if (m_topRibbon) {
+        QList<QAction*> actions = m_topRibbon->actions();
+        for (QAction* action : actions) {
+            QString text = action->text();
+            if (text == tr("New")) {
+                action->setIcon(getIcon("plus", "document-new"));
+            } else if (text == tr("Open")) {
+                action->setIcon(getIcon("folder-open", "document-open"));
+            } else if (text == tr("Save")) {
+                action->setIcon(getIcon("floppy-disk", "save"));
+            } else if (text == tr("XY Plot")) {
+                action->setIcon(getIcon("chart-line", "chart"));
+            } else if (text == tr("2D Plot")) {
+                action->setIcon(getIcon("chart-bar", "chart"));
+            } else if (text == tr("Preferences")) {
+                action->setIcon(getIcon("sliders", "settings"));
+            }
+        }
+    }
+    
+    // Update right ribbon icons
+    if (m_rightRibbon) {
+        QList<QAction*> actions = m_rightRibbon->actions();
+        for (QAction* action : actions) {
+            QString text = action->text();
+            if (text == tr("Lens Inspector")) {
+                action->setIcon(getIcon("lens", "search"));
+            } else if (text == tr("System Viewer")) {
+                action->setIcon(getIcon("desktop", "view"));
+            } else if (text == tr("Light Theme")) {
+                action->setIcon(getIcon("sun", "light"));
+            } else if (text == tr("Dark Theme")) {
+                action->setIcon(getIcon("moon", "dark"));
+            } else if (text == tr("System Theme")) {
+                action->setIcon(getIcon("desktop", "system"));
+            } else if (text == tr("Help")) {
+                action->setIcon(getIcon("question", "help"));
+            } else if (text == tr("About")) {
+                action->setIcon(getIcon("info", "about"));
+            }
+        }
     }
 }
 
@@ -835,6 +909,9 @@ void MainWindow::applyIcons()
     // Analysis menu actions
     m_xyPlotAction->setIcon(getIcon("chart-line", "chart"));
     m_2dPlotAction->setIcon(getIcon("chart-bar", "chart"));
+    
+    // Update ribbon icons
+    updateRibbonIcons();
 }
 
 void MainWindow::initializeUI()

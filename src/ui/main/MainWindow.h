@@ -95,6 +95,8 @@ private:
     void saveSettings();
     void setupTranslations();
     void setupTheme();
+    void restoreRibbonState();
+    void updateRibbonIcons();
     
     // Menu creation helpers
     QMenu* createFileMenu();
