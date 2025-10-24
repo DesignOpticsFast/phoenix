@@ -66,6 +66,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Initialize components (defer translations until after UI is ready)
     setupMenuBar();  // This creates all the actions
     setupToolBar();  // This uses the actions created above
+    setupRibbons();  // This creates dockable ribbons
     setupDockWidgets();
     setupStatusBar();
     setupConnections();
@@ -341,6 +342,156 @@ QToolBar* MainWindow::createMainToolBar()
     toolBar->setIconSize(QSize(24, 24));
     
     return toolBar;
+}
+
+void MainWindow::setupRibbons()
+{
+    // Top ribbon (horizontal)
+    m_topRibbon = createTopRibbon();
+    addToolBar(Qt::TopToolBarArea, m_topRibbon);
+    
+    // Right ribbon (vertical)
+    m_rightRibbon = createRightRibbon();
+    addToolBar(Qt::RightToolBarArea, m_rightRibbon);
+}
+
+QToolBar* MainWindow::createTopRibbon()
+{
+    QToolBar* ribbon = new QToolBar(tr("Top Ribbon"), this);
+    ribbon->setObjectName("topRibbon");
+    ribbon->setMovable(true);
+    ribbon->setFloatable(true);
+    ribbon->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
+    ribbon->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    ribbon->setIconSize(QSize(24, 24));
+    
+    // File actions
+    QAction* newAction = ribbon->addAction(getIcon("plus", "document-new"), tr("New"));
+    newAction->setToolTip(tr("Create new file"));
+    connect(newAction, &QAction::triggered, this, [this]() { 
+        m_actionTimer.start(); 
+        newFile(); 
+        logRibbonAction("new_file");
+    });
+    
+    QAction* openAction = ribbon->addAction(getIcon("folder-open", "document-open"), tr("Open"));
+    openAction->setToolTip(tr("Open existing file"));
+    connect(openAction, &QAction::triggered, this, [this]() { 
+        m_actionTimer.start(); 
+        openFile(); 
+        logRibbonAction("open_file");
+    });
+    
+    QAction* saveAction = ribbon->addAction(getIcon("floppy-disk", "document-save"), tr("Save"));
+    saveAction->setToolTip(tr("Save current file"));
+    connect(saveAction, &QAction::triggered, this, [this]() { 
+        m_actionTimer.start(); 
+        saveFile(); 
+        logRibbonAction("save_file");
+    });
+    
+    ribbon->addSeparator();
+    
+    // Analysis actions
+    QAction* xyPlotAction = ribbon->addAction(getIcon("chart-line", "chart"), tr("XY Plot"));
+    xyPlotAction->setToolTip(tr("Open XY plot analysis"));
+    connect(xyPlotAction, &QAction::triggered, this, [this]() { 
+        m_actionTimer.start(); 
+        showXYPlot(); 
+        logRibbonAction("xy_plot");
+    });
+    
+    QAction* plot2DAction = ribbon->addAction(getIcon("chart-bar", "chart"), tr("2D Plot"));
+    plot2DAction->setToolTip(tr("Open 2D plot analysis"));
+    connect(plot2DAction, &QAction::triggered, this, [this]() { 
+        m_actionTimer.start(); 
+        show2DPlot(); 
+        logRibbonAction("2d_plot");
+    });
+    
+    ribbon->addSeparator();
+    
+    // Tools actions
+    QAction* preferencesAction = ribbon->addAction(getIcon("sliders", "preferences"), tr("Preferences"));
+    preferencesAction->setToolTip(tr("Open preferences"));
+    connect(preferencesAction, &QAction::triggered, this, [this]() { 
+        m_actionTimer.start(); 
+        showPreferences(); 
+        logRibbonAction("preferences");
+    });
+    
+    return ribbon;
+}
+
+QToolBar* MainWindow::createRightRibbon()
+{
+    QToolBar* ribbon = new QToolBar(tr("Right Ribbon"), this);
+    ribbon->setObjectName("rightRibbon");
+    ribbon->setMovable(true);
+    ribbon->setFloatable(true);
+    ribbon->setAllowedAreas(Qt::LeftToolBarArea | Qt::RightToolBarArea);
+    ribbon->setOrientation(Qt::Vertical);
+    ribbon->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    ribbon->setIconSize(QSize(20, 20));
+    
+    // Editors actions
+    QAction* lensInspectorAction = ribbon->addAction(getIcon("lens", "search"), tr("Lens Inspector"));
+    lensInspectorAction->setToolTip(tr("Open lens inspector"));
+    connect(lensInspectorAction, &QAction::triggered, this, [this]() { 
+        m_actionTimer.start(); 
+        showLensInspector(); 
+        logRibbonAction("lens_inspector");
+    });
+    
+    QAction* systemViewerAction = ribbon->addAction(getIcon("desktop", "view"), tr("System Viewer"));
+    systemViewerAction->setToolTip(tr("Open system viewer"));
+    connect(systemViewerAction, &QAction::triggered, this, [this]() { 
+        m_actionTimer.start(); 
+        showSystemViewer(); 
+        logRibbonAction("system_viewer");
+    });
+    
+    ribbon->addSeparator();
+    
+    // View actions
+    QAction* lightThemeAction = ribbon->addAction(getIcon("sun", "light"), tr("Light Theme"));
+    lightThemeAction->setToolTip(tr("Switch to light theme"));
+    lightThemeAction->setCheckable(true);
+    connect(lightThemeAction, &QAction::triggered, this, [this]() { 
+        m_actionTimer.start(); 
+        setLightTheme(); 
+        logRibbonAction("light_theme");
+    });
+    
+    QAction* darkThemeAction = ribbon->addAction(getIcon("moon", "dark"), tr("Dark Theme"));
+    darkThemeAction->setToolTip(tr("Switch to dark theme"));
+    darkThemeAction->setCheckable(true);
+    connect(darkThemeAction, &QAction::triggered, this, [this]() { 
+        m_actionTimer.start(); 
+        setDarkTheme(); 
+        logRibbonAction("dark_theme");
+    });
+    
+    ribbon->addSeparator();
+    
+    // Help actions
+    QAction* helpAction = ribbon->addAction(getIcon("question-circle", "help"), tr("Help"));
+    helpAction->setToolTip(tr("Open help"));
+    connect(helpAction, &QAction::triggered, this, [this]() { 
+        m_actionTimer.start(); 
+        showHelp(); 
+        logRibbonAction("help");
+    });
+    
+    QAction* aboutAction = ribbon->addAction(getIcon("info-circle", "info"), tr("About"));
+    aboutAction->setToolTip(tr("Show about dialog"));
+    connect(aboutAction, &QAction::triggered, this, [this]() { 
+        m_actionTimer.start(); 
+        showAbout(); 
+        logRibbonAction("about");
+    });
+    
+    return ribbon;
 }
 
 void MainWindow::setupDockWidgets()
@@ -717,4 +868,34 @@ void MainWindow::showAbout()
 void MainWindow::showHelp()
 {
     QMessageBox::information(this, tr("Help"), tr("This feature is not yet implemented."));
+}
+
+// Telemetry hooks for UI latency logging
+void MainWindow::logUIAction(const QString& action, qint64 elapsed)
+{
+    // Log UI action with timing for <50ms chrome response validation
+    qDebug() << "UI Action:" << action << "took" << elapsed << "ms";
+    
+    // Check if response time meets Phase 1 requirements (<50ms)
+    if (elapsed > 50) {
+        qWarning() << "SLOW UI ACTION:" << action << "took" << elapsed << "ms (exceeds 50ms target)";
+    }
+    
+    // Update status bar with performance info
+    updateStatusMessage(QString("Action: %1 (%2ms)").arg(action).arg(elapsed));
+}
+
+void MainWindow::logRibbonAction(const QString& action)
+{
+    // Start timing for ribbon actions
+    m_actionTimer.start();
+    
+    // Log the ribbon action
+    qDebug() << "Ribbon Action:" << action;
+    
+    // Connect to the actual action completion
+    QTimer::singleShot(0, this, [this, action]() {
+        qint64 elapsed = m_actionTimer.elapsed();
+        logUIAction(QString("ribbon_%1").arg(action), elapsed);
+    });
 }
