@@ -99,6 +99,22 @@ private:
     void updateRibbonIcons();
     void setupFloatingRibbon(QToolBar* ribbon);
     
+    // Layout management
+    enum class RibbonLayout {
+        Horizontal,    // 1xn (default for top ribbon)
+        Vertical,      // nx1 (default for right ribbon) 
+        Grid          // nxm (for floating)
+    };
+    
+    void setRibbonLayout(QToolBar* ribbon, RibbonLayout layout);
+    void updateRibbonLayout(QToolBar* ribbon);
+    RibbonLayout getOptimalLayout(QToolBar* ribbon, bool isFloating);
+    void cycleRibbonLayout(QToolBar* ribbon);
+    void showRibbonContextMenu(QToolBar* ribbon, const QPoint& globalPos);
+    
+    // Event handling
+    void changeEvent(QEvent *event) override;
+    
     // Menu creation helpers
     QMenu* createFileMenu();
     QMenu* createEditorsMenu();
@@ -123,6 +139,10 @@ private:
     QToolBar* m_mainToolBar;
     QToolBar* m_topRibbon;
     QToolBar* m_rightRibbon;
+    
+    // Layout management
+    QMap<QToolBar*, RibbonLayout> m_ribbonLayouts;
+    QSet<QToolBar*> m_floatingRibbons;
     QStatusBar* m_statusBar;
     
     // Dock widgets

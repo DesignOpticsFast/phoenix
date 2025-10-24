@@ -382,6 +382,22 @@ QToolBar* MainWindow::createTopRibbon()
     connect(ribbon, &QToolBar::topLevelChanged, this, [this, ribbon](bool floating) {
         if (floating) {
             setupFloatingRibbon(ribbon);
+        } else {
+            // Remove from floating state when docked
+            m_floatingRibbons.remove(ribbon);
+            // Reset to normal state
+            ribbon->setWindowFlags(Qt::Widget);
+            // Restore original layout
+            RibbonLayout originalLayout = (ribbon == m_rightRibbon) ? RibbonLayout::Vertical : RibbonLayout::Horizontal;
+            setRibbonLayout(ribbon, originalLayout);
+        }
+    });
+    
+    // Add context menu for layout switching (only when floating)
+    ribbon->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ribbon, &QToolBar::customContextMenuRequested, this, [this, ribbon](const QPoint& pos) {
+        if (m_floatingRibbons.contains(ribbon)) {
+            showRibbonContextMenu(ribbon, ribbon->mapToGlobal(pos));
         }
     });
     
@@ -464,6 +480,22 @@ QToolBar* MainWindow::createRightRibbon()
     connect(ribbon, &QToolBar::topLevelChanged, this, [this, ribbon](bool floating) {
         if (floating) {
             setupFloatingRibbon(ribbon);
+        } else {
+            // Remove from floating state when docked
+            m_floatingRibbons.remove(ribbon);
+            // Reset to normal state
+            ribbon->setWindowFlags(Qt::Widget);
+            // Restore original layout
+            RibbonLayout originalLayout = (ribbon == m_rightRibbon) ? RibbonLayout::Vertical : RibbonLayout::Horizontal;
+            setRibbonLayout(ribbon, originalLayout);
+        }
+    });
+    
+    // Add context menu for layout switching (only when floating)
+    ribbon->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ribbon, &QToolBar::customContextMenuRequested, this, [this, ribbon](const QPoint& pos) {
+        if (m_floatingRibbons.contains(ribbon)) {
+            showRibbonContextMenu(ribbon, ribbon->mapToGlobal(pos));
         }
     });
     
@@ -675,17 +707,191 @@ void MainWindow::setupFloatingRibbon(QToolBar* ribbon)
 {
     if (!ribbon) return;
     
-    // When floating, set the ribbon to a compact size
-    ribbon->adjustSize();
+    // Determine optimal layout for floating
+    RibbonLayout layout = getOptimalLayout(ribbon, true);
+    setRibbonLayout(ribbon, layout);
     
-    // Set minimum and maximum size to be the same (compact)
-    QSize size = ribbon->sizeHint();
-    ribbon->setMinimumSize(size);
-    ribbon->setMaximumSize(size);
+    // Set proper window flags for frameless floating
+    ribbon->setWindowFlags(Qt::Window | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    ribbon->setParent(this, Qt::Window);
+    ribbon->setAttribute(Qt::WA_ShowWithoutActivating, true);
     
-    // Ensure it stays on top when floating
-    ribbon->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    // Calculate size based on layout
+    updateRibbonLayout(ribbon);
+    
+    // Track as floating
+    m_floatingRibbons.insert(ribbon);
+    
+    // Ensure visibility
     ribbon->show();
+}
+
+void MainWindow::setRibbonLayout(QToolBar* ribbon, RibbonLayout layout)
+{
+    if (!ribbon) return;
+    
+    m_ribbonLayouts[ribbon] = layout;
+    updateRibbonLayout(ribbon);
+}
+
+void MainWindow::updateRibbonLayout(QToolBar* ribbon)
+{
+    if (!ribbon) return;
+    
+    RibbonLayout layout = m_ribbonLayouts.value(ribbon, RibbonLayout::Horizontal);
+    bool isFloating = m_floatingRibbons.contains(ribbon);
+    
+    // Get all actions
+    QList<QAction*> actions = ribbon->actions();
+    int actionCount = actions.size();
+    
+    if (isFloating && layout == RibbonLayout::Grid) {
+        // Calculate grid dimensions
+        int cols = qCeil(qSqrt(actionCount));
+        int rows = qCeil(double(actionCount) / cols);
+        
+        // Set grid layout
+        ribbon->setOrientation(Qt::Horizontal);
+        ribbon->setToolButtonStyle(Qt::ToolButtonIconOnly);
+        
+        // Calculate size for grid
+        QSize iconSize = ribbon->iconSize();
+        QSize buttonSize = iconSize + QSize(8, 8); // Add padding
+        QSize gridSize = QSize(cols * buttonSize.width(), rows * buttonSize.height());
+        
+        ribbon->setMinimumSize(gridSize);
+        ribbon->resize(gridSize);
+        
+    } else if (layout == RibbonLayout::Horizontal) {
+        // Horizontal strip layout
+        ribbon->setOrientation(Qt::Horizontal);
+        ribbon->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+        
+        // Calculate horizontal size
+        QSize iconSize = ribbon->iconSize();
+        QSize buttonSize = iconSize + QSize(16, 32); // Text under icon
+        QSize horizontalSize = QSize(actionCount * buttonSize.width(), buttonSize.height());
+        
+        ribbon->setMinimumSize(horizontalSize);
+        ribbon->resize(horizontalSize);
+        
+    } else if (layout == RibbonLayout::Vertical) {
+        // Vertical strip layout
+        ribbon->setOrientation(Qt::Vertical);
+        ribbon->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        
+        // Calculate vertical size
+        QSize iconSize = ribbon->iconSize();
+        QSize buttonSize = iconSize + QSize(32, 16); // Text beside icon
+        QSize verticalSize = QSize(buttonSize.width(), actionCount * buttonSize.height());
+        
+        ribbon->setMinimumSize(verticalSize);
+        ribbon->resize(verticalSize);
+    }
+}
+
+RibbonLayout MainWindow::getOptimalLayout(QToolBar* ribbon, bool isFloating)
+{
+    if (!ribbon) return RibbonLayout::Horizontal;
+    
+    QList<QAction*> actions = ribbon->actions();
+    int actionCount = actions.size();
+    
+    if (isFloating) {
+        // For floating, choose grid if many actions, otherwise horizontal
+        if (actionCount > 6) {
+            return RibbonLayout::Grid;
+        } else {
+            return RibbonLayout::Horizontal;
+        }
+    } else {
+        // For docked, use original orientation
+        if (ribbon->orientation() == Qt::Vertical) {
+            return RibbonLayout::Vertical;
+        } else {
+            return RibbonLayout::Horizontal;
+        }
+    }
+}
+
+void MainWindow::cycleRibbonLayout(QToolBar* ribbon)
+{
+    if (!ribbon || !m_floatingRibbons.contains(ribbon)) return;
+    
+    RibbonLayout current = m_ribbonLayouts.value(ribbon, RibbonLayout::Horizontal);
+    RibbonLayout next;
+    
+    switch (current) {
+        case RibbonLayout::Horizontal:
+            next = RibbonLayout::Vertical;
+            break;
+        case RibbonLayout::Vertical:
+            next = RibbonLayout::Grid;
+            break;
+        case RibbonLayout::Grid:
+            next = RibbonLayout::Horizontal;
+            break;
+    }
+    
+    setRibbonLayout(ribbon, next);
+}
+
+void MainWindow::showRibbonContextMenu(QToolBar* ribbon, const QPoint& globalPos)
+{
+    if (!ribbon || !m_floatingRibbons.contains(ribbon)) return;
+    
+    QMenu contextMenu(this);
+    contextMenu.setTitle(tr("Ribbon Layout"));
+    
+    // Add layout options
+    QAction* horizontalAction = contextMenu.addAction(tr("Horizontal Layout"));
+    QAction* verticalAction = contextMenu.addAction(tr("Vertical Layout"));
+    QAction* gridAction = contextMenu.addAction(tr("Grid Layout"));
+    
+    // Mark current layout
+    RibbonLayout current = m_ribbonLayouts.value(ribbon, RibbonLayout::Horizontal);
+    switch (current) {
+        case RibbonLayout::Horizontal:
+            horizontalAction->setCheckable(true);
+            horizontalAction->setChecked(true);
+            break;
+        case RibbonLayout::Vertical:
+            verticalAction->setCheckable(true);
+            verticalAction->setChecked(true);
+            break;
+        case RibbonLayout::Grid:
+            gridAction->setCheckable(true);
+            gridAction->setChecked(true);
+            break;
+    }
+    
+    // Connect actions
+    connect(horizontalAction, &QAction::triggered, this, [this, ribbon]() {
+        setRibbonLayout(ribbon, RibbonLayout::Horizontal);
+    });
+    connect(verticalAction, &QAction::triggered, this, [this, ribbon]() {
+        setRibbonLayout(ribbon, RibbonLayout::Vertical);
+    });
+    connect(gridAction, &QAction::triggered, this, [this, ribbon]() {
+        setRibbonLayout(ribbon, RibbonLayout::Grid);
+    });
+    
+    // Show context menu
+    contextMenu.exec(globalPos);
+}
+
+void MainWindow::changeEvent(QEvent *event)
+{
+    if (event->type() == QEvent::WindowStateChange) {
+        // Ensure floating ribbons stay visible
+        for (QToolBar* ribbon : m_floatingRibbons) {
+            if (ribbon && ribbon->isVisible()) {
+                ribbon->raise();
+                ribbon->activateWindow();
+            }
+        }
+    }
+    QMainWindow::changeEvent(event);
 }
 
 void MainWindow::loadSettings()
