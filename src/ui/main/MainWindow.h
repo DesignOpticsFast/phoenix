@@ -97,6 +97,7 @@ private:
     void setupTheme();
     void restoreRibbonState();
     void updateRibbonIcons();
+    void setupFloatingRibbon(QToolBar* ribbon);
     
     // Menu creation helpers
     QMenu* createFileMenu();

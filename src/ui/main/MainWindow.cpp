@@ -372,6 +372,19 @@ QToolBar* MainWindow::createTopRibbon()
     ribbon->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     ribbon->setIconSize(QSize(24, 24));
     
+    // Ensure floating ribbons stay visible
+    ribbon->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
+    
+    // Set size policy for compact floating
+    ribbon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    
+    // Connect floating behavior
+    connect(ribbon, &QToolBar::topLevelChanged, this, [this, ribbon](bool floating) {
+        if (floating) {
+            setupFloatingRibbon(ribbon);
+        }
+    });
+    
     // File actions
     QAction* newAction = ribbon->addAction(getIcon("plus", "document-new"), tr("New"));
     newAction->setToolTip(tr("Create new file"));
@@ -440,6 +453,19 @@ QToolBar* MainWindow::createRightRibbon()
     ribbon->setOrientation(Qt::Vertical);
     ribbon->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     ribbon->setIconSize(QSize(20, 20));
+    
+    // Ensure floating ribbons stay visible
+    ribbon->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
+    
+    // Set size policy for compact floating
+    ribbon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    
+    // Connect floating behavior
+    connect(ribbon, &QToolBar::topLevelChanged, this, [this, ribbon](bool floating) {
+        if (floating) {
+            setupFloatingRibbon(ribbon);
+        }
+    });
     
     // Editors actions
     QAction* lensInspectorAction = ribbon->addAction(getIcon("lens", "search"), tr("Lens Inspector"));
@@ -639,10 +665,27 @@ void MainWindow::updateRibbonIcons()
             } else if (text == tr("Help")) {
                 action->setIcon(getIcon("question", "help"));
             } else if (text == tr("About")) {
-                action->setIcon(getIcon("info", "about"));
+                action->setIcon(getIcon("info-circle", "info"));
             }
         }
     }
+}
+
+void MainWindow::setupFloatingRibbon(QToolBar* ribbon)
+{
+    if (!ribbon) return;
+    
+    // When floating, set the ribbon to a compact size
+    ribbon->adjustSize();
+    
+    // Set minimum and maximum size to be the same (compact)
+    QSize size = ribbon->sizeHint();
+    ribbon->setMinimumSize(size);
+    ribbon->setMaximumSize(size);
+    
+    // Ensure it stays on top when floating
+    ribbon->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    ribbon->show();
 }
 
 void MainWindow::loadSettings()
