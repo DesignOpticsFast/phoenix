@@ -1,1 +1,10 @@
-# Test workflow change
+name: Test Workflow (Disabled)
+on:
+  workflow_call:  # Only callable, won't run on push/PR
+
+jobs:
+  noop:
+    if: false  # Always false condition
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "This workflow is disabled to reduce notification noise"

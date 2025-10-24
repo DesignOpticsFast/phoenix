@@ -211,10 +211,12 @@ jobs:
 
       - name: Build
         run: cmake --build build/dev-01-relwithdebinfo -j $(nproc || echo 4)
+        continue-on-error: false
 
       - name: Unit tests
         if: hashFiles('build/dev-01-relwithdebinfo/CTestTestfile.cmake') != ''
         run: ctest --test-dir build/dev-01-relwithdebinfo --output-on-failure
+        continue-on-error: false
 
   ci_checks:
     needs: changes
