@@ -699,8 +699,6 @@ void MainWindow::updateRibbonIcons()
             } else if (text == tr("About")) {
                 // Force update of Help-About icon with proper theming
                 action->setIcon(getIcon("info-circle", "info"));
-                // Ensure the icon is updated immediately
-                action->update();
             }
         }
     }
@@ -1206,7 +1204,6 @@ void MainWindow::applyIcons()
             for (QAction* action : helpActions) {
                 if (action->text().contains("About")) {
                     action->setIcon(getIcon("info-circle", "info"));
-                    action->update();
                 }
             }
             break;
