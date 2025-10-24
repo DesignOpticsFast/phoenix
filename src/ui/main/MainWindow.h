@@ -87,6 +87,7 @@ private slots:
 private:
     void setupMenuBar();
     void setupToolBar();
+    void setupRibbons();
     void setupDockWidgets();
     void setupStatusBar();
     void setupConnections();
@@ -105,6 +106,8 @@ private:
     
     // Toolbar creation helpers
     QToolBar* createMainToolBar();
+    QToolBar* createTopRibbon();
+    QToolBar* createRightRibbon();
     
     // Status bar helpers
     void updateStatusMessage(const QString& message);
@@ -115,6 +118,8 @@ private:
     // UI Components
     QMenuBar* m_menuBar;
     QToolBar* m_mainToolBar;
+    QToolBar* m_topRibbon;
+    QToolBar* m_rightRibbon;
     QStatusBar* m_statusBar;
     
     // Dock widgets
@@ -163,4 +168,8 @@ private:
     
     // Performance tracking
     QElapsedTimer m_actionTimer;
+    
+    // Telemetry hooks
+    void logUIAction(const QString& action, qint64 elapsed);
+    void logRibbonAction(const QString& action);
 };
