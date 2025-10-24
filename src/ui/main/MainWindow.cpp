@@ -697,7 +697,10 @@ void MainWindow::updateRibbonIcons()
             } else if (text == tr("Help")) {
                 action->setIcon(getIcon("question", "help"));
             } else if (text == tr("About")) {
+                // Force update of Help-About icon with proper theming
                 action->setIcon(getIcon("info-circle", "info"));
+                // Ensure the icon is updated immediately
+                action->update();
             }
         }
     }
@@ -707,14 +710,18 @@ void MainWindow::setupFloatingRibbon(QToolBar* ribbon)
 {
     if (!ribbon) return;
     
-    // Determine optimal layout for floating
-    RibbonLayout layout = getOptimalLayout(ribbon, true);
-    setRibbonLayout(ribbon, layout);
-    
-    // Set proper window flags for frameless floating
+    // Set proper window flags for always-on-top floating
     ribbon->setWindowFlags(Qt::Window | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     ribbon->setParent(this, Qt::Window);
     ribbon->setAttribute(Qt::WA_ShowWithoutActivating, true);
+    
+    // Force to front and ensure visibility
+    ribbon->raise();
+    ribbon->activateWindow();
+    
+    // Determine optimal layout for floating
+    RibbonLayout layout = getOptimalLayout(ribbon, true);
+    setRibbonLayout(ribbon, layout);
     
     // Calculate size based on layout
     updateRibbonLayout(ribbon);
@@ -722,8 +729,13 @@ void MainWindow::setupFloatingRibbon(QToolBar* ribbon)
     // Track as floating
     m_floatingRibbons.insert(ribbon);
     
-    // Ensure visibility
+    // Install event filter for resize handling
+    ribbon->installEventFilter(this);
+    
+    // Ensure visibility and z-order
     ribbon->show();
+    ribbon->raise();
+    ribbon->activateWindow();
 }
 
 void MainWindow::setRibbonLayout(QToolBar* ribbon, RibbonLayout layout)
@@ -746,21 +758,29 @@ void MainWindow::updateRibbonLayout(QToolBar* ribbon)
     int actionCount = actions.size();
     
     if (isFloating && layout == MainWindow::RibbonLayout::Grid) {
-        // Calculate grid dimensions
-        int cols = qCeil(qSqrt(actionCount));
-        int rows = qCeil(double(actionCount) / cols);
-        
-        // Set grid layout
+        // Set grid layout with configurable dimensions
         ribbon->setOrientation(Qt::Horizontal);
         ribbon->setToolButtonStyle(Qt::ToolButtonIconOnly);
         
-        // Calculate size for grid
+        // Calculate optimal grid dimensions based on current size
+        QSize currentSize = ribbon->size();
         QSize iconSize = ribbon->iconSize();
         QSize buttonSize = iconSize + QSize(8, 8); // Add padding
+        
+        // Calculate how many columns fit in current width
+        int cols = qMax(1, currentSize.width() / buttonSize.width());
+        int rows = qCeil(double(actionCount) / cols);
+        
+        // Calculate size for grid
         QSize gridSize = QSize(cols * buttonSize.width(), rows * buttonSize.height());
         
-        ribbon->setMinimumSize(gridSize);
+        // Set size constraints for resizable grid
+        ribbon->setMinimumSize(QSize(buttonSize.width(), buttonSize.height())); // Minimum 1x1
+        ribbon->setMaximumSize(QSize(16777215, 16777215)); // Allow very large
         ribbon->resize(gridSize);
+        
+        // Enable resizing by setting size policy
+        ribbon->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         
     } else if (layout == MainWindow::RibbonLayout::Horizontal) {
         // Horizontal strip layout
@@ -883,15 +903,33 @@ void MainWindow::showRibbonContextMenu(QToolBar* ribbon, const QPoint& globalPos
 void MainWindow::changeEvent(QEvent *event)
 {
     if (event->type() == QEvent::WindowStateChange) {
-        // Ensure floating ribbons stay visible
+        // Ensure floating ribbons stay on top of everything
         for (QToolBar* ribbon : m_floatingRibbons) {
             if (ribbon && ribbon->isVisible()) {
                 ribbon->raise();
                 ribbon->activateWindow();
+                // Ensure window flags are correct for always-on-top
+                ribbon->setWindowFlags(Qt::Window | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+                ribbon->show();
             }
         }
     }
     QMainWindow::changeEvent(event);
+}
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    // Handle ribbon resize events for grid layout
+    if (QToolBar* ribbon = qobject_cast<QToolBar*>(obj)) {
+        if (m_floatingRibbons.contains(ribbon) && event->type() == QEvent::Resize) {
+            RibbonLayout layout = m_ribbonLayouts.value(ribbon, MainWindow::RibbonLayout::Horizontal);
+            if (layout == MainWindow::RibbonLayout::Grid) {
+                // Update grid layout when ribbon is resized
+                updateRibbonLayout(ribbon);
+            }
+        }
+    }
+    return QMainWindow::eventFilter(obj, event);
 }
 
 void MainWindow::loadSettings()
@@ -1159,7 +1197,23 @@ void MainWindow::applyIcons()
     m_xyPlotAction->setIcon(getIcon("chart-line", "chart"));
     m_2dPlotAction->setIcon(getIcon("chart-bar", "chart"));
     
-    // Update ribbon icons
+    // Help menu actions (including Help-About)
+    // Find the Help menu and update its About action
+    QList<QMenu*> menus = m_menuBar->findChildren<QMenu*>();
+    for (QMenu* menu : menus) {
+        if (menu->title().contains("Help")) {
+            QList<QAction*> helpActions = menu->actions();
+            for (QAction* action : helpActions) {
+                if (action->text().contains("About")) {
+                    action->setIcon(getIcon("info-circle", "info"));
+                    action->update();
+                }
+            }
+            break;
+        }
+    }
+    
+    // Update ribbon icons (including Help-About)
     updateRibbonIcons();
 }
 

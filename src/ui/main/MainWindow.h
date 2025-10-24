@@ -114,6 +114,7 @@ private:
     
     // Event handling
     void changeEvent(QEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *event) override;
     
     // Menu creation helpers
     QMenu* createFileMenu();
