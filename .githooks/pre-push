@@ -7,7 +7,7 @@ ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 # shellcheck disable=SC1091
 source "$ROOT/scripts/lib/preflight_common.sh"
 
-if [[ "$(hostname)" != *"dev-01"* ]]; then
+if ! is_dev01; then
   echo "[pre-push] Not on dev-01; skipping enforced build gate."
   exit 0
 fi
