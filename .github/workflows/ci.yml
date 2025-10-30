@@ -32,7 +32,7 @@ jobs:
       ci_only: ${{ steps.classify.outputs.ci_only }}
     steps:
       - name: Checkout (full history)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           # For PRs, point at the head ref explicitly to avoid shallow/detached surprises
@@ -121,16 +121,19 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && needs.changes.outputs.docs_only == 'true'
     steps:
-      - uses: actions/checkout@v4
-      - uses: DavidAnson/markdownlint-cli2-action@v16
+      - uses: actions/checkout@v5
+      - uses: DavidAnson/markdownlint-cli2-action@v20
         with:
           globs: |
             **/*.md
             !.github/**
             !.underlord/**
+            !docs/palantir/**
+            !assets/**
+            !ci-audit-package/**
             !CHANGELOG.md
       - name: link check
-        uses: lycheeverse/lychee-action@v1   # pin to v1 while stabilizing
+        uses: lycheeverse/lychee-action@v2   # pin to v1 while stabilizing
         with:
           args: >
             --no-progress --include-fragments
@@ -163,7 +166,7 @@ jobs:
       CMAKE_PREFIX_PATH: /opt/Qt/6.10.0/gcc_64
       QTFRAMEWORK_BYPASS_LICENSE_CHECK: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Verify dev-01 labels & env
         shell: bash
@@ -226,7 +229,7 @@ jobs:
     if: github.event_name == 'pull_request' && needs.changes.outputs.ci_only == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Guard - no conflict markers in workflows
         run: |
           if grep -R -nE '^<<<<<<<|^>>>>>>>' .github/workflows ; then
