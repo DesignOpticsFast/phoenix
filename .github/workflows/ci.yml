@@ -126,6 +126,9 @@ jobs:
         with:
           globs: |
             **/*.md
+            !.github/**
+            !.underlord/**
+            !CHANGELOG.md
       - name: link check
         uses: lycheeverse/lychee-action@v1   # pin to v1 while stabilizing
         with:
