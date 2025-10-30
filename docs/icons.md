@@ -5,6 +5,7 @@ Phoenix uses Font Awesome Pro icons with a hybrid storage strategy that provides
 ## 🎯 Overview
 
 The icon system provides two access methods:
+
 - **Font-based icons**: Access to ALL Font Awesome Pro icons via Unicode
 - **SVG-based icons**: High-quality specific icons for custom use cases
 
@@ -112,6 +113,7 @@ python3 assets/icons/fontawesome-pro/icon-manager.py init
 ## 🎯 Common Icons
 
 ### Sharp Solid (Recommended)
+
 - Save: `\uf0c7`
 - Open: `\uf07c`
 - Chart Line: `\uf201`
@@ -123,10 +125,12 @@ python3 assets/icons/fontawesome-pro/icon-manager.py init
 - Question: `\uf059`
 
 ### Duotone
+
 - Chart Line: `\uf201`
 - Chart Scatter: `\uf201`
 
 ### Brands
+
 - GitHub: `\uf09b`
 - Twitter: `\uf099`
 - LinkedIn: `\uf08c`

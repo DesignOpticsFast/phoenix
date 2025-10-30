@@ -11,11 +11,13 @@ The UnderLord Phase 0.5 Gate has been **successfully completed** with both the G
 ## Final Artifacts Published
 
 ### Performance Data
+
 - ✅ `docs/sprint4/results/gate0_5_qtgraphs_6_10.csv` - Qt Graphs performance telemetry
 - ✅ `docs/sprint4/results/gate0_5_qtgraphs_6_10_summary.md` - Qt Graphs analysis
 - ✅ `docs/sprint4/results/gate0_5_transport.csv` - Transport benchmark data
 
 ### Control Documentation
+
 - ✅ `docs/sprint4/GATE_0_5_DECISION.md` - Final gate decision
 - ✅ `docs/sprint4/STOP_THE_LINE_2025-10-17.md` - Issue resolution and gate results
 - ✅ `docs/sprint4/PHASE_0_5_ARTIFACTS.md` - Complete artifact inventory
@@ -24,11 +26,13 @@ The UnderLord Phase 0.5 Gate has been **successfully completed** with both the G
 ## Acceptance Criteria - ALL MET
 
 ### Graphics Pipe (Qt Graphs)
+
 - ✅ 50 idle windows: < 5% total CPU, < 100 MB RAM per window
 - ✅ 10k points: ≥ 30 FPS (after downsampling)
 - ✅ Open/close 20×: no increasing RSS (no leaks)
 
 ### Transport Pipe (Palantir IPC)
+
 - ✅ gRPC overhead vs LocalSocket: 2.04% (< 5% threshold)
 - ✅ gRPC static footprint: 45 MB (< 50 MB threshold)
 

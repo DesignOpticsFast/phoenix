@@ -13,12 +13,14 @@
 ## 📋 **Mac Environment Details**
 
 ### **Connection Information**
+
 - **Tailscale IP**: `100.97.54.75`
 - **SSH Key**: `~/.ssh/github_phoenix`
 - **User**: `mark`
 - **Connection Command**: `ssh -i ~/.ssh/github_phoenix mark@100.97.54.75`
 
 ### **Qt6 Installation Status**
+
 - ✅ **Qt6 is installed** (confirmed by user)
 - ❌ **CMake cannot find Qt6** (path resolution issue)
 - 🔍 **Need to identify**: Qt6 installation path and version
@@ -26,6 +28,7 @@
 ## 🔍 **Required Information to Document**
 
 ### **Qt6 Installation Details**
+
 1. **Qt6 Version**: What version is installed? (Target: 6.10.0)
 2. **Installation Path**: Where is Qt6 installed?
    - `/Users/mark/Qt/6.10.0/macos` (Qt Installer)
@@ -42,12 +45,14 @@
    - Qt6::Graphs (required for Phoenix)
 
 ### **Development Tools**
+
 1. **CMake Version**: What version is installed?
 2. **Ninja Build**: Is ninja-build available?
 3. **Xcode Command Line Tools**: Are they installed?
 4. **Git**: Version and configuration
 
 ### **System Information**
+
 1. **macOS Version**: What version of macOS?
 2. **Architecture**: Intel x64 or Apple Silicon (ARM64)?
 3. **Available Memory**: RAM and storage
@@ -56,6 +61,7 @@
 ## 🎯 **Next Steps**
 
 ### **Immediate Actions Required**
+
 1. **Connect to Mac** via Tailscale
 2. **Identify Qt6 installation** path and version
 3. **Test CMake configuration** with correct paths
@@ -63,6 +69,7 @@
 5. **Create build script** for Mac environment
 
 ### **Commands to Run on Mac**
+
 ```bash
 # Connect to Mac
 ssh -i ~/.ssh/github_phoenix mark@100.97.54.75
@@ -91,6 +98,7 @@ brew --prefix qt@6 2>/dev/null
 ## 📝 **Documentation Template**
 
 ### **Qt6 Installation Found**
+
 - **Version**: [TO BE FILLED]
 - **Path**: [TO BE FILLED]
 - **qmake Location**: [TO BE FILLED]
@@ -98,11 +106,13 @@ brew --prefix qt@6 2>/dev/null
 - **Available Components**: [TO BE FILLED]
 
 ### **CMake Configuration**
+
 - **CMake Version**: [TO BE FILLED]
 - **Working CMAKE_PREFIX_PATH**: [TO BE FILLED]
 - **Build Command**: [TO BE FILLED]
 
 ### **System Details**
+
 - **macOS Version**: [TO BE FILLED]
 - **Architecture**: [TO BE FILLED]
 - **Available Tools**: [TO BE FILLED]
@@ -125,4 +135,3 @@ brew --prefix qt@6 2>/dev/null
 
 **Status**: 🔄 **IN PROGRESS** - Awaiting Mac environment discovery  
 **Next Action**: Connect to Mac and identify Qt6 installation details
-

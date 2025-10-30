@@ -15,6 +15,7 @@
 ## Results Summary
 
 ### Performance Metrics
+
 - **CPU Usage:** < 1% (well under 5% threshold)
 - **Memory Usage:** ~9.6 MB RSS (stable, no growth)
 - **Latency:** < 100ms per iteration
@@ -49,6 +50,3 @@
 
 ---
 **Status:** ✅ PASS - Ready for Gate 0.5B
-
-
-

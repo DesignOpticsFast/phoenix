@@ -7,6 +7,7 @@
 ## **Required Runner Labels**
 
 The dev-01 runner must be configured with these labels:
+
 - `self-hosted` (automatic)
 - `linux` (OS specification)
 - `x64` (architecture specification)
@@ -16,6 +17,7 @@ The dev-01 runner must be configured with these labels:
 ### **Applying Labels**
 
 **For new runner setup:**
+
 ```bash
 cd ~/actions-runner
 ./config.sh --url https://github.com/DesignOpticsFast/phoenix \
@@ -27,6 +29,7 @@ sudo ./svc.sh start
 ```
 
 **For existing runner:**
+
 ```bash
 cd ~/actions-runner
 sudo ./svc.sh stop
@@ -39,6 +42,7 @@ sudo ./svc.sh start
 ## **Required Environment Variables**
 
 ### **Method 1: Profile Script (Login Shells)**
+
 Create `/etc/profile.d/qt.sh` on dev-01:
 
 ```bash
@@ -50,6 +54,7 @@ export PATH=$QT_PATH/bin:$PATH
 ```
 
 ### **Method 2: Systemd Service Environment (Recommended)**
+
 The Actions runner is a systemd service, so we need to ensure environment variables are loaded by the service:
 
 ```bash
@@ -58,6 +63,7 @@ sudo systemctl edit actions.runner-*.service
 ```
 
 **Paste this configuration:**
+
 ```ini
 [Service]
 Environment=QT_VERSION=6.9.3
@@ -67,6 +73,7 @@ Environment=PATH=/opt/Qt/6.9.3/gcc_64/bin:%h/actions-runner:%h/actions-runner/bi
 ```
 
 **Apply the changes:**
+
 ```bash
 # Reload systemd configuration
 sudo systemctl daemon-reload
@@ -76,6 +83,7 @@ sudo systemctl restart actions.runner-*.service
 ```
 
 **Apply both methods for maximum compatibility:**
+
 ```bash
 # Method 1: Profile script
 sudo tee /etc/profile.d/qt.sh << 'EOF'
@@ -100,6 +108,7 @@ sudo systemctl restart actions.runner-*.service
 ## **Verification Steps**
 
 ### **1. Test Environment Locally**
+
 ```bash
 # Source environment
 source /etc/profile.d/qt.sh
@@ -113,6 +122,7 @@ test -f $CMAKE_PREFIX_PATH/lib/cmake/Qt6/Qt6Config.cmake && echo "Qt OK" || echo
 ```
 
 ### **2. One-Time Verification on dev-01**
+
 **Copy/paste this complete verification script:**
 
 ```bash
@@ -142,7 +152,9 @@ echo -e "\n=== Verification Complete ==="
 ```
 
 ### **2. Verify from CI Workflow**
+
 The CI workflow includes an environment verification step that will:
+
 - Display runner labels
 - Show environment variables
 - Probe Qt installation
@@ -153,12 +165,14 @@ The CI workflow includes an environment verification step that will:
 ## **CI Workflow Behavior**
 
 ### **Build Job Conditions**
+
 - **Internal PRs with code changes**: Build runs on dev-01
 - **Docs-only PRs**: Build skipped, docs checks run
 - **CI-only PRs**: Build skipped, ci_checks run
 - **Fork PRs**: Build skipped (safety), docs/ci_checks run
 
 ### **Safety Features**
+
 - **Fork Protection**: `head.repo.full_name == github.repository`
 - **Timeout**: 30 minutes maximum build time
 - **Concurrency**: Serialized builds on dev-01 (`dev01-build` group)
@@ -169,12 +183,15 @@ The CI workflow includes an environment verification step that will:
 ## **Monitoring**
 
 ### **Daily Heartbeat**
+
 - **Schedule**: Daily at 09:00 UTC
 - **Purpose**: Verify dev-01 is online and Qt is available
 - **Manual Trigger**: Available via `workflow_dispatch`
 
 ### **Health Check**
+
 The heartbeat workflow verifies:
+
 - Runner is accessible
 - Environment variables are set
 - Qt installation is present
@@ -184,18 +201,22 @@ The heartbeat workflow verifies:
 ## **Qt Version Management**
 
 ### **Current Configuration**
+
 - **Version**: 6.9.3
 - **Path**: `/opt/Qt/6.9.3/gcc_64`
 - **Configurable**: Via `QT_VERSION` environment variable
 
 ### **Upgrading Qt**
+
 1. Install new Qt version on dev-01
 2. Update `QT_VERSION` in `/etc/profile.d/qt.sh`
 3. Restart runner service
 4. Test with heartbeat workflow
 
 ### **Multiple Versions (Future)**
+
 For multiple Qt versions:
+
 ```bash
 # Maintain multiple installs
 /opt/Qt/6.9.3/gcc_64
@@ -212,15 +233,18 @@ export QT_VERSION=6.10.0
 ### **Common Issues**
 
 **1. Runner not found**
+
 - Verify labels: `self-hosted`, `dev-01`, `qt6`
 - Check runner service status: `sudo systemctl status actions.runner.*`
 
 **2. Qt not found**
+
 - Verify environment variables are set
 - Check Qt installation path
 - Test with: `test -f $CMAKE_PREFIX_PATH/lib/cmake/Qt6/Qt6Config.cmake`
 
 **3. Build timeouts**
+
 - Check dev-01 resource usage
 - Verify no hanging processes
 - Review build logs for specific errors
@@ -230,6 +254,7 @@ export QT_VERSION=6.10.0
 If dev-01 misbehaves, here's the quick rollback procedure:
 
 **Step 1: Stop dev-01 service**
+
 ```bash
 # On dev-01
 cd ~/actions-runner
@@ -238,6 +263,7 @@ sudo ./svc.sh stop
 
 **Step 2: Temporary fallback to GitHub runners**
 Update the build job in `ci.yml`:
+
 ```yaml
 build:
   name: Build (Qt on GitHub runners - temporary)
@@ -265,6 +291,7 @@ build:
 ```
 
 **Step 3: Revert once dev-01 is fixed**
+
 ```bash
 # Revert the temporary changes
 git revert <commit-sha>
@@ -272,6 +299,7 @@ git revert <commit-sha>
 ```
 
 **Benefits of this approach:**
+
 - ✅ Repository remains mergeable
 - ✅ Builds continue on GitHub runners
 - ✅ No data loss or configuration changes
@@ -304,6 +332,7 @@ After implementing the dev-01 configuration, run these validation tests:
 ### **✅ Expected CI Behavior**
 
 **In a PR build log, the "Verify dev-01 environment" step should print:**
+
 - Runner labels containing: `linux`, `x64`, `dev-01`, `qt6`
 - `CMAKE_PREFIX_PATH` → `/opt/Qt/6.9.3/gcc_64`
 - `"Qt probe OK…"` message
@@ -311,6 +340,7 @@ After implementing the dev-01 configuration, run these validation tests:
 ### **✅ Troubleshooting**
 
 **If any build still misses dev-01:**
+
 - Check the "Verify labels" line in the build log
 - Check the evaluated `if:` condition from the skipped job
 - Verify runner labels match exactly: `[self-hosted, linux, x64, dev-01, qt6]`

@@ -12,7 +12,9 @@
 ## Core Principles
 
 ### 1. Development Environment First
+
 **ALL CODE CHANGES MUST BE DONE ON DEV-01 FIRST**
+
 - ✅ Build and test on dev-01 before local development
 - ✅ Use Tailscale for secure connection to dev-01
 - ✅ Test GUI with Xvfb on dev-01
@@ -20,18 +22,23 @@
 - ✅ Commit changes from dev-01
 
 ### 2. User Experience First
+
 Performance, accessibility, and mobile responsiveness are non-negotiable.
 
 ### 3. Component Thinking
+
 Build small, reusable components with single responsibility.
 
 ### 4. Type Safety
+
 TypeScript everywhere. No `any` types without explicit justification.
 
 ### 5. Predictable State
+
 Immutable state updates with clear data flow.
 
 ### 6. Ship with Confidence
+
 Test user interactions, not implementation details.
 
 ---
@@ -39,6 +46,7 @@ Test user interactions, not implementation details.
 ## Development Workflow
 
 ### **Phase 1: Development on dev-01**
+
 ```bash
 # Connect to dev-01 via Tailscale
 ssh -i ~/.ssh/github_phoenix mark@100.97.54.75
@@ -60,6 +68,7 @@ git push origin feature-branch
 ```
 
 ### **Phase 2: Local Machine Testing**
+
 ```bash
 # On local machine
 git pull origin feature-branch
@@ -72,6 +81,7 @@ ninja -k0
 ```
 
 ### **Key Requirements**
+
 - ✅ **All changes on dev-01 first**
 - ✅ **Test with Xvfb on dev-01**
 - ✅ **Debug resource loading on dev-01**
@@ -106,6 +116,7 @@ const userName = "Alice"  // No semicolon, double quotes
 ### Naming Conventions
 
 **Components and Types:** `PascalCase`
+
 ```typescript
 interface UserProfile {
   name: string;
@@ -118,6 +129,7 @@ function UserCard({ name, email }: UserProfile) {
 ```
 
 **Functions, Variables, Hooks:** `camelCase`
+
 ```typescript
 const userName = 'Alice';
 const calculateTotal = (items: Item[]) => sum(items);
@@ -130,6 +142,7 @@ function useUserData(userId: string) {
 ```
 
 **Constants:** `UPPER_SNAKE_CASE`
+
 ```typescript
 const MAX_RETRY_ATTEMPTS = 3;
 const API_BASE_URL = 'https://api.example.com';
@@ -137,6 +150,7 @@ const DEFAULT_TIMEOUT_MS = 5000;
 ```
 
 **Event Handlers:** `handle*` prefix
+
 ```typescript
 function LoginForm() {
   const handleSubmit = (e: React.FormEvent) => {
@@ -153,6 +167,7 @@ function LoginForm() {
 ```
 
 **Boolean Variables:** `is*`, `has*`, `should*` prefix
+
 ```typescript
 const isLoading = true;
 const hasPermission = checkPermission();
@@ -164,6 +179,7 @@ const shouldShowModal = isLoading && hasPermission;
 ### Component Structure
 
 **Order matters:**
+
 ```typescript
 // 1. Imports
 import React, { useState, useEffect } from 'react';
@@ -227,6 +243,7 @@ export function UserProfile({ userId, onUpdate }: UserProfileProps) {
 ### TypeScript Usage
 
 **Always use TypeScript, never JavaScript:**
+
 ```typescript
 // Good
 interface ButtonProps {
@@ -255,6 +272,7 @@ function Button({ label, onClick, variant, disabled }) {
 ```
 
 **Never use `any` without justification:**
+
 ```typescript
 // Bad
 const data: any = await fetchData();
@@ -273,6 +291,7 @@ const legacyData: any = parseOldFormat(data); // TODO: Type this properly
 ```
 
 **Use proper prop interfaces:**
+
 ```typescript
 // Good
 interface ChatMessageProps {
@@ -300,6 +319,7 @@ interface ChatMessageProps {
 ### Custom Hooks
 
 **Return objects, not arrays (unless it's a tuple):**
+
 ```typescript
 // Good - object return
 function useUserData(userId: string) {
@@ -326,6 +346,7 @@ function useUserData(userId) {
 ### useEffect Cleanup
 
 **Always cleanup subscriptions:**
+
 ```typescript
 // Good
 useEffect(() => {
@@ -379,6 +400,7 @@ function ParentComponent() {
 ### React Testing Library (Not Enzyme)
 
 **Test user behavior, not implementation:**
+
 ```typescript
 // Good
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -767,6 +789,7 @@ useEffect(() => {
 **Format:** `<type>(<scope>): <subject>`
 
 **Examples:**
+
 ```bash
 feat(chat): add message streaming
 fix(auth): correct token refresh logic
@@ -825,6 +848,7 @@ npm run type-check && npm run lint && npm run test
 ## Version History
 
 ### 2.1.0 (2025-01-23)
+
 - **MAJOR UPDATE**: Added comprehensive CI workflow protection
 - **NEW**: Self-healing CI system with conflict prevention
 - **NEW**: Pre-commit hooks for conflict marker detection
@@ -834,6 +858,7 @@ npm run type-check && npm run lint && npm run test
 - **UPDATED**: CI workflow documentation and standards
 
 ### 2.0.0 (2025-01-21)
+
 - **MAJOR UPDATE**: Added dev-01-first development policy
 - **NEW**: Tailscale integration for secure development
 - **NEW**: Xvfb GUI testing on dev-01
@@ -842,6 +867,7 @@ npm run type-check && npm run lint && npm run test
 - **UPDATED**: Quality assurance standards
 
 ### 1.0.0 (2025-01-14)
+
 - Initial TypeScript/React coding standards
 - Component structure guidelines
 - Hooks best practices

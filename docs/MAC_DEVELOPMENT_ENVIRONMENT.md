@@ -15,12 +15,14 @@
 ## 🔧 **Development Tools**
 
 ### **Qt6 Installation**
+
 - **Location**: `/Users/mark/Qt/6.9.3/macos`
 - **Version**: Qt 6.9.3
 - **Installation Method**: Qt Installer
 - **CMake Path**: `/Users/mark/Qt/6.9.3/macos/lib/cmake/Qt6`
 
 **Key Files:**
+
 ```bash
 # Qt6 Configuration
 /Users/mark/Qt/6.9.3/macos/lib/cmake/Qt6/Qt6Config.cmake
@@ -36,15 +38,18 @@
 ```
 
 ### **CMake**
+
 - **Location**: System-installed (via Xcode Command Line Tools)
 - **Version**: Available via `cmake --version`
 - **Usage**: `cmake -S . -B build -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos`
 
 ### **Git**
+
 - **Version**: 2.50.1 (Apple Git-155)
 - **Location**: System-installed
 
 ### **Other Tools**
+
 - **Ninja Build**: Not installed (uses make instead)
 - **Xcode Command Line Tools**: Installed
 - **Homebrew**: Not installed
@@ -52,6 +57,7 @@
 ## 🚀 **Build Commands**
 
 ### **Standard Build**
+
 ```bash
 # Configure with Qt6
 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos
@@ -61,6 +67,7 @@ cmake --build build -j
 ```
 
 ### **Debug Build**
+
 ```bash
 # Configure for debug
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos
@@ -70,6 +77,7 @@ cmake --build build -j
 ```
 
 ### **Clean Build**
+
 ```bash
 # Remove build directory
 rm -rf build
@@ -104,6 +112,7 @@ cmake --build build -j
 ## 🔍 **Environment Variables**
 
 ### **Required for Phoenix Build**
+
 ```bash
 # Set Qt6 path (if not using -DCMAKE_PREFIX_PATH)
 export CMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos
@@ -113,6 +122,7 @@ export Qt6_DIR=/Users/mark/Qt/6.9.3/macos/lib/cmake/Qt6
 ```
 
 ### **Optional Environment Setup**
+
 ```bash
 # Add Qt6 tools to PATH (if needed)
 export PATH="/Users/mark/Qt/6.9.3/macos/bin:$PATH"
@@ -126,6 +136,7 @@ uic -v
 ## 🛠️ **Development Workflow**
 
 ### **Daily Development**
+
 ```bash
 # 1. Pull latest changes
 git pull
@@ -142,6 +153,7 @@ open build/Phoenix.app
 ```
 
 ### **Icon Updates**
+
 ```bash
 # 1. Update source image
 cp your_new_icon.svg resources/macos/Phoenix.svg
@@ -162,6 +174,7 @@ open build/Phoenix.app
 ## 🔧 **Troubleshooting**
 
 ### **Qt6 Not Found**
+
 ```bash
 # Check Qt6 installation
 ls -la /Users/mark/Qt/6.9.3/macos/lib/cmake/Qt6/
@@ -171,6 +184,7 @@ cmake --find-package -DNAME=Qt6 -DCOMPILER_ID=GNU -DLANGUAGE=CXX -DMODE=EXIST -D
 ```
 
 ### **Build Failures**
+
 ```bash
 # Check CMake configuration
 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos --debug-output
@@ -180,6 +194,7 @@ cmake --build build -j --verbose
 ```
 
 ### **Icon Issues**
+
 ```bash
 # Check icon file
 ls -l resources/macos/Phoenix.icns
@@ -194,6 +209,7 @@ plutil -p build/Phoenix.app/Contents/Info.plist | grep -i CFBundleIconFile
 ## 📋 **Verification Commands**
 
 ### **System Check**
+
 ```bash
 # Check macOS version
 sw_vers
@@ -206,6 +222,7 @@ system_profiler SPHardwareDataType | grep "Memory:"
 ```
 
 ### **Development Tools Check**
+
 ```bash
 # Check CMake
 cmake --version
@@ -218,6 +235,7 @@ git --version
 ```
 
 ### **Phoenix Build Check**
+
 ```bash
 # Check if Phoenix builds
 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos
@@ -230,6 +248,7 @@ open build/Phoenix.app
 ## 🚀 **Quick Reference**
 
 ### **Essential Commands**
+
 ```bash
 # Build Phoenix
 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos && cmake --build build -j
@@ -245,6 +264,7 @@ rm -rf build
 ```
 
 ### **Key Paths**
+
 - **Qt6**: `/Users/mark/Qt/6.9.3/macos`
 - **CMake**: System-installed
 - **Git**: System-installed
@@ -260,8 +280,3 @@ rm -rf build
 
 **Status**: ✅ **COMPLETE** - Mac development environment documented  
 **Next**: Use this guide for Mac development and troubleshooting
-
-
-
-
-
