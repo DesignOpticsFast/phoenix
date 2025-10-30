@@ -1,0 +1,10 @@
+# Vendor & generated
+assets/icons/**
+assets/**/fontawesome-pro/**
+
+# CI & automation
+.github/**
+.underlord/**
+
+# Submodule docs (linted in its own repo)
+docs/palantir/**

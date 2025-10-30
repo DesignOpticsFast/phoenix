@@ -128,6 +128,8 @@ jobs:
             **/*.md
             !.github/**
             !.underlord/**
+            !docs/palantir/**
+            !assets/**
             !CHANGELOG.md
       - name: link check
         uses: lycheeverse/lychee-action@v1   # pin to v1 while stabilizing
