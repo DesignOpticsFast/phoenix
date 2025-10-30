@@ -25,7 +25,7 @@ jobs:
 
       - name: Fail on unauthorized workflow edits
         run: |
-          ALLOW_REGEX='^\.github/workflows/(policy\.yml|dependabot\.ya?ml|auto-merge\.ya?ml|codeql\.ya?ml|auto-fix-markdownlint\.yml)$'
+          ALLOW_REGEX='^\.github/workflows/(policy\.yml|dependabot\.ya?ml|auto-merge\.ya?ml|codeql\.ya?ml|auto-fix-markdownlint\.yml|ci\.yml)$'
           if grep -E '^\.github/workflows/' changed.txt | grep -vE "$ALLOW_REGEX" ; then
             echo "❌ Unauthorized workflow edits detected"; exit 1
           fi
