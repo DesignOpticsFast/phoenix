@@ -12,6 +12,7 @@ This guide provides complete steps for setting up a development environment for 
 ### **ALL CODE CHANGES MUST BE DONE ON DEV-01 FIRST**
 
 **Rationale:**
+
 - ✅ **Consistent build environment** - Linux-based development
 - ✅ **Automated testing** - CI/CD pipelines run on dev-01
 - ✅ **Resource debugging** - Can test GUI with Xvfb
@@ -20,6 +21,7 @@ This guide provides complete steps for setting up a development environment for 
 - ✅ **Quality assurance** - Automated tests and validation
 
 **Workflow:**
+
 1. **Develop on dev-01** - Make all code changes
 2. **Test on dev-01** - Build and test with Xvfb
 3. **Commit from dev-01** - Push changes to repository
@@ -30,6 +32,7 @@ This guide provides complete steps for setting up a development environment for 
 ## 🔗 **Tailscale Integration**
 
 ### **Connection Setup**
+
 ```bash
 # Install Tailscale on dev-01 (already configured)
 # Install Tailscale on local machine
@@ -40,6 +43,7 @@ ssh -i ~/.ssh/github_phoenix mark@100.97.54.75
 ```
 
 ### **Benefits of Tailscale**
+
 - ✅ **Direct connection** - No NAT issues
 - ✅ **Secure** - Encrypted tunnel
 - ✅ **Reliable** - No port forwarding needed
@@ -47,6 +51,7 @@ ssh -i ~/.ssh/github_phoenix mark@100.97.54.75
 - ✅ **Persistent** - Always available
 
 ### **Development Commands**
+
 ```bash
 # Connect to dev-01
 ssh -i ~/.ssh/github_phoenix mark@100.97.54.75
@@ -74,11 +79,10 @@ sudo dnf install -y gcc gcc-c++ cmake ninja-build git \
 If AWS CLI v2 is missing:
 
 cd /tmp
-curl -fsSL -o awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+curl -fsSL -o awscliv2.zip <https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip>
 unzip awscliv2.zip
 sudo ./aws/install --update
 aws --version
-
 
 ⸻
 
@@ -88,7 +92,6 @@ Artifacts are versioned and stored with a checksum file.
 
 aws s3 cp s3://phoenix-dev-artifacts-us-east-2-mn/artifacts/6.10.0/Qt-6.10.0-gcc_64.tgz /tmp/
 aws s3 cp s3://phoenix-dev-artifacts-us-east-2-mn/artifacts/6.10.0/Qt-6.10.0-gcc_64.sha256 /tmp/
-
 
 ⸻
 
@@ -134,9 +137,9 @@ qmake -v
 echo $CMAKE_PREFIX_PATH
 
 Expected:
-	•	which qmake → /opt/Qt/6.9.3/gcc_64/bin/qmake
-	•	qmake -v → Qt version 6.9.3
-	•	CMAKE_PREFIX_PATH → /opt/Qt/6.9.3/gcc_64/lib/cmake
+ • which qmake → /opt/Qt/6.9.3/gcc_64/bin/qmake
+ • qmake -v → Qt version 6.9.3
+ • CMAKE_PREFIX_PATH → /opt/Qt/6.9.3/gcc_64/lib/cmake
 
 ⸻
 
@@ -156,8 +159,8 @@ target_link_libraries(qt_smoke PRIVATE Qt6::Widgets)
 EOF
 
 cat > main.cpp <<'EOF'
-#include <QApplication>
-#include <QLabel>
+# include <QApplication>
+# include <QLabel>
 int main(int argc, char** argv){
   QApplication a(argc, argv);
   QLabel l("Qt smoke ✅");
@@ -173,9 +176,9 @@ If the build succeeds and produces a qt_smoke executable, Qt is installed and wi
 ⸻
 
 Troubleshooting
-	•	qmake: command not found: Ensure /etc/environment has been updated and reload your shell with bash -l.
-	•	CMake cannot find Qt: Ensure CMAKE_PREFIX_PATH points to /opt/Qt/6.9.3/gcc_64/lib/cmake.
-	•	Missing OpenGL headers: Run sudo dnf install -y mesa-libGL-devel libglvnd-devel.
+ • qmake: command not found: Ensure /etc/environment has been updated and reload your shell with bash -l.
+ • CMake cannot find Qt: Ensure CMAKE_PREFIX_PATH points to /opt/Qt/6.9.3/gcc_64/lib/cmake.
+ • Missing OpenGL headers: Run sudo dnf install -y mesa-libGL-devel libglvnd-devel.
 
 ⸻
 
@@ -184,7 +187,7 @@ Next Steps
 After the environment is verified, clone and build project repositories:
 
 cd ~
-git clone https://github.com/DesignOpticsFast/phoenix.git
+git clone <https://github.com/DesignOpticsFast/phoenix.git>
 cd phoenix
 mkdir build && cd build
 cmake .. -G Ninja

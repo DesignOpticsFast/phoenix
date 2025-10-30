@@ -11,6 +11,7 @@
 ## 📋 **Phase 1 Requirements Summary**
 
 ### **Core Requirements:**
+
 - ✅ Standard menus (File, Editors, Analysis, Tools, Help)
 - ✅ Dockable ribbons (top horizontal + right vertical)
 - ✅ Status bar with slots
@@ -19,6 +20,7 @@
 - ✅ Telemetry hooks for UI latency logging
 
 ### **Acceptance Criteria:**
+
 - [ ] Chrome actions respond < 50 ms
 - [ ] Dock/float ribbons without flicker
 - [ ] Preferences opens, stores settings, updates locale/decimal selection
@@ -31,23 +33,29 @@
 ## 🐛 **Critical Bugs to Fix**
 
 ### **1. Help-About Icon Theming (CRIT-001)**
+
 **Issue**: Help→About icon not tinted correctly for non-System themes
-**Solution**: 
+**Solution**:
+
 - Investigate icon theming in `getIcon()` method
 - Ensure Help-About action uses proper theming
 - Test with Light/Dark themes
 
 ### **2. Splash Screen Timing (CRIT-002)**
+
 **Issue**: Splash screen timing not optimized
 **Solution**:
+
 - Review splash screen implementation in `PhoenixSplashScreen.cpp`
 - Ensure splash shows as early as possible
 - Fix startup time calculation to include splash duration
 - Optimize MainWindow ready detection
 
 ### **3. Status Bar Startup Time (CRIT-003)**
+
 **Issue**: Startup time shows on left, gets overwritten
 **Solution**:
+
 - Move startup time to right side of status bar
 - Make it persistent like other RHS items
 - Update `setupStatusBar()` method
@@ -60,6 +68,7 @@
 ### **Phase 1A: Bug Fixes (Priority 1)**
 
 #### **Task 1.1: Fix Help-About Icon Theming**
+
 - **Files**: `src/ui/main/MainWindow.cpp` (getIcon method)
 - **Time**: 30 minutes
 - **Steps**:
@@ -69,6 +78,7 @@
   4. Verify icon tinting works correctly
 
 #### **Task 1.2: Fix Splash Screen Timing**
+
 - **Files**: `src/main.cpp`, `src/ui/splash/PhoenixSplashScreen.cpp`
 - **Time**: 45 minutes
 - **Steps**:
@@ -79,6 +89,7 @@
   5. Test startup timing
 
 #### **Task 1.3: Fix Status Bar Startup Time**
+
 - **Files**: `src/ui/main/MainWindow.cpp` (setupStatusBar method)
 - **Time**: 30 minutes
 - **Steps**:
@@ -90,6 +101,7 @@
 ### **Phase 1B: Icon System (Priority 2)**
 
 #### **Task 1.4: Review Icon Selection Choices**
+
 - **Files**: `src/ui/main/MainWindow.cpp` (ribbon actions)
 - **Time**: 60 minutes
 - **Steps**:
@@ -99,6 +111,7 @@
   4. Test icon visibility and clarity
 
 #### **Task 1.5: Integrate FontAwesome Icons**
+
 - **Files**: `src/ui/main/MainWindow.cpp` (ribbon creation)
 - **Time**: 90 minutes
 - **Steps**:
@@ -110,6 +123,7 @@
 ### **Phase 1C: Cleanup & Testing (Priority 3)**
 
 #### **Task 1.6: Clean Up Debug Output**
+
 - **Files**: Various source files
 - **Time**: 30 minutes
 - **Steps**:
@@ -119,6 +133,7 @@
   4. Test clean output
 
 #### **Task 1.7: Test Ribbon System**
+
 - **Files**: `src/ui/main/MainWindow.cpp` (ribbon methods)
 - **Time**: 45 minutes
 - **Steps**:
@@ -129,6 +144,7 @@
   5. Test theme integration
 
 #### **Task 1.8: Enhance Telemetry System**
+
 - **Files**: `src/ui/main/MainWindow.cpp` (telemetry methods)
 - **Time**: 60 minutes
 - **Steps**:
@@ -140,6 +156,7 @@
 ### **Phase 1D: Acceptance Testing (Priority 4)**
 
 #### **Task 1.9: Acceptance Criteria Testing**
+
 - **Time**: 60 minutes
 - **Steps**:
   1. Test chrome actions < 50ms response
@@ -150,6 +167,7 @@
   6. Document results
 
 #### **Task 1.10: Performance Validation**
+
 - **Time**: 30 minutes
 - **Steps**:
   1. Measure UI response times
@@ -162,16 +180,19 @@
 ## 📊 **Implementation Timeline**
 
 ### **Day 1: Critical Bug Fixes**
+
 - **Morning**: Tasks 1.1, 1.2, 1.3 (Help-About, Splash, Status Bar)
 - **Afternoon**: Task 1.6 (Debug Cleanup)
 - **Total**: 2.5 hours
 
 ### **Day 2: Icon System & Testing**
+
 - **Morning**: Tasks 1.4, 1.5 (Icon Review, FontAwesome Integration)
 - **Afternoon**: Task 1.7 (Ribbon Testing)
 - **Total**: 3.25 hours
 
 ### **Day 3: Telemetry & Validation**
+
 - **Morning**: Task 1.8 (Telemetry Enhancement)
 - **Afternoon**: Tasks 1.9, 1.10 (Acceptance Testing, Performance)
 - **Total**: 2.5 hours
@@ -183,6 +204,7 @@
 ## ✅ **Success Criteria**
 
 ### **Must Have (Phase 1 Completion)**
+
 - [ ] All critical bugs fixed (CRIT-001, CRIT-002, CRIT-003)
 - [ ] Ribbon system fully functional and tested
 - [ ] FontAwesome icons integrated
@@ -190,12 +212,14 @@
 - [ ] All acceptance criteria met
 
 ### **Should Have (Quality)**
+
 - [ ] Comprehensive telemetry system
 - [ ] Performance validation completed
 - [ ] Icon selection optimized
 - [ ] User experience polished
 
 ### **Could Have (Nice to Have)**
+
 - [ ] Additional performance optimizations
 - [ ] Enhanced user feedback
 - [ ] Advanced telemetry reporting
@@ -205,11 +229,13 @@
 ## 🚨 **Risk Mitigation**
 
 ### **High Risk Items**
+
 1. **FontAwesome Integration**: May require significant changes to icon system
 2. **Splash Screen Timing**: Complex timing logic may be difficult to debug
 3. **Status Bar Layout**: May require careful layout management
 
 ### **Mitigation Strategies**
+
 1. **Incremental Testing**: Test each fix individually
 2. **Backup Strategy**: Keep working versions of critical files
 3. **User Feedback**: Test with actual user scenarios
@@ -220,6 +246,7 @@
 ## 📋 **Testing Checklist**
 
 ### **Functional Testing**
+
 - [ ] All menu actions work correctly
 - [ ] All ribbon actions work correctly
 - [ ] Ribbons dock to all sides
@@ -230,6 +257,7 @@
 - [ ] Multilingual support works
 
 ### **Performance Testing**
+
 - [ ] Chrome actions < 50ms response
 - [ ] Ribbon actions < 50ms response
 - [ ] No UI freezing
@@ -237,6 +265,7 @@
 - [ ] Responsive interface
 
 ### **Visual Testing**
+
 - [ ] All icons properly themed
 - [ ] Consistent visual design
 - [ ] Proper status bar layout
@@ -248,6 +277,7 @@
 ## 🎯 **Phase 1 Completion Definition**
 
 **Phase 1 is complete when:**
+
 1. All critical bugs are fixed
 2. Ribbon system is fully functional
 3. All acceptance criteria are met

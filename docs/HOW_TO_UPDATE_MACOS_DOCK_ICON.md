@@ -7,7 +7,9 @@
 ## 🎯 **Quick Update Process**
 
 ### **Step 1: Update the Source Image**
+
 Replace the source image with your new design:
+
 ```bash
 # Replace with your new icon (recommended: 1024x1024 PNG or SVG)
 cp your_new_icon.png resources/macos/Phoenix.svg
@@ -16,12 +18,14 @@ cp your_new_icon.svg resources/macos/Phoenix.svg
 ```
 
 ### **Step 2: Regenerate the Dock Icon**
+
 ```bash
 # Run the icon generation script
 ./scripts/generate_macos_icon.sh
 ```
 
 ### **Step 3: Rebuild Phoenix**
+
 ```bash
 # Clean previous build
 rm -rf build
@@ -32,6 +36,7 @@ cmake --build build -j
 ```
 
 ### **Step 4: Test the New Icon**
+
 ```bash
 # Verify the icon was updated
 ls -l build/Phoenix.app/Contents/Resources/Phoenix.icns
@@ -44,6 +49,7 @@ open build/Phoenix.app
 ## 📋 **Detailed Process**
 
 ### **Source Image Requirements**
+
 - **Format**: SVG (preferred) or PNG
 - **Size**: 1024×1024 pixels minimum
 - **Quality**: High resolution, sharp edges
@@ -51,7 +57,9 @@ open build/Phoenix.app
 - **Location**: `resources/macos/Phoenix.svg`
 
 ### **Icon Generation Process**
+
 The `generate_macos_icon.sh` script:
+
 1. **Reads**: `resources/macos/Phoenix.svg` (or `.png`)
 2. **Generates**: All required icon sizes:
    - 16×16, 32×32, 128×128, 256×256, 512×512
@@ -60,7 +68,9 @@ The `generate_macos_icon.sh` script:
 4. **Uses**: macOS built-in tools (`sips` and `iconutil`)
 
 ### **CMake Integration**
+
 The `CMakeLists.txt` automatically:
+
 - **Detects**: `.icns` file on macOS builds
 - **Embeds**: Icon in app bundle at `Contents/Resources/Phoenix.icns`
 - **Configures**: `CFBundleIconFile = "Phoenix"` in Info.plist
@@ -69,6 +79,7 @@ The `CMakeLists.txt` automatically:
 ## 🔧 **Troubleshooting**
 
 ### **Icon Not Updating**
+
 ```bash
 # Check if new .icns was created
 ls -l resources/macos/Phoenix.icns
@@ -82,6 +93,7 @@ rm resources/macos/Phoenix.icns
 ```
 
 ### **Build Fails**
+
 ```bash
 # Check Qt6 path (adjust for your installation)
 cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/your/qt6
@@ -93,6 +105,7 @@ cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/your/qt6
 ```
 
 ### **Dock Icon Still Shows Old Icon**
+
 ```bash
 # Force Dock refresh
 killall -KILL Dock
@@ -105,6 +118,7 @@ plutil -p build/Phoenix.app/Contents/Info.plist | grep -i CFBundleIconFile
 ```
 
 ### **Icon Looks Blurry**
+
 - **Cause**: Source image too small or low quality
 - **Solution**: Use higher resolution source image (1024×1024 or larger)
 - **Check**: Ensure source image is crisp and detailed
@@ -126,12 +140,14 @@ phoenix/
 ## 🎨 **Design Guidelines**
 
 ### **Icon Design Best Practices**
+
 - **Simple**: Works well at 16×16 pixels
 - **High Contrast**: Visible against light and dark backgrounds
 - **Distinctive**: Easily recognizable as Phoenix
 - **Consistent**: Matches your brand/design system
 
 ### **Technical Requirements**
+
 - **Vector Format**: SVG preferred for scalability
 - **Square Aspect**: 1:1 ratio (1024×1024 recommended)
 - **Clean Edges**: Sharp, well-defined shapes
@@ -140,6 +156,7 @@ phoenix/
 ## ✅ **Verification Checklist**
 
 After updating the icon, verify:
+
 - [ ] Source image updated (`resources/macos/Phoenix.svg`)
 - [ ] Script runs without errors
 - [ ] New `.icns` file created (check timestamp)
@@ -151,6 +168,7 @@ After updating the icon, verify:
 ## 🚀 **Advanced Usage**
 
 ### **Automated Updates**
+
 ```bash
 # Create a script to update icon and rebuild
 #!/bin/bash
@@ -164,6 +182,7 @@ open build/Phoenix.app
 ```
 
 ### **Multiple Icon Versions**
+
 ```bash
 # Keep different versions
 cp resources/macos/Phoenix.svg resources/macos/Phoenix_backup.svg
@@ -181,8 +200,3 @@ cp your_new_icon.svg resources/macos/Phoenix.svg
 
 **Status**: ✅ **COMPLETE** - Ready for future icon updates  
 **Next**: Use this guide whenever you need to update the Phoenix Dock icon
-
-
-
-
-

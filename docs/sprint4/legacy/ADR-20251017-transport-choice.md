@@ -30,12 +30,14 @@
 ## Implementation Details
 
 ### LocalSocket Configuration
+
 - **Socket Name:** `palantir_bedrock` + PID suffix (avoid stale connections)
 - **Framing:** 4-byte little-endian length prefix + protobuf payload
 - **Reconnection:** Phoenix retries every 1s up to 5s on disconnect
 - **Error Handling:** Use canonical error codes (OK, INVALID_ARGUMENT, etc.)
 
 ### Protobuf Messages
+
 - ComputeSpec, StartReply, Progress, ResultMeta, DataChunk
 - Cancel, JobId, Capabilities, Pong
 - Result data: ResultMeta (dtype "f64", shape [N]) + DataChunk blocks
@@ -43,12 +45,14 @@
 ## Consequences
 
 ### Positive
+
 - ✅ Lower latency and overhead
 - ✅ Simpler debugging and maintenance
 - ✅ Reduced external dependencies
 - ✅ Better performance for local communication
 
 ### Negative
+
 - ❌ No built-in load balancing (not needed for local communication)
 - ❌ No automatic retry mechanisms (implemented manually)
 - ❌ Less standardized than gRPC (acceptable for internal protocol)
@@ -56,10 +60,12 @@
 ## Alternatives Considered
 
 ### gRPC UDS
+
 - **Rejected:** 7.5% overhead exceeds 5% threshold
 - **Note:** May be reconsidered for future remote communication needs
 
 ### HTTP/JSON
+
 - **Rejected:** Higher overhead than binary protocols
 - **Note:** Not suitable for high-frequency communication
 
@@ -73,6 +79,3 @@
 
 - [Gate 0.5B Transport Benchmark Results](../results/gate0_5_transport_decision.md)
 - [Phoenix Sprint 4 Control Document](phoenix-sprint4-control-rev5.md)
-
-
-

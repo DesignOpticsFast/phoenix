@@ -13,17 +13,20 @@ The Phase 0.5 Gate has been **successfully completed** with both the Graphics pi
 ### A) Graphics / Plot Probe (Qt Graphs) - ✅ PASS
 
 **Acceptance Criteria Met:**
+
 - ✅ 50 idle windows: < 5% total CPU on dev-01; < 100 MB RAM per window
-- ✅ 10k points: ≥ 30 FPS (after downsampling) 
+- ✅ 10k points: ≥ 30 FPS (after downsampling)
 - ✅ Open/close 20×: no increasing RSS (no leaks)
 
 **Performance Metrics:**
+
 - **CPU Usage:** 4.51-5.5% (within limits)
 - **Memory Usage:** 84-85 MB per window (under 100 MB limit)
 - **Frame Rate:** 35 FPS for 10k points with downsampling (exceeds 30 FPS threshold)
 - **Memory Leaks:** No increasing RSS detected
 
 **Artifacts Generated:**
+
 - `docs/sprint4/results/gate0_5_qtgraphs_6_10.csv`
 - `docs/sprint4/results/gate0_5_qtgraphs_6_10_summary.md`
 
@@ -32,10 +35,12 @@ The Phase 0.5 Gate has been **successfully completed** with both the Graphics pi
 **Transport Decision: gRPC (UDS)**
 
 **Acceptance Criteria Met:**
+
 - ✅ gRPC overhead vs LocalSocket: 2.04% (< 5% threshold)
 - ✅ gRPC static footprint: 45 MB (< 50 MB threshold)
 
 **Performance Metrics:**
+
 - **LocalSocket Baseline:** 100.954 ms
 - **gRPC Latency:** 103.013 ms
 - **gRPC Overhead:** 2.04% (acceptable)
@@ -43,6 +48,7 @@ The Phase 0.5 Gate has been **successfully completed** with both the Graphics pi
 - **Footprint Difference:** 40 MB (under 50 MB limit)
 
 **Artifacts Generated:**
+
 - `docs/sprint4/results/gate0_5_transport.csv`
 - No ADR required (gRPC meets criteria)
 

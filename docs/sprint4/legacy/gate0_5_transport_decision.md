@@ -16,6 +16,7 @@
 ## Decision
 
 ⚠️ **Use LocalSocket+Protobuf**
+
 - Overhead > 5% (7.5%)
 - OR Footprint > 50MB (45MB)
 - Record ADR for fallback decision

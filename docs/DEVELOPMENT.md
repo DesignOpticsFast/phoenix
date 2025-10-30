@@ -31,12 +31,14 @@ git push
 ### Troubleshooting
 
 #### Preflight Fails
+
 1. Check you're on dev-01: `hostname`
 2. Verify Qt environment: `echo $CMAKE_PREFIX_PATH`
 3. Run preflight manually: `./scripts/dev01-preflight.sh`
 4. Check build logs for specific errors
 
 #### CI Fails After Preflight Passes
+
 1. Ensure you're using the correct runner labels
 2. Verify environment variables match between local and CI
 3. Check that all changes are committed and pushed
@@ -51,6 +53,7 @@ git push
 ### Build Environment Policy
 
 **dev-01 is the canonical build environment** - macOS builds are intentionally not required because:
+
 - dev-01 provides consistent, fast builds (25 seconds)
 - All developers can access dev-01 for validation
 - CI runs exclusively on dev-01 for reliability
@@ -59,6 +62,7 @@ git push
 ### Build Directory
 
 All dev-01 builds use `build/dev-01-relwithdebinfo` to:
+
 - Isolate from other build configurations
 - Document the build source (dev-01)
 - Allow parallel builds with different configurations

@@ -5,6 +5,7 @@
 **Owner / Validation Authority:** Mark Nicholson  
 **Repositories:** DesignOpticsFast/phoenix, DesignOpticsFast/bedrock  
 **Languages / Stack:**
+
 - Phoenix: C++17 · Qt 6 (latest stable) · Protobuf · Palantir (LocalSocket)
 - Bedrock: C++20 · OpenMP · TBB · Protobuf · Palantir server  
 **Target Platforms:** macOS · Windows · Linux
@@ -14,16 +15,19 @@
 ## 🎯 Gate 0.5 Decisions (Final)
 
 ### Transport Protocol Choice
+
 **Decision:** Use LocalSocket + Protobuf for Palantir communication  
 **Rationale:** gRPC UDS overhead (7.5%) exceeds 5% threshold  
 **ADR:** [ADR-20251017-transport-choice.md](ADR-20251017-transport-choice.md)  
 
 ### Qt Version (dev-01)
+
 **Decision:** Proceed with Qt 6.9.3 + QtCharts for development  
 **Rationale:** Qt 6.10.x requires Qt Account credentials; 6.9.3 performs excellently  
 **Note:** Qt 6.10.x upgrade planned once headless installer resolved  
 
 ### Performance Validation
+
 - ✅ Qt Charts: 50 idle windows CPU < 1% (target: < 5%)
 - ✅ Transport: LocalSocket baseline 100ms vs gRPC 107.5ms (7.5% overhead)
 - ✅ All acceptance criteria met for Gate 0.5
@@ -35,6 +39,7 @@
 Build a responsive, crash-resistant, multilingual Phoenix IDE shell and demonstrate the first end-to-end analysis loop via Palantir between Phoenix (C++17/Qt) and Bedrock (C++20).
 
 **Objectives:**
+
 1. Zero-freeze UI (< 50 ms chrome response)
 2. Independent, concurrent Analysis windows (~ 50)
 3. Async progress / cancel / debug channels
@@ -61,6 +66,7 @@ Build a responsive, crash-resistant, multilingual Phoenix IDE shell and demonstr
 **Scope:** Standard menus, dockable ribbons, status bar slots, Preferences → Environment, multilingual UI theme.
 
 **Implementation:**
+
 - Menu bar: File / Editors / Analysis / Tools / Help (actions stubbed)
 - Ribbons: top (horizontal) & right (vertical), dockable to any side, floatable, resizable
 - Use QToolBars with FontAwesome icons (placeholder icons OK)
@@ -70,6 +76,7 @@ Build a responsive, crash-resistant, multilingual Phoenix IDE shell and demonstr
 - Telemetry hooks for UI latency logging
 
 **Acceptance:**
+
 - Chrome actions respond < 50 ms
 - Dock/float ribbons without flicker
 - Preferences opens, stores settings, and updates locale/decimal selection
@@ -84,12 +91,14 @@ Build a responsive, crash-resistant, multilingual Phoenix IDE shell and demonstr
 **Update All:** enqueue per window jobs, respect max_active_jobs  
 
 **XY Sine Analysis Window:**
+
 - Toolbar: Calculator (Compute Settings), Display (style), Update
 - Tabs: Graph (Qt Charts via QChartView), Data (table with copy), Debug (if requested)
 - Downsampling: None when n_samples ≤ 2,000; Enable LTTB above that
 - Update All: enqueue per window; respect max_active_jobs
 
 **Acceptance:**
+
 - ≥ 50 Analysis windows can open; independent Start/Cancel/Update with no UI freeze
 - First paint after data arrival ≤ 200 ms on realistic datasets
 - Cancel to CANCELLING transition < 200 ms
@@ -246,6 +255,7 @@ All acceptances met; Milestones A and B signed off by Mark; CI green (macOS/Win/
 ## 🚨 Known Deviations
 
 ### Qt Charts Usage (Phase 1-2)
+
 - **Deviation:** Used Qt Charts (deprecated) for plotting functionality
 - **Cause:** Failed to identify deprecation status before implementation
 - **Policy Violation:** "No deprecated libraries" policy violated
@@ -257,6 +267,7 @@ All acceptances met; Milestones A and B signed off by Mark; CI green (macOS/Win/
 ## ✅ Status: Final — Approved for UnderLord Execution (Rev 5.1)
 
 This Rev 5.1 supersedes all prior revisions and includes:
+
 - Gate 0.5 decisions (Transport: LocalSocket+Protobuf, Qt: 6.9.3)
 - Phoenix → C++17 (Qt-aligned)
 - Bedrock → C++20 (OpenMP/TBB/multi-config)
