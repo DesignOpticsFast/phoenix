@@ -130,6 +130,7 @@ jobs:
             !.underlord/**
             !docs/palantir/**
             !assets/**
+            !ci-audit-package/**
             !CHANGELOG.md
       - name: link check
         uses: lycheeverse/lychee-action@v1   # pin to v1 while stabilizing
