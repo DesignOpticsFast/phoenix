@@ -43,7 +43,9 @@ bool IconBootstrap::InitFonts() {
     st.path = path;
     
     // Check existence and size (for diagnostics only, not gating)
-    st.exists = QResource::exists(path);
+    // Try to open the file to check if resource exists
+    QFile testFile(path);
+    st.exists = testFile.exists();
     if (st.exists) {
       QFileInfo fi(path);
       st.bytes = fi.size();
