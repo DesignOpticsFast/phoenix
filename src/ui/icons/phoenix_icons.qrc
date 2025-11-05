@@ -1,11 +1,11 @@
 <RCC>
     <qresource prefix="/fonts">
-        <!-- Font Awesome Pro fonts -->
-        <file>../../../assets/icons/fontawesome-pro/fonts/fa-sharp-solid-900.ttf</file>
-        <file>../../../assets/icons/fontawesome-pro/fonts/fa-sharp-regular-400.ttf</file>
-        <file>../../../assets/icons/fontawesome-pro/fonts/fa-duotone-900.ttf</file>
-        <file>../../../assets/icons/fontawesome-pro/fonts/fa-brands-400.ttf</file>
-        <file>../../../assets/icons/fontawesome-pro/fonts/fa-solid-900.ttf</file>
+        <!-- Font Awesome Pro fonts - aliased to flat names to match loader expectations -->
+        <file alias="fa-sharp-solid-900.ttf">../../../assets/icons/fontawesome-pro/fonts/fa-sharp-solid-900.ttf</file>
+        <file alias="fa-sharp-regular-400.ttf">../../../assets/icons/fontawesome-pro/fonts/fa-sharp-regular-400.ttf</file>
+        <file alias="fa-duotone-900.ttf">../../../assets/icons/fontawesome-pro/fonts/fa-duotone-900.ttf</file>
+        <file alias="fa-brands-400.ttf">../../../assets/icons/fontawesome-pro/fonts/fa-brands-400.ttf</file>
+        <file alias="fa-solid-900.ttf">../../../assets/icons/fontawesome-pro/fonts/fa-solid-900.ttf</file>
     </qresource>
     <qresource prefix="/icons">
         <!-- Branding SVGs only (FA UI chrome icons now use glyphs) -->

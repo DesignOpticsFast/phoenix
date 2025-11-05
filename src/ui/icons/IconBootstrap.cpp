@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QIODevice>
+#include <QResource>
 #include <QDebug>
 #include <algorithm>
 #include <mutex>
@@ -41,25 +42,24 @@ bool IconBootstrap::InitFonts() {
     FontLoadStatus st;
     st.path = path;
     
-    // Check existence and size
-    st.exists = QFile::exists(path);
+    // Check existence and size (for diagnostics only, not gating)
+    st.exists = QResource::exists(path);
     if (st.exists) {
       QFileInfo fi(path);
       st.bytes = fi.size();
     }
     
-    // Try path-based loading first
+    // Always attempt path-based loading first (don't gate on exists)
     st.triedPath = true;
-    if (st.exists) {
-      st.id = QFontDatabase::addApplicationFont(path);
-    }
+    st.id = QFontDatabase::addApplicationFont(path);
     
     // Fallback: fromData if path loading failed
-    if (st.id == -1 && st.exists) {
+    if (st.id == -1) {
       QFile f(path);
       if (f.open(QIODevice::ReadOnly)) {
         st.triedData = true;
         QByteArray data = f.readAll();
+        st.bytes = data.size(); // Update bytes from actual loaded data
         st.id = QFontDatabase::addApplicationFontFromData(data);
       }
     }
@@ -67,20 +67,28 @@ bool IconBootstrap::InitFonts() {
     // Get families if registration succeeded
     if (st.id != -1) {
       st.families = QFontDatabase::applicationFontFamilies(st.id);
+      // Update bytes from actual resource if we didn't load via fromData
+      if (!st.triedData && st.bytes == 0) {
+        QFileInfo fi(path);
+        st.bytes = fi.size();
+      }
     }
     
     s_status.push_back(st);
     
     // Log per-font status
-    if (!st.exists) {
-      qCCritical(phxFonts) << "FA font missing:" << st.path;
-    } else if (!st.ok()) {
+    if (!st.ok()) {
+      // Failed to load - log critical with diagnostic info
       qCCritical(phxFonts) << "FA register failed:" << st.path
+                           << "exists=" << st.exists
                            << "bytes=" << st.bytes
                            << "triedPath=" << st.triedPath
                            << "triedData=" << st.triedData;
     } else {
+      // Success - log at debug level with details
+      QString method = st.triedData ? "fromData" : "byPath";
       qCDebug(phxFonts) << "FA loaded:" << st.path
+                        << "method=" << method
                         << "bytes=" << st.bytes
                         << "families=" << st.families.join(", ");
     }
