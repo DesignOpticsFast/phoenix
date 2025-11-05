@@ -108,20 +108,51 @@ void EnvironmentPage::updateSystemInfo()
     }
     m_appVersionLabel->setText(appVersion);
     
-    // Font Awesome Families
-    QStringList fontFamilies;
-    if (!IconBootstrap::sharpSolidFamily().isEmpty()) fontFamilies << IconBootstrap::sharpSolidFamily();
-    if (!IconBootstrap::sharpRegularFamily().isEmpty()) fontFamilies << IconBootstrap::sharpRegularFamily();
-    if (!IconBootstrap::duotoneFamily().isEmpty()) fontFamilies << IconBootstrap::duotoneFamily();
-    if (!IconBootstrap::brandsFamily().isEmpty()) fontFamilies << IconBootstrap::brandsFamily();
+    // Font Awesome Families - enhanced diagnostics
+    const auto& statuses = IconBootstrap::fontStatuses();
+    int loadedCount = std::count_if(statuses.begin(), statuses.end(),
+                                     [](const IconBootstrap::FontLoadStatus& s) { return s.ok(); });
+    int totalCount = statuses.size();
     
-    if (fontFamilies.isEmpty()) {
-        m_fontAwesomeTextEdit->setPlainText(tr("Font Awesome families not loaded"));
-    } else {
-        QString fontInfo = tr("Loaded Font Awesome families:\n");
-        for (const QString& family : fontFamilies) {
-            fontInfo += QString("• %1\n").arg(family);
+    QString fontInfo = tr("Loaded %1/%2 Font Awesome fonts.\n\n").arg(loadedCount).arg(totalCount);
+    
+    if (IconBootstrap::faAvailable()) {
+        // All loaded - show families
+        QStringList allFamilies;
+        for (const auto& st : statuses) {
+            for (const QString& family : st.families) {
+                if (!allFamilies.contains(family)) {
+                    allFamilies << family;
+                }
+            }
         }
-        m_fontAwesomeTextEdit->setPlainText(fontInfo);
+        if (!allFamilies.isEmpty()) {
+            fontInfo += tr("Font families:\n");
+            for (const QString& family : allFamilies) {
+                fontInfo += QString("• %1\n").arg(family);
+            }
+        }
+    } else {
+        // Not all loaded - show detailed status
+        fontInfo += tr("Expected fonts:\n");
+        QStringList expected = IconBootstrap::expectedFontPaths();
+        for (const QString& path : expected) {
+            fontInfo += QString("• %1\n").arg(path);
+        }
+        
+        fontInfo += tr("\nStatus:\n");
+        for (const auto& st : statuses) {
+            if (!st.exists) {
+                fontInfo += QString("[MISSING] %1\n").arg(st.path);
+            } else if (!st.ok()) {
+                fontInfo += QString("[FAILED]  %1 (bytes=%2)\n").arg(st.path).arg(st.bytes);
+            } else {
+                QString familyList = st.families.join(", ");
+                fontInfo += QString("[OK]      %1 (families: %2)\n").arg(st.path).arg(familyList);
+            }
+        }
+        fontInfo += tr("\nSee log for details.");
     }
+    
+    m_fontAwesomeTextEdit->setPlainText(fontInfo);
 }
