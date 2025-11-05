@@ -18,9 +18,13 @@
 #include <QObject>
 #include <QMetaObject>
 #include <QLoggingCategory>
+#include <QToolBar>
+#include <QEvent>
+#include <cmath>
 
 QHash<IconKey, QIcon> IconProvider::s_cache;
 QJsonObject IconProvider::s_iconManifest;
+QHash<QString, QString> IconProvider::s_aliasMap;
 bool IconProvider::s_manifestLoaded = false;
 
 QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool dark, qreal dpr) {
@@ -43,39 +47,80 @@ QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool da
         loadManifest();
     }
     
-    // Try SVG first, then font
-    QIcon result = svgIcon(name, size);
-    if (result.isNull()) {
-        result = fontIcon(name, style, size, dark);
+    // NEW PRIORITY ORDER: glyph → SVG → theme → fallback
+    QIcon result;
+    QString canonicalName = resolveAlias(name);
+    
+    // Get palette for consistent color role usage
+    const QPalette pal = QApplication::palette();
+    // Ensure DPR is at least 1.0
+    dpr = qMax(1.0, dpr);
+    
+    // 1. Try FA glyph (if available and manifest has entry)
+    if (IconBootstrap::faAvailable() && s_iconManifest.contains(canonicalName)) {
+        QJsonObject iconData = s_iconManifest[canonicalName].toObject();
+        QString styleStr = iconData["style"].toString("sharp-solid");
+        IconStyle resolvedStyle = parseStyleString(styleStr);
+        result = fontIcon(canonicalName, resolvedStyle, size, pal, dpr);
     }
     
+    // 2. Try SVG (branding only)
     if (result.isNull()) {
-        result = fallback();
+        result = svgIcon(canonicalName, size, pal, dpr);
     }
     
-    // Apply theme-aware tinting for better visibility
-    if (!result.isNull()) {
-        // Get contrast-aware color
-        const QPalette pal = QApplication::palette();
-        const QColor iconColor = pickIconColor(pal, dark);
-        
-        // Tint the icon
-        QPixmap pm = result.pixmap(size, size);
-        pm.setDevicePixelRatio(dpr);
-        pm = tintPixmap(pm, iconColor);
-        result = QIcon(pm);
-        
-        qCInfo(phxIcons).noquote() 
-            << "[ICON] returning name=" << name
-            << "px=" << size
-            << "dark=" << dark
-            << "color=" << iconColor.name();
+    // 3. Try system theme
+    if (result.isNull()) {
+        result = themeIcon(canonicalName, pal);
+    }
+    
+    // 4. Fallback
+    if (result.isNull()) {
+        result = fallback(pal);
     }
     
     // Cache the result
     s_cache.insert(key, result);
     
     return result;
+}
+
+QIcon IconProvider::icon(const QString& logicalName, const QSize& size, const QPalette& pal) {
+    int iconSize = qMin(size.width(), size.height());
+    if (iconSize <= 0) iconSize = 16;
+    
+    bool isDark = pal.window().color().lightness() < 128;
+    qreal dpr = 1.0;
+    if (QGuiApplication::instance()) {
+        QScreen* screen = QGuiApplication::primaryScreen();
+        if (screen) {
+            dpr = qMax(1.0, screen->devicePixelRatioF());
+        }
+    }
+    
+    return icon(logicalName, IconStyle::SharpSolid, iconSize, isDark, dpr);
+}
+
+QIcon IconProvider::icon(const QString& logicalName, const QSize& size, const QWidget* widget) {
+    QPalette pal = getPaletteForIcon(widget);
+    return icon(logicalName, size, pal);
+}
+
+QPalette IconProvider::getPaletteForIcon(const QWidget* widget) {
+    // Try to get palette from widget (especially toolbars) first
+    if (widget) {
+        // Check if it's a toolbar or has a toolbar parent
+        const QToolBar* toolbar = qobject_cast<const QToolBar*>(widget);
+        if (!toolbar && widget->parent()) {
+            toolbar = qobject_cast<const QToolBar*>(widget->parent());
+        }
+        if (toolbar) {
+            return toolbar->palette();
+        }
+        return widget->palette();
+    }
+    // Fall back to application palette
+    return QApplication::palette();
 }
 
 QString IconProvider::fontFamily(IconStyle style) {
@@ -121,20 +166,94 @@ void IconProvider::setupCacheClearing() {
         QObject::connect(screen, &QScreen::logicalDotsPerInchChanged, &IconProvider::clearCache);
         QObject::connect(screen, &QScreen::geometryChanged, &IconProvider::clearCache);
     }
+    
+    // Install event filter to catch palette changes
+    class PaletteChangeFilter : public QObject {
+    public:
+        bool eventFilter(QObject* obj, QEvent* event) override {
+            if (event->type() == QEvent::ApplicationPaletteChange || 
+                event->type() == QEvent::PaletteChange) {
+                IconProvider::clearCache();
+            }
+            return QObject::eventFilter(obj, event);
+        }
+    };
+    
+    static PaletteChangeFilter* filter = new PaletteChangeFilter();
+    qApp->installEventFilter(filter);
 }
 
 void IconProvider::loadManifest() {
     QFile manifestFile(":/resources/icons/phx-icons.json");
-    if (manifestFile.open(QIODevice::ReadOnly)) {
-        QJsonDocument doc = QJsonDocument::fromJson(manifestFile.readAll());
-        s_iconManifest = doc.object();
-        s_manifestLoaded = true;
-    } else {
-        qCWarning(phxIcons) << "Could not load icon manifest";
+    if (!manifestFile.open(QIODevice::ReadOnly)) {
+        qCCritical(phxIcons) << "Failed to open icon manifest resource:" << manifestFile.errorString();
+        s_iconManifest = QJsonObject();
+        s_manifestLoaded = true; // Mark as loaded to avoid repeated attempts
+        return;
     }
+
+    QByteArray data = manifestFile.readAll();
+    if (data.isEmpty()) {
+        qCCritical(phxIcons) << "Icon manifest resource is empty";
+        s_iconManifest = QJsonObject();
+        s_manifestLoaded = true;
+        return;
+    }
+
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+    if (parseError.error != QJsonParseError::NoError || doc.isNull()) {
+        qCCritical(phxIcons) << "Failed to parse icon manifest JSON:" << parseError.errorString();
+        s_iconManifest = QJsonObject();
+        s_manifestLoaded = true;
+        return;
+    }
+
+    QJsonObject root = doc.object();
+    s_iconManifest = root["icons"].toObject();
+    
+    // Build alias map
+    s_aliasMap.clear();
+    for (auto it = s_iconManifest.begin(); it != s_iconManifest.end(); ++it) {
+        QString canonicalName = it.key();
+        QJsonObject iconData = it.value().toObject();
+        if (iconData.contains("aliases")) {
+            QJsonArray aliases = iconData["aliases"].toArray();
+            for (const QJsonValue& alias : aliases) {
+                s_aliasMap[alias.toString()] = canonicalName;
+            }
+        }
+        // Also map canonical name to itself
+        s_aliasMap[canonicalName] = canonicalName;
+    }
+    
+    s_manifestLoaded = true;
+    qCInfo(phxIcons) << "Loaded icon manifest with" << s_iconManifest.size() << "icons";
 }
 
-QIcon IconProvider::svgIcon(const QString& alias, int size) {
+QString IconProvider::resolveAlias(const QString& name) {
+    if (!s_manifestLoaded) {
+        loadManifest();
+    }
+    return s_aliasMap.value(name, name); // Return canonical name or original if not found
+}
+
+IconStyle IconProvider::parseStyleString(const QString& styleStr) {
+    if (styleStr == "sharp-solid" || styleStr == "solid") {
+        return IconStyle::SharpSolid;
+    } else if (styleStr == "sharp-regular" || styleStr == "regular") {
+        return IconStyle::SharpRegular;
+    } else if (styleStr == "duotone") {
+        return IconStyle::Duotone;
+    } else if (styleStr == "brands") {
+        return IconStyle::Brands;
+    } else if (styleStr == "classic-solid") {
+        return IconStyle::ClassicSolid;
+    }
+    return IconStyle::SharpSolid; // Default
+}
+
+QIcon IconProvider::svgIcon(const QString& alias, int size, const QPalette& pal, qreal dpr) {
     const QString path = QString(":/icons/%1.svg").arg(alias);
     if (!QFile::exists(path)) {
         qCInfo(phxIcons).noquote() << "[ICON] svg" << path << "MISS";
@@ -142,20 +261,48 @@ QIcon IconProvider::svgIcon(const QString& alias, int size) {
     }
     
     qCInfo(phxIcons).noquote() << "[ICON] svg" << path << "FOUND";
-    QIcon icon(path);
-    if (icon.isNull()) {
+    QIcon sourceIcon(path);
+    if (sourceIcon.isNull()) {
         return QIcon(); // Return null icon, let caller fallback
     }
     
     if (size > 0) {
-        QPixmap pm = icon.pixmap(size, size);
-        return QIcon(pm);
+        // Render at HiDPI size for sharp display (use ceil to avoid fractional blurs)
+        int renderSize = static_cast<int>(std::ceil(size * dpr));
+        
+        // Normal state
+        QPixmap normalPm = sourceIcon.pixmap(renderSize, renderSize);
+        normalPm.setDevicePixelRatio(dpr);
+        QColor normalColor = pal.color(QPalette::ButtonText);
+        normalPm = tintPixmap(normalPm, normalColor);
+        
+        // Disabled state
+        QPixmap disabledPm = sourceIcon.pixmap(renderSize, renderSize);
+        disabledPm.setDevicePixelRatio(dpr);
+        QColor disabledColor = pal.color(QPalette::Disabled, QPalette::ButtonText);
+        disabledPm = tintPixmap(disabledPm, disabledColor);
+        
+        // Active state (slightly brighter for hover)
+        QPixmap activePm = sourceIcon.pixmap(renderSize, renderSize);
+        activePm.setDevicePixelRatio(dpr);
+        QColor activeColor = pal.color(QPalette::Active, QPalette::ButtonText);
+        activePm = tintPixmap(activePm, activeColor);
+        
+        QIcon result;
+        result.addPixmap(normalPm, QIcon::Normal);
+        result.addPixmap(disabledPm, QIcon::Disabled);
+        result.addPixmap(activePm, QIcon::Active);
+        return result;
     }
     
-    return icon;
+    return sourceIcon;
 }
 
-QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, bool dark) {
+QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, const QPalette& pal, qreal dpr) {
+    if (!IconBootstrap::faAvailable()) {
+        return QIcon(); // Return null, let caller fallback
+    }
+    
     QString fontFamily;
     switch (style) {
         case IconStyle::SharpSolid: fontFamily = IconBootstrap::sharpSolidFamily(); break;
@@ -165,32 +312,131 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, boo
         default: fontFamily = IconBootstrap::sharpSolidFamily(); break;
     }
     if (fontFamily.isEmpty()) {
-        return fallback();
+        return QIcon(); // Return null, let caller fallback
     }
     
-    // Get Unicode from manifest
+    // Get codepoint from manifest (new format)
     if (s_manifestLoaded && s_iconManifest.contains(name)) {
         QJsonObject iconData = s_iconManifest[name].toObject();
-        QString unicode = iconData["unicode"].toString();
+        QString codepointStr = iconData["codepoint"].toString();
         
-        if (!unicode.isEmpty()) {
-            QFont font(fontFamily, size);
-            QPixmap pixmap(size, size);
-            pixmap.fill(Qt::transparent);
-            
-            QPainter painter(&pixmap);
-            painter.setFont(font);
-            painter.setPen(dark ? Qt::white : Qt::black);
-            painter.drawText(pixmap.rect(), Qt::AlignCenter, unicode);
-            
-            return QIcon(pixmap);
+        if (!codepointStr.isEmpty()) {
+            // Convert hex string to Unicode character
+            bool ok;
+            uint32_t codepoint = codepointStr.toUInt(&ok, 16);
+            if (ok) {
+                QChar unicodeChar(codepoint);
+                
+                // Render at HiDPI size for sharp display (use ceil to avoid fractional blurs)
+                int renderSize = static_cast<int>(std::ceil(size * dpr));
+                
+                // Normal state: use ButtonText role for UI chrome consistency
+                QColor normalColor = pal.color(QPalette::ButtonText);
+                QPixmap normalPixmap(renderSize, renderSize);
+                normalPixmap.fill(Qt::transparent);
+                normalPixmap.setDevicePixelRatio(dpr);
+                
+                QPainter painter(&normalPixmap);
+                painter.setFont(QFont(fontFamily, size));
+                painter.setPen(normalColor);
+                painter.drawText(QRect(0, 0, renderSize, renderSize), Qt::AlignCenter, unicodeChar);
+                painter.end();
+                
+                // Disabled state: use Disabled group with lighter/washed appearance
+                QColor disabledColor = pal.color(QPalette::Disabled, QPalette::ButtonText);
+                QPixmap disabledPixmap(renderSize, renderSize);
+                disabledPixmap.fill(Qt::transparent);
+                disabledPixmap.setDevicePixelRatio(dpr);
+                
+                QPainter disabledPainter(&disabledPixmap);
+                disabledPainter.setFont(QFont(fontFamily, size));
+                disabledPainter.setPen(disabledColor);
+                disabledPainter.drawText(QRect(0, 0, renderSize, renderSize), Qt::AlignCenter, unicodeChar);
+                disabledPainter.end();
+                
+                // Active state: slightly brighter for hover feedback
+                QColor activeColor = pal.color(QPalette::Active, QPalette::ButtonText);
+                QPixmap activePixmap(renderSize, renderSize);
+                activePixmap.fill(Qt::transparent);
+                activePixmap.setDevicePixelRatio(dpr);
+                
+                QPainter activePainter(&activePixmap);
+                activePainter.setFont(QFont(fontFamily, size));
+                activePainter.setPen(activeColor);
+                activePainter.drawText(QRect(0, 0, renderSize, renderSize), Qt::AlignCenter, unicodeChar);
+                activePainter.end();
+                
+                // Build icon with all states
+                QIcon icon;
+                icon.addPixmap(normalPixmap, QIcon::Normal);
+                icon.addPixmap(disabledPixmap, QIcon::Disabled);
+                icon.addPixmap(activePixmap, QIcon::Active);
+                
+                return icon;
+            }
         }
     }
     
-    return fallback();
+    return QIcon(); // Return null, let caller fallback
 }
 
-QIcon IconProvider::fallback() {
-    // Return question mark SVG icon
-    return QIcon(":/icons/circle-question.svg");
+QIcon IconProvider::themeIcon(const QString& name, const QPalette& pal) {
+    // Map common icon names to system theme names
+    static QHash<QString, QString> themeMap = {
+        {"file-new", "document-new"},
+        {"file-open", "document-open"},
+        {"save", "document-save"},
+        {"save-as", "document-save-as"},
+        {"settings", "preferences-system"},
+        {"close", "window-close"},
+        {"search", "edit-find"},
+        {"info", "help-about"},
+        {"help", "help-contents"}
+    };
+    
+    QString themeName = themeMap.value(name, name);
+    if (QIcon::hasThemeIcon(themeName)) {
+        QIcon icon = QIcon::fromTheme(themeName);
+        
+        // Generate states for theme icons too (they may not have disabled variants)
+        // Extract pixmaps and tint them
+        QPixmap normalPm = icon.pixmap(16, 16);
+        if (!normalPm.isNull()) {
+            QColor normalColor = pal.color(QPalette::ButtonText);
+            QColor disabledColor = pal.color(QPalette::Disabled, QPalette::ButtonText);
+            QColor activeColor = pal.color(QPalette::Active, QPalette::ButtonText);
+            
+            QIcon result;
+            result.addPixmap(tintPixmap(normalPm, normalColor), QIcon::Normal);
+            result.addPixmap(tintPixmap(normalPm, disabledColor), QIcon::Disabled);
+            result.addPixmap(tintPixmap(normalPm, activeColor), QIcon::Active);
+            return result;
+        }
+        return icon;
+    }
+    return QIcon(); // Return null, let caller fallback
+}
+
+QIcon IconProvider::fallback(const QPalette& pal) {
+    // Return question mark SVG icon with states
+    QIcon sourceIcon(":/icons/circle-question.svg");
+    if (sourceIcon.isNull()) {
+        return QIcon();
+    }
+    
+    // Generate states for fallback icon
+    QPixmap normalPm = sourceIcon.pixmap(16, 16);
+    if (!normalPm.isNull()) {
+        QColor normalColor = pal.color(QPalette::ButtonText);
+        QColor disabledColor = pal.color(QPalette::Disabled, QPalette::ButtonText);
+        QColor activeColor = pal.color(QPalette::Active, QPalette::ButtonText);
+        
+        QIcon result;
+        result.addPixmap(tintPixmap(normalPm, normalColor), QIcon::Normal);
+        result.addPixmap(tintPixmap(normalPm, disabledColor), QIcon::Disabled);
+        result.addPixmap(tintPixmap(normalPm, activeColor), QIcon::Active);
+        return result;
+    }
+    
+    return sourceIcon;
 }

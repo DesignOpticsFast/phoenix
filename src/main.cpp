@@ -3,6 +3,8 @@
 #include "ui/icons/IconBootstrap.h"
 #include "ui/icons/IconProvider.h"
 #include "ui/icons/PhxLogging.h"
+#include "ui/themes/ThemeManager.h"
+#include "app/SettingsProvider.h"
 #include "version.h"
 #include <QApplication>
 #include <QTimer>
@@ -10,6 +12,7 @@
 #include <QSplashScreen>
 #include <QElapsedTimer>
 #include <QLoggingCategory>
+#include <memory>
 
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
@@ -46,8 +49,15 @@ int main(int argc, char** argv) {
     
     // High DPI scaling is enabled by default in Qt 6
     
+    // Create single QSettings instance and SettingsProvider
+    auto qsettings = std::make_unique<QSettings>("Phoenix", "Phoenix");
+    auto* settingsProvider = new SettingsProvider(&app, std::move(qsettings));
+    
+    // Wire ThemeManager singleton (must happen before ThemeManager::instance() use)
+    ThemeManager::setSettingsProvider(settingsProvider);
+    
     // Create main window (but don't show it yet)
-    MainWindow mainWindow;
+    MainWindow mainWindow(settingsProvider);
     
     // Connect splash finish to firstShown signal
     QObject::connect(&mainWindow, &MainWindow::firstShown, [&]() {

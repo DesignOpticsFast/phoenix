@@ -11,7 +11,7 @@
 #include <QStandardPaths>
 #include <QDebug>
 
-EnvironmentPage::EnvironmentPage(QWidget *parent)
+EnvironmentPage::EnvironmentPage(QSettings& s, QWidget *parent)
     : QWidget(parent)
     , m_mainLayout(nullptr)
     , m_systemInfoGroup(nullptr)
@@ -23,7 +23,7 @@ EnvironmentPage::EnvironmentPage(QWidget *parent)
     , m_platformLabel(nullptr)
     , m_appVersionLabel(nullptr)
     , m_fontAwesomeTextEdit(nullptr)
-    , m_settings(new QSettings("Phoenix", "Phoenix", this))
+    , m_settings(s)
 {
     setupUI();
     updateSystemInfo();
@@ -89,7 +89,7 @@ void EnvironmentPage::saveSettings()
 void EnvironmentPage::updateSystemInfo()
 {
     // QSettings Location
-    QString settingsPath = m_settings->fileName();
+    QString settingsPath = m_settings.fileName();
     m_qsettingsLocationLabel->setText(settingsPath);
     m_qsettingsLocationLabel->setToolTip(settingsPath);
     

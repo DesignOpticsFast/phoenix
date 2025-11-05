@@ -1,41 +1,21 @@
 <RCC>
+    <qresource prefix="/fonts">
+        <!-- Font Awesome Pro fonts -->
+        <file>../../../assets/icons/fontawesome-pro/fonts/fa-sharp-solid-900.ttf</file>
+        <file>../../../assets/icons/fontawesome-pro/fonts/fa-sharp-regular-400.ttf</file>
+        <file>../../../assets/icons/fontawesome-pro/fonts/fa-duotone-900.ttf</file>
+        <file>../../../assets/icons/fontawesome-pro/fonts/fa-brands-400.ttf</file>
+        <file>../../../assets/icons/fontawesome-pro/fonts/fa-solid-900.ttf</file>
+    </qresource>
+    <qresource prefix="/icons">
+        <!-- Branding SVGs only (FA UI chrome icons now use glyphs) -->
+        <file>../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
+    </qresource>
     <qresource prefix="/">
-        <!-- Fonts -->
-        <file alias="fonts/fa-sharp-solid-900.ttf">../../../assets/icons/fontawesome-pro/fonts/fa-sharp-solid-900.ttf</file>
-        <file alias="fonts/fa-sharp-regular-400.ttf">../../../assets/icons/fontawesome-pro/fonts/fa-sharp-regular-400.ttf</file>
-        <file alias="fonts/fa-duotone-900.ttf">../../../assets/icons/fontawesome-pro/fonts/fa-duotone-900.ttf</file>
-        <file alias="fonts/fa-brands-400.ttf">../../../assets/icons/fontawesome-pro/fonts/fa-brands-400.ttf</file>
-        <file alias="fonts/fa-solid-900.ttf">../../../assets/icons/fontawesome-pro/fonts/fa-solid-900.ttf</file>
-        
-        <!-- SVGs -->
-        <file alias="icons/save.svg">../../../assets/icons/fontawesome-pro/svgs/save.svg</file>
-        <file alias="icons/open.svg">../../../assets/icons/fontawesome-pro/svgs/open.svg</file>
-        <file alias="icons/chart-line.svg">../../../assets/icons/fontawesome-pro/svgs/chart-line.svg</file>
-        <file alias="icons/chart-area.svg">../../../assets/icons/fontawesome-pro/svgs/chart-scatter.svg</file>
-        <file alias="icons/circle-question.svg">../../../assets/icons/fontawesome-pro/svgs/fallback.svg</file>
-        
-        <!-- File menu icons - use different source files for visual differentiation -->
-        <file alias="icons/file-plus.svg">../../../assets/icons/fontawesome-pro/svgs/open.svg</file>
-        <file alias="icons/folder.svg">../../../assets/icons/fontawesome-pro/svgs/save.svg</file>
-        <file alias="icons/floppy-disk.svg">../../../assets/icons/fontawesome-pro/svgs/save.svg</file>
-        <file alias="icons/floppy-disk-pen.svg">../../../assets/icons/fontawesome-pro/svgs/chart-line.svg</file>
-        <file alias="icons/sliders.svg">../../../assets/icons/fontawesome-pro/svgs/brain.svg</file>
-        <file alias="icons/power-off.svg">../../../assets/icons/fontawesome-pro/svgs/cube.svg</file>
-        
-        <!-- Editors menu icons - use different source files -->
-        <file alias="icons/lens.svg">../../../assets/icons/fontawesome-pro/svgs/brain.svg</file>
-        <file alias="icons/desktop.svg">../../../assets/icons/fontawesome-pro/svgs/cube.svg</file>
-        
-        <!-- Analysis menu - use different icon for 2D Plot -->
-        <file alias="icons/chart-bar.svg">../../../assets/icons/fontawesome-pro/svgs/chart-scatter.svg</file>
-        
-        <!-- Info circle for help -->
-        <file alias="icons/info-circle.svg">../../../assets/icons/fontawesome-pro/svgs/circle-question.svg</file>
-        
         <!-- Icon manifest -->
         <file alias="resources/icons/phx-icons.json">../../resources/icons/phx-icons.json</file>
         
-        <!-- Application icon -->
+        <!-- Application icon (branding) -->
         <file alias="phoenix-icon.svg">../../resources/icons/phoenix-icon.svg</file>
     </qresource>
 </RCC>

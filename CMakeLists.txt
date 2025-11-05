@@ -6,6 +6,7 @@ project(Phoenix
   LANGUAGES CXX)
 
 # ---- C++ & Qt automations ---------------------------------------------------
+# C++/Qt config (confirmed present)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -13,6 +14,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
+
+# === Palantir integration toggle (default OFF for Sprint 4) ===
+option(PHX_WITH_PALANTIR "Enable Palantir integration" OFF)
+
+# Make the flag visible to all targets
+add_compile_definitions(
+    $<$<BOOL:${PHX_WITH_PALANTIR}>:PHX_WITH_PALANTIR=1>
+    $<$<NOT:$<BOOL:${PHX_WITH_PALANTIR}>>:PHX_WITH_PALANTIR=0>
+)
+
+# (Note: real/stub source selection will be added in a later chunk)
 
 # ---- Version header (generated at configure time)
 # Generates ${CMAKE_BINARY_DIR}/generated/version.h containing PHOENIX_VERSION
@@ -64,6 +76,9 @@ add_executable(phoenix_app
   src/ui/icons/IconBootstrap.cpp
   src/ui/icons/PhxIconImageProvider.cpp
   src/tools/IconGallery.cpp
+
+  # I/O utilities
+  src/app/io/FileIO.cpp
 
   # headers with Q_OBJECT for AUTOMOC
   src/ui/StepViewer.hpp

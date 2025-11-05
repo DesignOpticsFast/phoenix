@@ -1,3 +1,7 @@
+// NOTE (Sprint 4): This implementation is valid only when PHX_WITH_PALANTIR=1.
+// Existing blocking calls are tolerated for now; they will be guarded or moved
+// behind the feature flag and replaced with stubs in the next chunk.
+
 #pragma once
 
 #include <QLocalSocket>

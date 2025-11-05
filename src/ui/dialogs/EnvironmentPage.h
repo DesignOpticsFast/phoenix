@@ -14,7 +14,7 @@ class EnvironmentPage : public QWidget
     Q_OBJECT
 
 public:
-    explicit EnvironmentPage(QWidget *parent = nullptr);
+    explicit EnvironmentPage(QSettings& s, QWidget *parent = nullptr);
     ~EnvironmentPage() override;
 
     void loadSettings();
@@ -40,6 +40,6 @@ private:
     // Font Awesome information
     QTextEdit* m_fontAwesomeTextEdit;
     
-    // Settings
-    QSettings* m_settings;
+    // Settings (reference to injected QSettings)
+    QSettings& m_settings;
 };

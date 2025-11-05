@@ -6,6 +6,18 @@ This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ---
 
+## [Unreleased] – Sprint 4
+### Phoenix (Frontend)
+- **Icon System Refactor (Sprint 4)**: Font Awesome glyph refactor complete; SVGs limited to branding. All toolbar/menu icons now use FA glyphs through IconProvider with theme-aware tinting. Removed FA UI chrome SVG duplicates from QRC. Added CI pre-build checks for QRC path validation and SVG currentColor enforcement.
+- **Toolbar Floating Z-Order**: Floating toolbars and dock widgets now stay above the Phoenix MainWindow when floated. Tool/dock windows remain above their parent window (not globally) and automatically raise when MainWindow regains focus. Re-docking clears window flags for normal docking behavior.
+- **Dialog Cleanup**: Removed abandoned dialogs (XYWindow, EnvironmentPrefs, MainWindow variants) and moved them to `experiments/` directory. Fixed PreferencesDialog lifetime management by replacing `std::unique_ptr` with `QPointer` and Qt parent ownership. Added `Qt::WA_DeleteOnClose` for automatic cleanup. Dialog now raises/activates when reopened instead of creating duplicates.
+- **Settings Provider Injection**: Replaced scattered QSettings instances with a single injected SettingsProvider. Created SettingsProvider class wrapping QSettings, created in main() and parented to QApplication. All components (MainWindow, PreferencesDialog, ThemeManager, etc.) now receive QSettings& via dependency injection. Standardized settings keys with PhxKeys namespace constants (ui/theme, ui/geometry, i18n/language, etc.). Fixed LanguagePage app name inconsistency (now uses "Phoenix" instead of "PhoenixApp").
+- **I/O Hardening**: Added FileIO utility namespace with safe helpers for file operations (canonicalize, ensureDir, readTextFile, writeTextFileAtomic). Hardened ThemeManager::loadStyleSheet() and IconProvider::loadManifest() with explicit error handling and logging. Added save/export scaffolding to MainWindow with path validation. All file operations now use centralized error handling; failures are logged with clear messages and do not crash the application.
+- **Constants Header & Plotting Stub**: Created `PhxConstants.h` with centralized constants for UI sizes, timers, and plotting parameters. Replaced magic numbers throughout MainWindow and PreferencesDialog with named constants (window sizes, icon sizes, dock widths, performance thresholds). Added plotting stub to QtGraphsPlotView that logs a deferred warning; plotting implementation deferred to Sprint 5.
+- **Assets & Licensing Cleanup**: Removed Font Awesome UI chrome SVG duplicates (using glyphs instead). Normalized QRC file paths and organized resources into separate prefixes (/fonts, /icons). Added Font Awesome Pro license file at `assets/icons/fontawesome-pro/LICENSE.txt`. Created `docs/LICENSING.md` documenting asset licensing. Verified About dialog uses FA glyph icon that tints correctly with theme.
+
+---
+
 ## [v0.1.0-sprint1] – 2025-10-08
 ### Status
 **Sprint 1 Complete — Baseline Release**

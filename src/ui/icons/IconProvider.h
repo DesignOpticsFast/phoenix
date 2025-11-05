@@ -3,6 +3,10 @@
 #include <QHash>
 #include <QJsonObject>
 #include <QString>
+#include <QSize>
+#include <QPalette>
+#include <QToolBar>
+#include <QEvent>
 
 // Include the enum definition
 enum class IconStyle { 
@@ -41,22 +45,31 @@ inline size_t qHash(const IconKey& key, size_t seed = 0) noexcept {
 
 class IconProvider {
 public:
+    // Original signature (kept for compatibility)
     static QIcon icon(const QString& name, IconStyle style = IconStyle::SharpSolid, 
                      int size = 16, bool dark = false, qreal dpr = 1.0);
+    // New overload for widget usage (tries widget palette first, falls back to app palette)
+    static QIcon icon(const QString& logicalName, const QSize& size, const QPalette& pal);
+    static QIcon icon(const QString& logicalName, const QSize& size, const QWidget* widget = nullptr);
     static QString fontFamily(IconStyle style);
     static bool isDarkMode(const QWidget* widget = nullptr);
     static void clearCache();
     static int cacheSize();
     static void onThemeChanged(); // Clears cache on theme change
-    static void setupCacheClearing(); // Setup automatic cache clearing on theme/DPR changes
+    static void setupCacheClearing(); // Setup automatic cache clearing on theme/DPR/palette changes
 
 private:
     static QHash<IconKey, QIcon> s_cache;
     static QJsonObject s_iconManifest;
+    static QHash<QString, QString> s_aliasMap; // alias -> canonical name
     static bool s_manifestLoaded;
     
     static void loadManifest();
-    static QIcon svgIcon(const QString& alias, int size);
-    static QIcon fontIcon(const QString& name, IconStyle style, int size, bool dark);
-    static QIcon fallback();
+    static QString resolveAlias(const QString& name); // Resolve alias to canonical name
+    static IconStyle parseStyleString(const QString& styleStr); // Parse "sharp-solid" -> IconStyle
+    static QIcon svgIcon(const QString& alias, int size, const QPalette& pal, qreal dpr = 1.0);
+    static QIcon fontIcon(const QString& name, IconStyle style, int size, const QPalette& pal, qreal dpr = 1.0);
+    static QIcon themeIcon(const QString& name, const QPalette& pal); // Try system theme icons
+    static QIcon fallback(const QPalette& pal); // Fallback with palette for states
+    static QPalette getPaletteForIcon(const QWidget* widget); // Get palette from widget or app
 };

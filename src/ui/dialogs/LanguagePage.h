@@ -13,7 +13,7 @@ class LanguagePage : public QWidget
     Q_OBJECT
 
 public:
-    explicit LanguagePage(QWidget *parent = nullptr);
+    explicit LanguagePage(QSettings& s, QWidget *parent = nullptr);
     ~LanguagePage();
 
     void loadSettings();
@@ -32,7 +32,7 @@ private:
 
     QComboBox* m_languageCombo;
     QLabel* m_currentLanguageLabel;
-    QSettings m_settings;
+    QSettings& m_settings;
     
     QStringList m_languageCodes;
     QStringList m_languageNames;

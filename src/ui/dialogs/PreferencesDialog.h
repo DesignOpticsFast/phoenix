@@ -17,7 +17,7 @@ class PreferencesDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit PreferencesDialog(QWidget *parent = nullptr);
+    explicit PreferencesDialog(QSettings& s, QWidget *parent = nullptr);
     ~PreferencesDialog() override;
 
 protected:
@@ -46,6 +46,6 @@ private:
     EnvironmentPage* m_environmentPage;
     LanguagePage* m_languagePage;
     
-    // Settings
-    QSettings* m_settings;
+    // Settings (reference to injected QSettings)
+    QSettings& m_settings;
 };

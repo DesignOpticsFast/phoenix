@@ -2,6 +2,10 @@
 #include "../dialogs/PreferencesDialog.h"
 #include "../themes/ThemeManager.h"
 #include "../icons/IconProvider.h"
+#include "app/SettingsProvider.h"
+#include "app/SettingsKeys.h"
+#include "app/io/FileIO.h"
+#include "app/PhxConstants.h"
 #include <QApplication>
 #include <QMenuBar>
 #include <QToolBar>
@@ -11,7 +15,6 @@
 #include <QMessageBox>
 #include <QTimer>
 #include <QElapsedTimer>
-#include <QSettings>
 #include <QLocale>
 #include <QTranslator>
 #include <QProcess>
@@ -19,8 +22,11 @@
 #include <QDebug>
 #include <QShowEvent>
 #include <QStatusBar>
+#include <QEvent>
+#include <QFileDialog>
+#include <QFileInfo>
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     : QMainWindow(parent)
     , m_menuBar(nullptr)
     , m_mainToolBar(nullptr)
@@ -43,15 +49,15 @@ MainWindow::MainWindow(QWidget *parent)
     , m_darkThemeAction(nullptr)
     , m_systemThemeAction(nullptr)
     , m_themeGroup(nullptr)
-    , m_settings(new QSettings("Phoenix", "Phoenix", this))
+    , m_settingsProvider(sp)
     , m_translator(new QTranslator(this))
     , m_themeManager(nullptr)  // Defer initialization to avoid circular dependency
     , m_debugTimer(new QTimer(this))
     , m_startupTime(0)
 {
     setWindowTitle("Phoenix - Optical Design Studio");
-    setMinimumSize(800, 600);
-    resize(1200, 800);
+    setMinimumSize(phx::ui::kMainMinSize);
+    resize(phx::ui::kDefaultWindowSize);
     
     // Set application icon
     setWindowIcon(QIcon(":/phoenix-icon.svg"));
@@ -68,6 +74,7 @@ MainWindow::MainWindow(QWidget *parent)
     setupToolBar();  // This uses the actions created above
     setupRibbons();  // This creates dockable ribbons
     setupDockWidgets();
+    setupFloatingToolbarsAndDocks();  // Setup floating behavior for toolbars and docks
     setupStatusBar();
     setupConnections();
     setupTheme();
@@ -77,7 +84,7 @@ MainWindow::MainWindow(QWidget *parent)
     setupTranslations();
     
     // Start debug info updates
-    m_debugTimer->setInterval(1000); // Update every second
+    m_debugTimer->setInterval(phx::ui::kTelemetryIntervalMs); // Update every second
     connect(m_debugTimer, &QTimer::timeout, this, &MainWindow::updateDebugInfo);
     m_debugTimer->start();
     
@@ -94,6 +101,24 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
     saveSettings();
     QMainWindow::closeEvent(event);
+}
+
+bool MainWindow::event(QEvent* e)
+{
+    if (e->type() == QEvent::WindowActivate) {
+        // Nudge floating bars above their parent window when MainWindow regains focus
+        for (auto *tb : findChildren<QToolBar*>()) {
+            if (tb->isFloating()) {
+                tb->raise();
+            }
+        }
+        for (auto *dw : findChildren<QDockWidget*>()) {
+            if (dw->isFloating()) {
+                dw->raise();
+            }
+        }
+    }
+    return QMainWindow::event(e);
 }
 
 void MainWindow::setupMenuBar()
@@ -325,6 +350,7 @@ QToolBar* MainWindow::createMainToolBar()
     toolBar->setObjectName("mainToolBar");
     toolBar->setMovable(true);
     toolBar->setFloatable(true);
+    toolBar->setAllowedAreas(Qt::AllToolBarAreas);
     toolBar->setVisible(true);
     toolBar->show();
     
@@ -339,7 +365,7 @@ QToolBar* MainWindow::createMainToolBar()
     toolBar->setVisible(true);
     toolBar->show();
     toolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
-    toolBar->setIconSize(QSize(24, 24));
+    toolBar->setIconSize(QSize(phx::ui::kRibbonIconPx, phx::ui::kRibbonIconPx));
     
     return toolBar;
 }
@@ -363,7 +389,7 @@ QToolBar* MainWindow::createTopRibbon()
     ribbon->setFloatable(true);
     ribbon->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
     ribbon->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    ribbon->setIconSize(QSize(24, 24));
+    ribbon->setIconSize(QSize(phx::ui::kRibbonIconPx, phx::ui::kRibbonIconPx));
     
     // File actions
     QAction* newAction = ribbon->addAction(getIcon("plus", "document-new"), tr("New"));
@@ -429,10 +455,10 @@ QToolBar* MainWindow::createRightRibbon()
     ribbon->setObjectName("rightRibbon");
     ribbon->setMovable(true);
     ribbon->setFloatable(true);
-    ribbon->setAllowedAreas(Qt::LeftToolBarArea | Qt::RightToolBarArea);
+    ribbon->setAllowedAreas(Qt::AllToolBarAreas);
     ribbon->setOrientation(Qt::Vertical);
     ribbon->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    ribbon->setIconSize(QSize(20, 20));
+    ribbon->setIconSize(QSize(phx::ui::kToolbarIconPx, phx::ui::kToolbarIconPx));
     
     // Editors actions
     QAction* lensInspectorAction = ribbon->addAction(getIcon("lens", "search"), tr("Lens Inspector"));
@@ -500,11 +526,11 @@ void MainWindow::setupDockWidgets()
     m_toolboxDock = new QDockWidget(tr("Toolbox"), this);
     m_toolboxDock->setObjectName("toolboxDock");
     m_toolboxDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    m_toolboxDock->setMinimumWidth(200);
-    m_toolboxDock->setMaximumWidth(400);
+    m_toolboxDock->setMinimumWidth(phx::ui::kDockMinWidth);
+    m_toolboxDock->setMaximumWidth(phx::ui::kDockWideWidth);
     
     QWidget* toolboxWidget = new QWidget();
-    toolboxWidget->setMinimumSize(200, 300);
+    toolboxWidget->setMinimumSize(phx::ui::kDockMinWidth, phx::ui::kPanelMinHeight);
     m_toolboxDock->setWidget(toolboxWidget);
     addDockWidget(Qt::LeftDockWidgetArea, m_toolboxDock);
     
@@ -512,18 +538,64 @@ void MainWindow::setupDockWidgets()
     m_propertiesDock = new QDockWidget(tr("Properties"), this);
     m_propertiesDock->setObjectName("propertiesDock");
     m_propertiesDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    m_propertiesDock->setMinimumWidth(200);
-    m_propertiesDock->setMaximumWidth(400);
+    m_propertiesDock->setMinimumWidth(phx::ui::kDockMinWidth);
+    m_propertiesDock->setMaximumWidth(phx::ui::kDockWideWidth);
     
     QWidget* propertiesWidget = new QWidget();
-    propertiesWidget->setMinimumSize(200, 300);
+    propertiesWidget->setMinimumSize(phx::ui::kDockMinWidth, phx::ui::kPanelMinHeight);
     m_propertiesDock->setWidget(propertiesWidget);
     addDockWidget(Qt::RightDockWidgetArea, m_propertiesDock);
     
     // Central widget placeholder
     QWidget* centralWidget = new QWidget();
-    centralWidget->setMinimumSize(400, 300);
+    centralWidget->setMinimumSize(phx::ui::kDockWideWidth, phx::ui::kPanelMinHeight);
     setCentralWidget(centralWidget);
+}
+
+void MainWindow::setupFloatingToolbarsAndDocks()
+{
+    // Lambda to setup floating behavior for both QToolBar and QDockWidget
+    auto setupFloatingBehavior = [this](QWidget *w) {
+        // Connect to topLevelChanged signal (available on both QToolBar and QDockWidget)
+        if (auto *tb = qobject_cast<QToolBar*>(w)) {
+            connect(tb, &QToolBar::topLevelChanged, this, [this, w](bool floating) {
+                if (floating) {
+                    w->setWindowFlag(Qt::Tool, true);
+                    w->setWindowFlag(Qt::WindowStaysOnTopHint, true);
+                    w->show();    // re-apply flags
+                    w->raise();
+                    w->activateWindow();
+                } else {
+                    w->setWindowFlag(Qt::WindowStaysOnTopHint, false);
+                    w->setWindowFlag(Qt::Tool, false);
+                    // No show() required here, docked windows are managed by QMainWindow
+                }
+            });
+        } else if (auto *dw = qobject_cast<QDockWidget*>(w)) {
+            connect(dw, &QDockWidget::topLevelChanged, this, [this, w](bool floating) {
+                if (floating) {
+                    w->setWindowFlag(Qt::Tool, true);
+                    w->setWindowFlag(Qt::WindowStaysOnTopHint, true);
+                    w->show();
+                    w->raise();
+                    w->activateWindow();
+                } else {
+                    w->setWindowFlag(Qt::WindowStaysOnTopHint, false);
+                    w->setWindowFlag(Qt::Tool, false);
+                    // No show() required here, docked windows are managed by QMainWindow
+                }
+            });
+        }
+    };
+    
+    // Apply to all toolbars
+    setupFloatingBehavior(m_mainToolBar);
+    setupFloatingBehavior(m_topRibbon);
+    setupFloatingBehavior(m_rightRibbon);
+    
+    // Apply to all dock widgets
+    setupFloatingBehavior(m_toolboxDock);
+    setupFloatingBehavior(m_propertiesDock);
 }
 
 void MainWindow::setupStatusBar()
@@ -550,15 +622,19 @@ void MainWindow::setupConnections()
 
 void MainWindow::setupTranslations()
 {
+    if (!m_settingsProvider) return;
     // Load current language from settings
-    QString language = m_settings->value("language", "en").toString();
+    auto& s = m_settingsProvider->settings();
+    QString language = s.value(PhxKeys::I18N_LANGUAGE, "en").toString();
     setLanguage(language);
 }
 
 void MainWindow::setupTheme()
 {
+    if (!m_settingsProvider) return;
     // Load current theme from settings
-    QString theme = m_settings->value("theme", "system").toString();
+    auto& s = m_settingsProvider->settings();
+    QString theme = s.value(PhxKeys::UI_THEME, "system").toString();
     if (theme == "light") {
         m_lightThemeAction->setChecked(true);
         if (m_themeManager) m_themeManager->setTheme(ThemeManager::Theme::Light);
@@ -573,16 +649,20 @@ void MainWindow::setupTheme()
 
 void MainWindow::loadSettings()
 {
+    if (!m_settingsProvider) return;
     // Load window geometry
-    restoreGeometry(m_settings->value("geometry").toByteArray());
-    restoreState(m_settings->value("windowState").toByteArray());
+    auto& s = m_settingsProvider->settings();
+    restoreGeometry(s.value(PhxKeys::UI_GEOMETRY).toByteArray());
+    restoreState(s.value(PhxKeys::UI_WINDOW_STATE).toByteArray());
 }
 
 void MainWindow::saveSettings()
 {
+    if (!m_settingsProvider) return;
     // Save window geometry
-    m_settings->setValue("geometry", saveGeometry());
-    m_settings->setValue("windowState", saveState());
+    auto& s = m_settingsProvider->settings();
+    s.setValue(PhxKeys::UI_GEOMETRY, saveGeometry());
+    s.setValue(PhxKeys::UI_WINDOW_STATE, saveState());
 }
 
 void MainWindow::updateStatusBar()
@@ -686,32 +766,11 @@ void MainWindow::updateDebugInfo()
 
 QIcon MainWindow::getIcon(const QString& name, const QString& fallback)
 {
-    // Use IconProvider to get Font Awesome icons
-    if (m_themeManager) {
-        bool isDark = m_themeManager->isDarkMode();
-        // Try Font Awesome icon first
-        QIcon faIcon = IconProvider::icon(name, IconStyle::SharpSolid, 16, isDark);
-        if (!faIcon.isNull()) {
-            return faIcon;
-        }
-        
-        // Fallback to system theme icons
-        if (name == "plus") return QIcon::fromTheme("document-new");
-        if (name == "folder-open") return QIcon::fromTheme("document-open");
-        if (name == "floppy-disk") return QIcon::fromTheme("document-save");
-        if (name == "copy") return QIcon::fromTheme("edit-copy");
-        if (name == "gear") return QIcon::fromTheme("preferences-system");
-        if (name == "xmark") return QIcon::fromTheme("application-exit");
-        if (name == "magnifying-glass") return QIcon::fromTheme("edit-find");
-        if (name == "eye") return QIcon::fromTheme("view-refresh");
-        if (name == "chart-line") return QIcon::fromTheme("office-chart-line");
-        if (name == "chart-area") return QIcon::fromTheme("office-chart-area");
-        if (name == "info-circle") return QIcon::fromTheme("help-about");
-        return QIcon::fromTheme("application-x-executable");
-    } else {
-        // Fallback to default icon if theme manager not ready
-        return IconProvider::icon(name, IconStyle::SharpSolid, 16, m_themeManager->isDarkMode());
-    }
+    Q_UNUSED(fallback); // IconProvider handles all fallbacks now
+    
+    // Use IconProvider with widget-aware overload (automatically uses toolbar palette if available)
+    // Use standard icon size for menus/toolbars
+    return IconProvider::icon(name, QSize(phx::ui::kMenuIconPx, phx::ui::kMenuIconPx), this);
 }
 
 // File menu actions
@@ -727,22 +786,73 @@ void MainWindow::openFile()
 
 void MainWindow::saveFile()
 {
-    QMessageBox::information(this, tr("Save File"), tr("This feature is not yet implemented."));
+    // TODO: Implement actual save logic when file formats are defined
+    // For now, show "not implemented" message
+    
+    // TODO (Future): When implementing:
+    // 1. Get target path from current document or use QFileDialog
+    // 2. Validate path using FileIO::canonicalize()
+    // 3. Ensure parent directory exists: FileIO::ensureDir(QFileInfo(path).absolutePath(), &err)
+    // 4. For long operations, use QtConcurrent::run + QFutureWatcher to avoid blocking GUI thread
+    // 5. Write using: FileIO::writeTextFileAtomic(path, content, &err)
+    // 6. On failure, show QMessageBox::warning with path and error message
+    
+    QMessageBox::information(this, tr("Save"), tr("Not implemented in this sprint."));
 }
 
 void MainWindow::saveAsFile()
 {
-    QMessageBox::information(this, tr("Save As File"), tr("This feature is not yet implemented."));
+    // TODO: Implement actual save-as logic when file formats are defined
+    // For now, show "not implemented" message
+    
+    // TODO (Future): When implementing:
+    // 1. Use QFileDialog::getSaveFileName() to get target path
+    // 2. Validate path (non-empty, valid parent directory)
+    // 3. Use FileIO::canonicalize() for final path
+    // 4. Ensure parent directory: FileIO::ensureDir(QFileInfo(path).absolutePath(), &err)
+    // 5. For long operations, use QtConcurrent::run + QFutureWatcher to avoid blocking GUI thread
+    // 6. Write using: FileIO::writeTextFileAtomic(path, content, &err)
+    // 7. On failure, show QMessageBox::warning with path and error message
+    
+    QString targetPath = QFileDialog::getSaveFileName(this, tr("Save As"), "", tr("All Files (*)"));
+    if (targetPath.isEmpty()) {
+        return; // User cancelled
+    }
+    
+    // Validate path
+    QString canonicalPath = FileIO::canonicalize(targetPath);
+    if (canonicalPath.isEmpty()) {
+        QMessageBox::warning(this, tr("Save As"), tr("Invalid file path."));
+        return;
+    }
+    
+    // Ensure parent directory exists
+    QFileInfo fileInfo(canonicalPath);
+    QString parentDir = fileInfo.absolutePath();
+    QString dirError;
+    if (!FileIO::ensureDir(parentDir, &dirError)) {
+        QMessageBox::warning(this, tr("Save As"), 
+            tr("Failed to create directory:\n%1\n\n%2").arg(parentDir, dirError));
+        return;
+    }
+    
+    // TODO: Actual file writing will be implemented later
+    // For now, just show "not implemented" message
+    QMessageBox::information(this, tr("Save As"), tr("Not implemented in this sprint."));
 }
 
 void MainWindow::showPreferences()
 {
     if (!m_preferencesDialog) {
-        m_preferencesDialog = std::make_unique<PreferencesDialog>(this);
+        if (!m_settingsProvider) return;
+        // Pass QSettings& reference to PreferencesDialog
+        m_preferencesDialog = new PreferencesDialog(m_settingsProvider->settings(), this);
+        m_preferencesDialog->setAttribute(Qt::WA_DeleteOnClose, true);  // auto-delete on close
+    } else {
+        m_preferencesDialog->raise();
+        m_preferencesDialog->activateWindow();
     }
-    m_preferencesDialog->show();
-    m_preferencesDialog->raise();
-    m_preferencesDialog->activateWindow();
+    m_preferencesDialog->show();  // non-modal
 }
 
 void MainWindow::exitApplication()
@@ -776,19 +886,19 @@ void MainWindow::show2DPlot()
 void MainWindow::setLightTheme()
 {
     if (m_themeManager) m_themeManager->setTheme(ThemeManager::Theme::Light);
-    m_settings->setValue("theme", "light");
+    // ThemeManager now saves theme via SettingsProvider
 }
 
 void MainWindow::setDarkTheme()
 {
     if (m_themeManager) m_themeManager->setTheme(ThemeManager::Theme::Dark);
-    m_settings->setValue("theme", "dark");
+    // ThemeManager now saves theme via SettingsProvider
 }
 
 void MainWindow::setSystemTheme()
 {
     if (m_themeManager) m_themeManager->setTheme(ThemeManager::Theme::System);
-    m_settings->setValue("theme", "system");
+    // ThemeManager now saves theme via SettingsProvider
 }
 
 void MainWindow::setLanguage(const QString& language)
@@ -803,7 +913,10 @@ void MainWindow::setLanguage(const QString& language)
     if (m_translator->load(translationFile)) {
         QApplication::installTranslator(m_translator);
         m_currentLocale = QLocale(language);
-        m_settings->setValue("language", language);
+        if (m_settingsProvider) {
+            auto& s = m_settingsProvider->settings();
+            s.setValue(PhxKeys::I18N_LANGUAGE, language);
+        }
         
         // Retranslate UI
         retranslateUi();
@@ -877,7 +990,7 @@ void MainWindow::logUIAction(const QString& action, qint64 elapsed)
     qDebug() << "UI Action:" << action << "took" << elapsed << "ms";
     
     // Check if response time meets Phase 1 requirements (<50ms)
-    if (elapsed > 50) {
+    if (elapsed > phx::ui::kUITargetResponseMs) {
         qWarning() << "SLOW UI ACTION:" << action << "took" << elapsed << "ms (exceeds 50ms target)";
     }
     

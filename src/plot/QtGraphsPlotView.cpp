@@ -1,4 +1,5 @@
 #include "QtGraphsPlotView.hpp"
+#include "app/PhxConstants.h"
 
 #include <QWidget>
 #include <QPainter>
@@ -38,13 +39,14 @@ void QtGraphsPlotView::setupPlot()
 
 void QtGraphsPlotView::setData(const std::vector<double>& xValues, const std::vector<double>& yValues)
 {
-    xValues_ = xValues;
-    yValues_ = yValues;
+    Q_UNUSED(xValues);
+    Q_UNUSED(yValues);
     
-    // Apply downsampling if needed
-    applyDownsampling();
+    qWarning() << "[Plot] Deferred: plotting disabled this sprint; target points"
+               << phx::plot::kTargetPoints;
     
-    updatePlot();
+    // Stub implementation - plotting deferred to Sprint 5
+    // TODO: Implement actual plotting when Sprint 5 begins
 }
 
 void QtGraphsPlotView::setTitle(const QString& title)

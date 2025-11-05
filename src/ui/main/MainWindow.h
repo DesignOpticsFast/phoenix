@@ -8,10 +8,9 @@
 #include <QActionGroup>
 #include <QTimer>
 #include <QElapsedTimer>
-#include <QSettings>
 #include <QLocale>
 #include <QTranslator>
-#include <memory>
+#include <QPointer>
 
 QT_BEGIN_NAMESPACE
 class QDockWidget;
@@ -27,7 +26,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(class SettingsProvider* sp, QWidget *parent = nullptr);
     ~MainWindow() override;
     
     // Startup timing
@@ -40,6 +39,7 @@ signals:
 protected:
     void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent* ev) override;
+    bool event(QEvent* e) override;
 
 private slots:
     // File menu actions
@@ -89,6 +89,7 @@ private:
     void setupToolBar();
     void setupRibbons();
     void setupDockWidgets();
+    void setupFloatingToolbarsAndDocks();
     void setupStatusBar();
     void setupConnections();
     void loadSettings();
@@ -149,11 +150,11 @@ private:
     QAction* m_systemThemeAction;
     QActionGroup* m_themeGroup;
     
-    // Dialogs
-    std::unique_ptr<PreferencesDialog> m_preferencesDialog;
+    // Dialogs (QPointer auto-nulls when dialog is deleted)
+    QPointer<PreferencesDialog> m_preferencesDialog;
     
     // Settings and state
-    QSettings* m_settings;
+    QPointer<class SettingsProvider> m_settingsProvider;
     QLocale m_currentLocale;
     QTranslator* m_translator;
     ThemeManager* m_themeManager;

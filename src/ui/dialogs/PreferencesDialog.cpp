@@ -1,6 +1,8 @@
 #include "PreferencesDialog.h"
 #include "EnvironmentPage.h"
 #include "LanguagePage.h"
+#include "app/SettingsKeys.h"
+#include "app/PhxConstants.h"
 #include <QDialog>
 #include <QListWidget>
 #include <QStackedWidget>
@@ -11,7 +13,7 @@
 #include <QSettings>
 #include <QDebug>
 
-PreferencesDialog::PreferencesDialog(QWidget *parent)
+PreferencesDialog::PreferencesDialog(QSettings& s, QWidget *parent)
     : QDialog(parent)
     , m_splitter(nullptr)
     , m_categoryList(nullptr)
@@ -21,12 +23,12 @@ PreferencesDialog::PreferencesDialog(QWidget *parent)
     , m_applyButton(nullptr)
     , m_environmentPage(nullptr)
     , m_languagePage(nullptr)
-    , m_settings(new QSettings("Phoenix", "Phoenix", this))
+    , m_settings(s)
 {
     setWindowTitle(tr("Preferences"));
     setModal(true);
-    setMinimumSize(600, 400);
-    resize(800, 500);
+    setMinimumSize(phx::ui::kPrefsMinSize);
+    resize(phx::ui::kPrefsInitSize);
     
     setupUI();
     loadSettings();
@@ -65,11 +67,11 @@ void PreferencesDialog::setupUI()
     // Right pane - content stack
     m_contentStack = new QStackedWidget();
     
-    // Create pages
-    m_environmentPage = new EnvironmentPage(this);
+    // Create pages (pass QSettings& reference)
+    m_environmentPage = new EnvironmentPage(m_settings, this);
     m_contentStack->addWidget(m_environmentPage);
     
-    m_languagePage = new LanguagePage(this);
+    m_languagePage = new LanguagePage(m_settings, this);
     m_contentStack->addWidget(m_languagePage);
     
     m_splitter->addWidget(m_contentStack);
@@ -131,21 +133,29 @@ void PreferencesDialog::onApply()
 void PreferencesDialog::loadSettings()
 {
     // Load dialog geometry
-    restoreGeometry(m_settings->value("preferencesDialog/geometry").toByteArray());
+    if (auto b = m_settings.value(PhxKeys::DIALOG_PREFS_GEO).toByteArray(); !b.isEmpty()) {
+        restoreGeometry(b);
+    }
     
     // Load page settings
     if (m_environmentPage) {
         m_environmentPage->loadSettings();
+    }
+    if (m_languagePage) {
+        m_languagePage->loadSettings();
     }
 }
 
 void PreferencesDialog::saveSettings()
 {
     // Save dialog geometry
-    m_settings->setValue("preferencesDialog/geometry", saveGeometry());
+    m_settings.setValue(PhxKeys::DIALOG_PREFS_GEO, saveGeometry());
     
     // Save page settings
     if (m_environmentPage) {
         m_environmentPage->saveSettings();
+    }
+    if (m_languagePage) {
+        m_languagePage->saveSettings();
     }
 }

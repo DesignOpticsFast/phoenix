@@ -1,13 +1,14 @@
 #include "LanguagePage.h"
+#include "app/SettingsKeys.h"
 #include <QApplication>
 #include <QTranslator>
 #include <QDebug>
 
-LanguagePage::LanguagePage(QWidget *parent)
+LanguagePage::LanguagePage(QSettings& s, QWidget *parent)
     : QWidget(parent)
     , m_languageCombo(nullptr)
     , m_currentLanguageLabel(nullptr)
-    , m_settings("Phoenix", "PhoenixApp")
+    , m_settings(s)
 {
     setupUi();
     populateLanguages();
@@ -80,7 +81,7 @@ void LanguagePage::populateLanguages()
 
 void LanguagePage::loadSettings()
 {
-    QString currentLanguage = m_settings.value("language", "en").toString();
+    QString currentLanguage = m_settings.value(PhxKeys::I18N_LANGUAGE, "en").toString();
     
     // Find and select current language
     int index = m_languageCodes.indexOf(currentLanguage);
@@ -99,7 +100,7 @@ void LanguagePage::saveSettings()
     int index = m_languageCombo->currentIndex();
     if (index >= 0 && index < m_languageCodes.size()) {
         QString selectedLanguage = m_languageCodes[index];
-        m_settings.setValue("language", selectedLanguage);
+        m_settings.setValue(PhxKeys::I18N_LANGUAGE, selectedLanguage);
         emit languageChanged(selectedLanguage);
     }
 }

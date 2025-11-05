@@ -1,10 +1,15 @@
 #include "ThemeManager.h"
+#include "app/SettingsProvider.h"
+#include "app/SettingsKeys.h"
 #include <QApplication>
 #include <QStyleFactory>
 #include <QDir>
 #include <QDebug>
+#include <QFile>
+#include <QTextStream>
 
 ThemeManager* ThemeManager::s_instance = nullptr;
+QPointer<SettingsProvider> ThemeManager::provider_ = nullptr;
 
 ThemeManager* ThemeManager::instance()
 {
@@ -14,10 +19,14 @@ ThemeManager* ThemeManager::instance()
     return s_instance;
 }
 
+void ThemeManager::setSettingsProvider(SettingsProvider* sp)
+{
+    provider_ = sp;
+}
+
 ThemeManager::ThemeManager(QObject* parent)
     : QObject(parent)
     , m_currentTheme(Theme::System)
-    , m_settings(new QSettings("Phoenix", "Phoenix", this))
 {
     loadSettings();
 }
@@ -75,7 +84,16 @@ void ThemeManager::themeChanged()
 
 void ThemeManager::loadSettings()
 {
-    QString themeString = m_settings->value("theme", "system").toString();
+    auto* sp = provider_.data();
+    if (!sp) {
+        // Fall back to System theme if provider not set
+        m_currentTheme = Theme::System;
+        applyTheme(m_currentTheme);
+        return;
+    }
+    
+    auto& s = sp->settings();
+    QString themeString = s.value(PhxKeys::UI_THEME, "system").toString();
     if (themeString == "light") {
         m_currentTheme = Theme::Light;
     } else if (themeString == "dark") {
@@ -89,6 +107,12 @@ void ThemeManager::loadSettings()
 
 void ThemeManager::saveSettings()
 {
+    auto* sp = provider_.data();
+    if (!sp) {
+        return;
+    }
+    
+    auto& s = sp->settings();
     QString themeString;
     switch (m_currentTheme) {
         case Theme::Light:
@@ -101,7 +125,7 @@ void ThemeManager::saveSettings()
             themeString = "system";
             break;
     }
-    m_settings->setValue("theme", themeString);
+    s.setValue(PhxKeys::UI_THEME, themeString);
 }
 
 void ThemeManager::applyTheme(Theme theme)
@@ -166,10 +190,21 @@ QString ThemeManager::loadStyleSheet(const QString& filename)
 {
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "Could not open stylesheet:" << filename;
+        qWarning() << "[Theme] Failed to open" << filename << file.errorString();
         return QString();
     }
     
     QTextStream stream(&file);
-    return stream.readAll();
+    QString content = stream.readAll();
+    
+    if (file.error() != QFile::NoError) {
+        qWarning() << "[Theme] Read error for" << filename << file.errorString();
+        return QString();
+    }
+    
+    if (content.isEmpty()) {
+        qWarning() << "[Theme] Stylesheet file is empty:" << filename;
+    }
+    
+    return content;
 }

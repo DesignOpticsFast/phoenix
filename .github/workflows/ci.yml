@@ -23,6 +23,66 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  pre-build-checks:
+    name: Pre-build resource checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      
+      - name: Validate QRC entries
+        run: |
+          set -e
+          QRC_FILE="src/ui/icons/phoenix_icons.qrc"
+          if [ ! -f "$QRC_FILE" ]; then
+            echo "❌ QRC file not found: $QRC_FILE"
+            exit 1
+          fi
+          
+          # Extract file paths from QRC using sed to parse XML
+          QRC_DIR="$(dirname "$QRC_FILE")"
+          while IFS= read -r line; do
+            # Extract path between > and </file>
+            file_path=$(echo "$line" | sed -n 's/.*>\(.*\)<\/file>/\1/p')
+            if [ -n "$file_path" ]; then
+              # Resolve relative path from qrc location
+              full_path="$QRC_DIR/$file_path"
+              if [ ! -f "$full_path" ]; then
+                echo "❌ QRC entry points to missing file: $file_path (resolved: $full_path)"
+                exit 1
+              fi
+            fi
+          done < <(grep '<file' "$QRC_FILE")
+          
+          echo "✅ All QRC entries validated"
+      
+      - name: Check SVG currentColor usage
+        run: |
+          set -e
+          # Check non-branding SVGs for hardcoded colors
+          # Branding SVGs (phoenix-icon.svg) are exempt
+          SVG_DIR="assets/icons/fontawesome-pro/svgs"
+          if [ ! -d "$SVG_DIR" ]; then
+            echo "⚠️  SVG directory not found, skipping check"
+            exit 0
+          fi
+          
+          # Find SVGs with hardcoded fill or stroke (excluding branding)
+          VIOLATIONS=$(find "$SVG_DIR" -name "*.svg" ! -name "*phoenix*" -exec grep -l 'fill="#[^c]' {} \; 2>/dev/null || true)
+          if [ -n "$VIOLATIONS" ]; then
+            echo "❌ Found SVGs with hardcoded fill colors (should use fill=\"currentColor\"):"
+            echo "$VIOLATIONS"
+            exit 1
+          fi
+          
+          VIOLATIONS=$(find "$SVG_DIR" -name "*.svg" ! -name "*phoenix*" -exec grep -l 'stroke="#[^c]' {} \; 2>/dev/null || true)
+          if [ -n "$VIOLATIONS" ]; then
+            echo "❌ Found SVGs with hardcoded stroke colors (should use stroke=\"currentColor\"):"
+            echo "$VIOLATIONS"
+            exit 1
+          fi
+          
+          echo "✅ SVG color check passed"
+
   changes:
     name: Detect Changes
     runs-on: ubuntu-latest
@@ -241,8 +301,43 @@ jobs:
           file_or_dir: .github/workflows
           config_file: .yamllint.yml
 
+  palantir-no-blocking-when-disabled:
+    name: Palantir: block new blocking calls when disabled
+    runs-on: ubuntu-latest
+    env:
+      PHX_WITH_PALANTIR: '0'   # Sprint 4 default
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Compute diff vs base
+        id: diff
+        run: |
+          # Determine base reference for PRs and pushes
+          if [ -n "${GITHUB_BASE_REF}" ]; then
+            BASE="origin/${GITHUB_BASE_REF}"
+          else
+            BASE="$(git rev-parse origin/main || echo HEAD~1)"
+          fi
+          echo "BASE_REF=${BASE}" >> $GITHUB_OUTPUT
+
+      - name: Scan diff for blocking patterns (only when Palantir disabled)
+        if: ${{ env.PHX_WITH_PALANTIR == '0' }}
+        run: |
+          BASE_REF="${{ steps.diff.outputs.BASE_REF }}"
+          # Filter to palantir sources and only added/changed hunks
+          DIFF=$(git diff --unified=0 --diff-filter=ACMRT "$BASE_REF"...HEAD -- src/palantir || true)
+          # Patterns to catch (function names and sleeps)
+          if echo "$DIFF" | grep -E '^\+.*\b(waitFor[A-Za-z]*|sleep\(|msleep\(|usleep\()' ; then
+            echo "::error ::New blocking call(s) added under src/palantir while PHX_WITH_PALANTIR=OFF."
+            exit 1
+          else
+            echo "No new blocking calls found in src/palantir."
+          fi
+
   gate:
-    needs: [changes, docs, build, ci_checks]
+    needs: [changes, docs, build, ci_checks, palantir-no-blocking-when-disabled, pre-build-checks]
     if: always()
     runs-on: ubuntu-latest
     steps:

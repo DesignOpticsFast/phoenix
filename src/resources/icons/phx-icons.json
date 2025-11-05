@@ -1,72 +1,81 @@
 {
   "icons": {
-    "plus": {
-      "unicode": "f067",
-      "font": "fa-sharp-solid-900"
+    "file-new": {
+      "style": "sharp-solid",
+      "codepoint": "f067",
+      "aliases": ["file-plus", "plus", "add"]
     },
-    "folder-open": {
-      "unicode": "f07c",
-      "font": "fa-sharp-solid-900"
+    "file-open": {
+      "style": "sharp-solid",
+      "codepoint": "f07c",
+      "aliases": ["folder-open", "folder"]
     },
     "save": {
-      "unicode": "f0c7",
-      "font": "fa-sharp-solid-900"
+      "style": "sharp-solid",
+      "codepoint": "f0c7",
+      "aliases": ["floppy-disk"]
+    },
+    "save-as": {
+      "style": "sharp-solid",
+      "codepoint": "f0c7",
+      "aliases": ["floppy-disk-pen"]
     },
     "settings": {
-      "unicode": "f013",
-      "font": "fa-sharp-solid-900"
-    },
-    "search": {
-      "unicode": "f002",
-      "font": "fa-sharp-solid-900"
-    },
-    "view": {
-      "unicode": "f06e",
-      "font": "fa-sharp-solid-900"
-    },
-    "chart": {
-      "unicode": "f080",
-      "font": "fa-sharp-solid-900"
-    },
-    "info": {
-      "unicode": "f05a",
-      "font": "fa-sharp-solid-900"
+      "style": "sharp-solid",
+      "codepoint": "f013",
+      "aliases": ["sliders", "gear", "preferences"]
     },
     "close": {
-      "unicode": "f00d",
-      "font": "fa-sharp-solid-900"
+      "style": "sharp-solid",
+      "codepoint": "f00d",
+      "aliases": ["xmark", "power-off", "exit"]
     },
-    "floppy-disk": {
-      "unicode": "f0c7",
-      "font": "fa-sharp-solid-900"
+    "search": {
+      "style": "sharp-solid",
+      "codepoint": "f002",
+      "aliases": ["magnifying-glass", "lens"]
     },
-    "gear": {
-      "unicode": "f013",
-      "font": "fa-sharp-solid-900"
+    "view": {
+      "style": "sharp-solid",
+      "codepoint": "f06e",
+      "aliases": ["eye", "desktop", "system-viewer"]
     },
-    "xmark": {
-      "unicode": "f00d",
-      "font": "fa-sharp-solid-900"
+    "chart": {
+      "style": "sharp-solid",
+      "codepoint": "f080",
+      "aliases": ["chart-line", "chart-bar", "chart-area", "xy-plot"]
     },
-    "magnifying-glass": {
-      "unicode": "f002",
-      "font": "fa-sharp-solid-900"
+    "info": {
+      "style": "sharp-solid",
+      "codepoint": "f05a",
+      "aliases": ["info-circle", "circle-info"]
     },
-    "eye": {
-      "unicode": "f06e",
-      "font": "fa-sharp-solid-900"
+    "help": {
+      "style": "sharp-solid",
+      "codepoint": "f059",
+      "aliases": ["question-circle", "circle-question"]
     },
-    "chart-line": {
-      "unicode": "f201",
-      "font": "fa-sharp-solid-900"
+    "sun": {
+      "style": "sharp-solid",
+      "codepoint": "f185",
+      "aliases": ["light", "light-theme"]
     },
-    "chart-area": {
-      "unicode": "f1fe",
-      "font": "fa-sharp-solid-900"
+    "moon": {
+      "style": "sharp-solid",
+      "codepoint": "f186",
+      "aliases": ["dark", "dark-theme"]
     },
-    "info-circle": {
-      "unicode": "f05a",
-      "font": "fa-sharp-solid-900"
+    "document-new": {
+      "style": "sharp-solid",
+      "codepoint": "f067"
+    },
+    "document-open": {
+      "style": "sharp-solid",
+      "codepoint": "f07c"
+    },
+    "document-save": {
+      "style": "sharp-solid",
+      "codepoint": "f0c7"
     }
   }
 }

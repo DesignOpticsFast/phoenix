@@ -6,6 +6,9 @@
 #include <QStyle>
 #include <QPalette>
 #include <QString>
+#include <QPointer>
+
+class SettingsProvider;
 
 class ThemeManager : public QObject
 {
@@ -19,6 +22,7 @@ public:
     };
 
     static ThemeManager* instance();
+    static void setSettingsProvider(SettingsProvider* sp);
     
     // Theme management
     void setTheme(Theme theme);
@@ -43,9 +47,9 @@ signals:
 private:
     explicit ThemeManager(QObject* parent = nullptr);
     static ThemeManager* s_instance;
+    static QPointer<SettingsProvider> provider_;
     
     Theme m_currentTheme;
-    QSettings* m_settings;
     
     void applyTheme(Theme theme);
     void applyLightTheme();
