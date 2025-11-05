@@ -1,80 +1,80 @@
 {
   "icons": {
     "file-new": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f067",
       "aliases": ["file-plus", "plus", "add"]
     },
     "file-open": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f07c",
       "aliases": ["folder-open", "folder"]
     },
     "save": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f0c7",
       "aliases": ["floppy-disk"]
     },
     "save-as": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f0c7",
       "aliases": ["floppy-disk-pen"]
     },
     "settings": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f013",
       "aliases": ["sliders", "gear", "preferences"]
     },
     "close": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f00d",
       "aliases": ["xmark", "power-off", "exit"]
     },
     "search": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f002",
       "aliases": ["magnifying-glass", "lens"]
     },
     "view": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f06e",
       "aliases": ["eye", "desktop", "system-viewer"]
     },
     "chart": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f080",
       "aliases": ["chart-line", "chart-bar", "chart-area", "xy-plot"]
     },
     "info": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f05a",
       "aliases": ["info-circle", "circle-info"]
     },
     "help": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f059",
       "aliases": ["question-circle", "circle-question"]
     },
     "sun": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f185",
       "aliases": ["light", "light-theme"]
     },
     "moon": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f186",
       "aliases": ["dark", "dark-theme"]
     },
     "document-new": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f067"
     },
     "document-open": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f07c"
     },
     "document-save": {
-      "style": "sharp-solid",
+      "style": "solid",
       "codepoint": "f0c7"
     }
   }

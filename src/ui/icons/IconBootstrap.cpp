@@ -15,10 +15,10 @@ static std::once_flag s_infoOnce;
 
 QStringList IconBootstrap::expectedFontPaths() {
   return QStringList{
-    ":/fonts/fa-sharp-solid-900.ttf",
-    ":/fonts/fa-sharp-regular-400.ttf",
+    ":/fonts/fa-solid-900.ttf",
     ":/fonts/fa-duotone-900.ttf",
     ":/fonts/fa-brands-400.ttf"
+    // Note: fa-regular-400.ttf not included yet; all current icons use solid style
   };
 }
 
@@ -100,19 +100,18 @@ bool IconBootstrap::InitFonts() {
                                [](const FontLoadStatus& s) { return s.ok(); });
   
   // Extract family names for backward compatibility
-  if (s_status.size() >= 4) {
+  // Map to Pro fonts: solid (0), duotone (1), brands (2)
+  if (s_status.size() >= 3) {
     if (s_status[0].ok() && !s_status[0].families.isEmpty()) {
-      g_ss = s_status[0].families.first();
+      g_ss = s_status[0].families.first(); // Pro Solid
     }
     if (s_status[1].ok() && !s_status[1].families.isEmpty()) {
-      g_sr = s_status[1].families.first();
+      g_duo = s_status[1].families.first(); // Pro Duotone
     }
     if (s_status[2].ok() && !s_status[2].families.isEmpty()) {
-      g_duo = s_status[2].families.first();
+      g_br = s_status[2].families.first(); // Brands
     }
-    if (s_status[3].ok() && !s_status[3].families.isEmpty()) {
-      g_br = s_status[3].families.first();
-    }
+    // g_sr (regular) left empty for now - not used in current manifest
   }
   
   // One summary info log (once per run)
