@@ -970,11 +970,22 @@ void MainWindow::retranslateUi()
 
 void MainWindow::showAbout()
 {
-    QMessageBox::about(this, tr("About Phoenix"),
-                       QString(tr("Phoenix UI for Bedrock\nVersion %1\n\nBuilt with Qt %2\nRunning on %3"))
+    // Use IconProvider glyph icon so it tints with theme
+    const QIcon infoIcon = IconProvider::icon("info",
+        QSize(phx::ui::kMenuIconPx, phx::ui::kMenuIconPx), this);
+    
+    QMessageBox mb(QMessageBox::Information,
+                   tr("About Phoenix"),
+                   QString(tr("Phoenix UI for Bedrock\nVersion %1\n\nBuilt with Qt %2\nRunning on %3"))
                        .arg(QApplication::applicationVersion())
                        .arg(QT_VERSION_STR)
-                       .arg(QSysInfo::prettyProductName()));
+                       .arg(QSysInfo::prettyProductName()),
+                   QMessageBox::Ok,
+                   this);
+    
+    mb.setWindowIcon(infoIcon);
+    mb.setIconPixmap(infoIcon.pixmap(QSize(phx::ui::kMenuIconPx, phx::ui::kMenuIconPx)));
+    mb.exec();
 }
 
 

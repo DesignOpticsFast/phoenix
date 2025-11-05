@@ -31,8 +31,8 @@ bool IconProvider::s_manifestLoaded = false;
 QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool dark, qreal dpr) {
     IconKey key{name, style, size, dark, dpr};
     
-    // Trace once per request
-    qCInfo(phxIcons).noquote() << "[ICON] req"
+    // Trace once per request (debug level to reduce noise)
+    qCDebug(phxIcons).noquote() << "[ICON] req"
                       << "name=" << name
                       << "style=" << int(style)
                       << "px=" << size
@@ -229,7 +229,7 @@ void IconProvider::loadManifest() {
     }
     
     s_manifestLoaded = true;
-    qCInfo(phxIcons) << "Loaded icon manifest with" << s_iconManifest.size() << "icons";
+    qCDebug(phxIcons) << "Loaded icon manifest with" << s_iconManifest.size() << "icons";
 }
 
 QString IconProvider::resolveAlias(const QString& name) {
@@ -257,11 +257,11 @@ IconStyle IconProvider::parseStyleString(const QString& styleStr) {
 QIcon IconProvider::svgIcon(const QString& alias, int size, const QPalette& pal, qreal dpr) {
     const QString path = QString(":/icons/%1.svg").arg(alias);
     if (!QFile::exists(path)) {
-        qCInfo(phxIcons).noquote() << "[ICON] svg" << path << "MISS";
+        qCDebug(phxIcons).noquote() << "[ICON] svg" << path << "MISS";
         return QIcon(); // Return null icon, let caller fallback
     }
     
-    qCInfo(phxIcons).noquote() << "[ICON] svg" << path << "FOUND";
+    qCDebug(phxIcons).noquote() << "[ICON] svg" << path << "FOUND";
     QIcon sourceIcon(path);
     if (sourceIcon.isNull()) {
         return QIcon(); // Return null icon, let caller fallback
@@ -419,8 +419,21 @@ QIcon IconProvider::themeIcon(const QString& name, const QPalette& pal) {
 }
 
 QIcon IconProvider::fallback(const QPalette& pal) {
-    // Return question mark SVG icon with states
-    QIcon sourceIcon(":/icons/circle-question.svg");
+    // Return fallback SVG icon with states
+    static constexpr const char* kFallback = ":/icons/fallback.svg";
+    if (!QFile::exists(kFallback)) {
+        qCCritical(phxIcons) << "Fallback icon missing:" << kFallback;
+        // Return a minimal themed icon as last resort
+        QPixmap pm(16, 16);
+        pm.fill(pal.color(QPalette::ButtonText));
+        QIcon icon;
+        icon.addPixmap(pm, QIcon::Normal);
+        icon.addPixmap(pm, QIcon::Disabled);
+        icon.addPixmap(pm, QIcon::Active);
+        return icon;
+    }
+    
+    QIcon sourceIcon(kFallback);
     if (sourceIcon.isNull()) {
         return QIcon();
     }

@@ -18,7 +18,7 @@ static bool loadOne(const char* res, QString& family) {
     return false;
   }
   family = fams.first(); // Use actual runtime family
-  qCInfo(phxFonts) << "FA font OK" << res << "family:" << family;
+  qCDebug(phxFonts) << "FA font OK" << res << "family:" << family;
   return true;
 }
 
