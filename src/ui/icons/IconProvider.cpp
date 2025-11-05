@@ -7,6 +7,7 @@
 #include <QFont>
 #include <QFontDatabase>
 #include <QJsonDocument>
+#include <QJsonArray>
 #include <QFile>
 #include <QDebug>
 #include <QWidget>
@@ -94,7 +95,7 @@ QIcon IconProvider::icon(const QString& logicalName, const QSize& size, const QP
     if (QGuiApplication::instance()) {
         QScreen* screen = QGuiApplication::primaryScreen();
         if (screen) {
-            dpr = qMax(1.0, screen->devicePixelRatioF());
+            dpr = qMax(1.0, screen->devicePixelRatio());
         }
     }
     

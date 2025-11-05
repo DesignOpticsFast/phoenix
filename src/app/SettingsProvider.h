@@ -5,7 +5,7 @@
 #include <memory>
 
 class SettingsProvider : public QObject {
-    Q_OBJECT
+    // Note: No Q_OBJECT macro needed - this class has no signals/slots/tr()
 
 public:
     SettingsProvider(QObject* parent, std::unique_ptr<QSettings> s)
