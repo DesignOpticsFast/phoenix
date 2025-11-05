@@ -4,7 +4,6 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QIODevice>
-#include <QResource>
 #include <QDebug>
 #include <algorithm>
 #include <mutex>
