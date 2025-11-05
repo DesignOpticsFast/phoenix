@@ -71,7 +71,7 @@ private:
     static IconStyle parseStyleString(const QString& styleStr); // Parse "sharp-solid" -> IconStyle
     static QIcon svgIcon(const QString& alias, int size, const QPalette& pal, qreal dpr = 1.0);
     static QIcon fontIcon(const QString& name, IconStyle style, int size, const QPalette& pal, qreal dpr = 1.0);
-    static QIcon themeIcon(const QString& name, const QPalette& pal); // Try system theme icons
-    static QIcon fallback(const QPalette& pal); // Fallback with palette for states
+    static QIcon themeIcon(const QString& name, int size, const QPalette& pal, qreal dpr = 1.0); // Try system theme icons
+    static QIcon fallback(int size, const QPalette& pal, qreal dpr = 1.0); // Fallback with palette for states
     static QPalette getPaletteForIcon(const QWidget* widget); // Get palette from widget or app
 };

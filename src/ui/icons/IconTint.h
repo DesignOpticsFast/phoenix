@@ -17,12 +17,18 @@
 inline QPixmap tintPixmap(const QPixmap& src, const QColor& color) {
     if (src.isNull()) return src;
     
+    // Preserve device pixel ratio
+    const qreal dpr = std::max<qreal>(1.0, src.devicePixelRatio());
+    
     QImage img = src.toImage().convertToFormat(QImage::Format_ARGB32_Premultiplied);
     QPainter p(&img);
     p.setCompositionMode(QPainter::CompositionMode_SourceIn); // keep alpha, apply color
     p.fillRect(img.rect(), color);
     p.end();
-    return QPixmap::fromImage(img);
+    
+    QPixmap out = QPixmap::fromImage(img);
+    out.setDevicePixelRatio(dpr);
+    return out;
 }
 
 

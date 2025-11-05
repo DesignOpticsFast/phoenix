@@ -30,6 +30,14 @@ QHash<QString, QString> IconProvider::s_aliasMap;
 bool IconProvider::s_manifestLoaded = false;
 QTimer* IconProvider::s_cacheDebounceTimer = nullptr;
 
+// Helper to compute DPR from widget's screen or primary screen
+static qreal computeDpr(const QWidget* w = nullptr) {
+    if (const QScreen* s = w ? w->screen() : QGuiApplication::primaryScreen()) {
+        return std::max<qreal>(1.0, s->devicePixelRatio());
+    }
+    return 1.0;
+}
+
 QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool dark, qreal dpr) {
     IconKey key{name, style, size, dark, dpr};
     
@@ -74,12 +82,12 @@ QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool da
     
     // 3. Try system theme
     if (result.isNull()) {
-        result = themeIcon(canonicalName, pal);
+        result = themeIcon(canonicalName, size, pal, dpr);
     }
     
     // 4. Fallback
     if (result.isNull()) {
-        result = fallback(pal);
+        result = fallback(size, pal, dpr);
     }
     
     // Cache the result
@@ -89,24 +97,20 @@ QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool da
 }
 
 QIcon IconProvider::icon(const QString& logicalName, const QSize& size, const QPalette& pal) {
-    int iconSize = qMin(size.width(), size.height());
-    if (iconSize <= 0) iconSize = 16;
+    const int s = std::max(1, qMin(size.width(), size.height()));
+    const qreal dpr = computeDpr();
     
     bool isDark = pal.window().color().lightness() < 128;
-    qreal dpr = 1.0;
-    if (QGuiApplication::instance()) {
-        QScreen* screen = QGuiApplication::primaryScreen();
-        if (screen) {
-            dpr = qMax(1.0, screen->devicePixelRatio());
-        }
-    }
-    
-    return icon(logicalName, IconStyle::SharpSolid, iconSize, isDark, dpr);
+    return icon(logicalName, IconStyle::SharpSolid, s, isDark, dpr);
 }
 
 QIcon IconProvider::icon(const QString& logicalName, const QSize& size, const QWidget* widget) {
+    const int s = std::max(1, qMin(size.width(), size.height()));
+    const qreal dpr = computeDpr(widget);
+    
     QPalette pal = getPaletteForIcon(widget);
-    return icon(logicalName, size, pal);
+    bool isDark = pal.window().color().lightness() < 128;
+    return icon(logicalName, IconStyle::SharpSolid, s, isDark, dpr);
 }
 
 QPalette IconProvider::getPaletteForIcon(const QWidget* widget) {
@@ -302,23 +306,23 @@ QIcon IconProvider::svgIcon(const QString& alias, int size, const QPalette& pal,
     }
     
     if (size > 0) {
-        // Render at HiDPI size for sharp display (use ceil to avoid fractional blurs)
-        int renderSize = static_cast<int>(std::ceil(size * dpr));
+        // Compute device-pixel dimensions
+        const int rw = qCeil(size * dpr);
+        const int rh = qCeil(size * dpr);
         
-        // Normal state
-        QPixmap normalPm = sourceIcon.pixmap(renderSize, renderSize);
+        // Render at device-pixel size and set DPR
+        // tintPixmap() will preserve DPR
+        QPixmap normalPm = sourceIcon.pixmap(rw, rh);
         normalPm.setDevicePixelRatio(dpr);
         QColor normalColor = pal.color(QPalette::ButtonText);
         normalPm = tintPixmap(normalPm, normalColor);
         
-        // Disabled state
-        QPixmap disabledPm = sourceIcon.pixmap(renderSize, renderSize);
+        QPixmap disabledPm = sourceIcon.pixmap(rw, rh);
         disabledPm.setDevicePixelRatio(dpr);
         QColor disabledColor = pal.color(QPalette::Disabled, QPalette::ButtonText);
         disabledPm = tintPixmap(disabledPm, disabledColor);
         
-        // Active state (slightly brighter for hover)
-        QPixmap activePm = sourceIcon.pixmap(renderSize, renderSize);
+        QPixmap activePm = sourceIcon.pixmap(rw, rh);
         activePm.setDevicePixelRatio(dpr);
         QColor activeColor = pal.color(QPalette::Active, QPalette::ButtonText);
         activePm = tintPixmap(activePm, activeColor);
@@ -360,52 +364,46 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, con
             bool ok;
             uint32_t codepoint = codepointStr.toUInt(&ok, 16);
             if (ok) {
-                QChar unicodeChar(codepoint);
+                // Compute device-pixel dimensions
+                const int rw = qCeil(size * dpr);
+                const int rh = qCeil(size * dpr);
                 
-                // Render at HiDPI size for sharp display (use ceil to avoid fractional blurs)
-                int renderSize = static_cast<int>(std::ceil(size * dpr));
+                // Create font with pixel size scaled by DPR (0.9 for padding to avoid clipping)
+                QFont f(fontFamily);
+                f.setPixelSize(qRound(qMin(rw, rh) * 0.9));
                 
-                // Normal state: use ButtonText role for UI chrome consistency
-                QColor normalColor = pal.color(QPalette::ButtonText);
-                QPixmap normalPixmap(renderSize, renderSize);
-                normalPixmap.fill(Qt::transparent);
-                normalPixmap.setDevicePixelRatio(dpr);
+                // Debug logging (once per icon render)
+                qCDebug(phxFonts) << "glyph" << name
+                                  << "family" << f.family()
+                                  << "px" << f.pixelSize()
+                                  << "dpr" << dpr
+                                  << "rect" << rw << "x" << rh;
                 
-                QPainter painter(&normalPixmap);
-                painter.setFont(QFont(fontFamily, size));
-                painter.setPen(normalColor);
-                painter.drawText(QRect(0, 0, renderSize, renderSize), Qt::AlignCenter, unicodeChar);
-                painter.end();
-                
-                // Disabled state: use Disabled group with lighter/washed appearance
-                QColor disabledColor = pal.color(QPalette::Disabled, QPalette::ButtonText);
-                QPixmap disabledPixmap(renderSize, renderSize);
-                disabledPixmap.fill(Qt::transparent);
-                disabledPixmap.setDevicePixelRatio(dpr);
-                
-                QPainter disabledPainter(&disabledPixmap);
-                disabledPainter.setFont(QFont(fontFamily, size));
-                disabledPainter.setPen(disabledColor);
-                disabledPainter.drawText(QRect(0, 0, renderSize, renderSize), Qt::AlignCenter, unicodeChar);
-                disabledPainter.end();
-                
-                // Active state: slightly brighter for hover feedback
-                QColor activeColor = pal.color(QPalette::Active, QPalette::ButtonText);
-                QPixmap activePixmap(renderSize, renderSize);
-                activePixmap.fill(Qt::transparent);
-                activePixmap.setDevicePixelRatio(dpr);
-                
-                QPainter activePainter(&activePixmap);
-                activePainter.setFont(QFont(fontFamily, size));
-                activePainter.setPen(activeColor);
-                activePainter.drawText(QRect(0, 0, renderSize, renderSize), Qt::AlignCenter, unicodeChar);
-                activePainter.end();
+                // Helper lambda to create pixmap for a state
+                auto createStatePixmap = [&](const QColor& color) -> QPixmap {
+                    QPixmap pm(rw, rh);
+                    pm.setDevicePixelRatio(dpr);
+                    pm.fill(Qt::transparent);
+                    
+                    QPainter p(&pm);
+                    p.setRenderHint(QPainter::TextAntialiasing, true);
+                    p.setRenderHint(QPainter::Antialiasing, true);
+                    p.setFont(f);
+                    p.setPen(color);
+                    
+                    // Use QString::fromUcs4 for robust Unicode handling
+                    const char32_t cp = static_cast<char32_t>(codepoint);
+                    p.drawText(QRect(0, 0, rw, rh), Qt::AlignCenter, QString::fromUcs4(&cp, 1));
+                    p.end();
+                    
+                    return pm;
+                };
                 
                 // Build icon with all states
                 QIcon icon;
-                icon.addPixmap(normalPixmap, QIcon::Normal);
-                icon.addPixmap(disabledPixmap, QIcon::Disabled);
-                icon.addPixmap(activePixmap, QIcon::Active);
+                icon.addPixmap(createStatePixmap(pal.color(QPalette::ButtonText)), QIcon::Normal);
+                icon.addPixmap(createStatePixmap(pal.color(QPalette::Disabled, QPalette::ButtonText)), QIcon::Disabled);
+                icon.addPixmap(createStatePixmap(pal.color(QPalette::Active, QPalette::ButtonText)), QIcon::Active);
                 
                 return icon;
             }
@@ -415,7 +413,7 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, con
     return QIcon(); // Return null, let caller fallback
 }
 
-QIcon IconProvider::themeIcon(const QString& name, const QPalette& pal) {
+QIcon IconProvider::themeIcon(const QString& name, int size, const QPalette& pal, qreal dpr) {
     // Map common icon names to system theme names
     static QHash<QString, QString> themeMap = {
         {"file-new", "document-new"},
@@ -433,10 +431,15 @@ QIcon IconProvider::themeIcon(const QString& name, const QPalette& pal) {
     if (QIcon::hasThemeIcon(themeName)) {
         QIcon icon = QIcon::fromTheme(themeName);
         
+        // Compute device-pixel dimensions
+        const int rw = qCeil(size * dpr);
+        const int rh = qCeil(size * dpr);
+        
         // Generate states for theme icons too (they may not have disabled variants)
-        // Extract pixmaps and tint them
-        QPixmap normalPm = icon.pixmap(16, 16);
+        // Request at device-pixel size and set DPR
+        QPixmap normalPm = icon.pixmap(rw, rh, QIcon::Normal, QIcon::On);
         if (!normalPm.isNull()) {
+            normalPm.setDevicePixelRatio(dpr);
             QColor normalColor = pal.color(QPalette::ButtonText);
             QColor disabledColor = pal.color(QPalette::Disabled, QPalette::ButtonText);
             QColor activeColor = pal.color(QPalette::Active, QPalette::ButtonText);
@@ -452,13 +455,19 @@ QIcon IconProvider::themeIcon(const QString& name, const QPalette& pal) {
     return QIcon(); // Return null, let caller fallback
 }
 
-QIcon IconProvider::fallback(const QPalette& pal) {
+QIcon IconProvider::fallback(int size, const QPalette& pal, qreal dpr) {
     // Return fallback SVG icon with states
     static constexpr const char* kFallback = ":/icons/fallback.svg";
+    
+    // Compute device-pixel dimensions
+    const int rw = qCeil(size * dpr);
+    const int rh = qCeil(size * dpr);
+    
     if (!QFile::exists(kFallback)) {
         qCCritical(phxIcons) << "Fallback icon missing:" << kFallback;
-        // Return a minimal themed icon as last resort
-        QPixmap pm(16, 16);
+        // Return a minimal themed icon as last resort (at device-pixel size)
+        QPixmap pm(rw, rh);
+        pm.setDevicePixelRatio(dpr);
         pm.fill(pal.color(QPalette::ButtonText));
         QIcon icon;
         icon.addPixmap(pm, QIcon::Normal);
@@ -472,9 +481,10 @@ QIcon IconProvider::fallback(const QPalette& pal) {
         return QIcon();
     }
     
-    // Generate states for fallback icon
-    QPixmap normalPm = sourceIcon.pixmap(16, 16);
+    // Generate states for fallback icon at device-pixel size
+    QPixmap normalPm = sourceIcon.pixmap(rw, rh);
     if (!normalPm.isNull()) {
+        normalPm.setDevicePixelRatio(dpr);
         QColor normalColor = pal.color(QPalette::ButtonText);
         QColor disabledColor = pal.color(QPalette::Disabled, QPalette::ButtonText);
         QColor activeColor = pal.color(QPalette::Active, QPalette::ButtonText);
