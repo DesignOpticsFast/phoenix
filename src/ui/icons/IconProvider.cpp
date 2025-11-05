@@ -21,12 +21,14 @@
 #include <QLoggingCategory>
 #include <QToolBar>
 #include <QEvent>
+#include <QTimer>
 #include <cmath>
 
 QHash<IconKey, QIcon> IconProvider::s_cache;
 QJsonObject IconProvider::s_iconManifest;
 QHash<QString, QString> IconProvider::s_aliasMap;
 bool IconProvider::s_manifestLoaded = false;
+QTimer* IconProvider::s_cacheDebounceTimer = nullptr;
 
 QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool dark, qreal dpr) {
     IconKey key{name, style, size, dark, dpr};
@@ -150,6 +152,19 @@ void IconProvider::clearCache() {
     s_cache.clear();
 }
 
+void IconProvider::scheduleIconCacheClear() {
+    if (!s_cacheDebounceTimer) {
+        // Initialize timer on first use
+        s_cacheDebounceTimer = new QTimer(qApp);
+        s_cacheDebounceTimer->setSingleShot(true);
+        s_cacheDebounceTimer->setInterval(75);
+        QObject::connect(s_cacheDebounceTimer, &QTimer::timeout, &IconProvider::clearCache);
+    }
+    if (!s_cacheDebounceTimer->isActive()) {
+        s_cacheDebounceTimer->start();
+    }
+}
+
 int IconProvider::cacheSize() {
     return s_cache.size();
 }
@@ -159,22 +174,41 @@ void IconProvider::onThemeChanged() {
 }
 
 void IconProvider::setupCacheClearing() {
-    // Clear cache on screen/DPR changes
-    QObject::connect(qApp, &QGuiApplication::primaryScreenChanged, &IconProvider::clearCache);
+    // Lambda to wire all screen signals for cache invalidation
+    auto wireScreen = [](QScreen* s) {
+        if (!s) return;
+        QObject::connect(s, &QScreen::geometryChanged, &IconProvider::scheduleIconCacheClear);
+        QObject::connect(s, &QScreen::logicalDotsPerInchChanged, &IconProvider::scheduleIconCacheClear);
+        QObject::connect(s, &QScreen::physicalDotsPerInchChanged, &IconProvider::scheduleIconCacheClear);
+        // Note: devicePixelRatioChanged signal may not be available in all Qt versions
+        // The above signals should cover DPR changes through geometry/DPI changes
+    };
     
-    // Connect to all existing screens
-    for (auto* screen : qApp->screens()) {
-        QObject::connect(screen, &QScreen::logicalDotsPerInchChanged, &IconProvider::clearCache);
-        QObject::connect(screen, &QScreen::geometryChanged, &IconProvider::clearCache);
+    // Wire existing screens
+    for (QScreen* screen : QGuiApplication::screens()) {
+        wireScreen(screen);
     }
     
-    // Install event filter to catch palette changes
+    // Handle screen added/removed
+    QObject::connect(qApp, &QGuiApplication::screenAdded, [wireScreen](QScreen* s) {
+        wireScreen(s);
+        IconProvider::scheduleIconCacheClear();
+    });
+    
+    QObject::connect(qApp, &QGuiApplication::screenRemoved, [](QScreen*) {
+        IconProvider::scheduleIconCacheClear();
+    });
+    
+    // Clear cache on primary screen change
+    QObject::connect(qApp, &QGuiApplication::primaryScreenChanged, &IconProvider::scheduleIconCacheClear);
+    
+    // Install event filter to catch palette changes (immediate clear, no debounce needed)
     class PaletteChangeFilter : public QObject {
     public:
         bool eventFilter(QObject* obj, QEvent* event) override {
             if (event->type() == QEvent::ApplicationPaletteChange || 
                 event->type() == QEvent::PaletteChange) {
-                IconProvider::clearCache();
+                IconProvider::clearCache(); // Immediate clear for palette changes
             }
             return QObject::eventFilter(obj, event);
         }

@@ -57,12 +57,14 @@ public:
     static int cacheSize();
     static void onThemeChanged(); // Clears cache on theme change
     static void setupCacheClearing(); // Setup automatic cache clearing on theme/DPR/palette changes
+    static void scheduleIconCacheClear(); // Schedule debounced cache clear
 
 private:
     static QHash<IconKey, QIcon> s_cache;
     static QJsonObject s_iconManifest;
     static QHash<QString, QString> s_aliasMap; // alias -> canonical name
     static bool s_manifestLoaded;
+    static QTimer* s_cacheDebounceTimer; // single-shot debounce for cache clear
     
     static void loadManifest();
     static QString resolveAlias(const QString& name); // Resolve alias to canonical name
