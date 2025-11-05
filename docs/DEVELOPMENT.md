@@ -66,3 +66,24 @@ All dev-01 builds use `build/dev-01-relwithdebinfo` to:
 - Isolate from other build configurations
 - Document the build source (dev-01)
 - Allow parallel builds with different configurations
+
+## QML Debugging
+
+We do not use QML debugging in Phoenix. The build system explicitly undefines `QT_QML_DEBUG` to ensure QML debugging hooks are not compiled in.
+
+**Important**: In Qt, defining `QT_QML_DEBUG` (even as `0`) enables QML debugging hooks. We must ensure it is **not defined** at all.
+
+### CMake Configuration
+
+- CMake explicitly undefines `QT_QML_DEBUG` using `-UQT_QML_DEBUG` for all targets
+- This ensures QML debugging is disabled even if the IDE injects the macro
+
+### Qt Creator Run Settings
+
+When using Qt Creator, ensure QML debugging is disabled:
+
+1. **Projects → Run** (for your run configuration)
+2. **Uncheck** "QML debugging and profiling"
+3. **Remove** any additional arguments containing `--qmljsdebugger=...`
+
+This prevents the "QML debugging is enabled. Only use this in a safe environment." banner from appearing at runtime.

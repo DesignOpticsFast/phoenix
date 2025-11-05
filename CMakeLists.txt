@@ -36,6 +36,11 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 # Qt Graphs replaces old Qt Charts; ensure the component list matches your code.
 find_package(Qt6 REQUIRED COMPONENTS Widgets Concurrent Core Graphs)
 
+# ---- QML Debugging: explicitly disable -------------------------------------
+# Ensure QML debugging macro is NOT defined even if the IDE injects it.
+# Note: Defining QT_QML_DEBUG=0 still enables hooks; we must undefine it entirely.
+add_compile_options(-UQT_QML_DEBUG)
+
 # ---- Optional policy include (compiler/Qt-version aware) --------------------
 # We include this AFTER Qt is found so the policy can use Qt6 variables/targets.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -125,6 +130,9 @@ target_link_libraries(phoenix_app
     Qt6::Core
     Qt6::Graphs
 )
+
+# Ensure QML debugging is disabled for the app target as well
+target_compile_options(phoenix_app PRIVATE -UQT_QML_DEBUG)
 
 # ---- Platform-specific app icon/bundle settings -----------------------------
 if (APPLE)
