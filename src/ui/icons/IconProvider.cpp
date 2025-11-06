@@ -457,15 +457,28 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, con
                 // Apply DPR pixel size AFTER selecting the face
                 f.setPixelSize(qRound(qMin(rw, rh) * 0.9));
                 
+                // Prepare glyph string and font metrics
+                const QString glyph = QString::fromUcs4(&cp, 1);
+                QFontMetricsF fm(f);
+                
+                // Compute baseline-centered coordinates using font metrics
+                // Horizontal: center using advance (handles negative left bearings better)
+                const qreal adv = fm.horizontalAdvance(glyph);
+                const qreal x = (rw - adv) * 0.5;
+                
+                // Vertical: compute baseline so the visual box (ascent+descent) is centered
+                const qreal ascent = fm.ascent();
+                const qreal descent = fm.descent();
+                const qreal y = (rh + ascent - descent) * 0.5; // baseline position
+                
                 // Debug logging (once per icon render)
-                qCDebug(phxFonts) << "face test" << name
-                                  << "fam" << f.family()
-                                  << "style" << f.styleName()
-                                  << "cp" << QString::number(codepoint, 16)
-                                  << "supports=true"
-                                  << "px" << f.pixelSize()
-                                  << "dpr" << dpr
-                                  << "rect" << rw << "x" << rh;
+                qCDebug(phxFonts) << "CENTERED glyph" << name
+                                  << "adv" << adv
+                                  << "ascent" << ascent << "descent" << descent
+                                  << "x" << x << "y(baseline)" << y
+                                  << "rect" << rw << "x" << rh
+                                  << "fam" << f.family() << "/" << f.styleName()
+                                  << "px" << f.pixelSize() << "dpr" << dpr;
                 
                 // Helper lambda to create pixmap for a state
                 auto createStatePixmap = [&](const QColor& color, const QString& stateName) -> QPixmap {
@@ -479,22 +492,16 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, con
                     p.setFont(f);
                     p.setPen(color);
                     
-                    // Get resolved font info (what the painter will actually use)
-                    QFontInfo finf(p.font());
-                    const QRect devRect(0, 0, rw, rh);
-                    const QString glyph = QString::fromUcs4(&cp, 1);
-                    QFontMetricsF fm(f);
+                    // Optional: debug outline (red rectangle around pixmap)
+                    if (qEnvironmentVariableIsSet("PHX_ICON_DEBUG_OUTLINE")) {
+                        p.setPen(QColor(255, 0, 0, 80));
+                        p.drawRect(QRectF(0, 0, rw - 1, rh - 1));
+                        p.setPen(color);
+                    }
                     
-                    // Log intended vs resolved font at render time
-                    qCDebug(phxFonts) << "RENDER glyph" << name << stateName
-                                      << "face" << face.family << "/" << face.style
-                                      << "intended" << f.family() << "/" << f.styleName() << "px" << f.pixelSize()
-                                      << "resolved" << finf.family() << "/" << finf.styleName()
-                                      << "dpr" << dpr << "rect" << devRect
-                                      << "bound" << fm.boundingRect(glyph);
-                    
-                    // Use QString::fromUcs4 for robust Unicode handling
-                    p.drawText(devRect, Qt::AlignCenter, glyph);
+                    // Draw glyph at explicit baseline point (x, y)
+                    // This centers the visual box (ascent+descent) rather than just the baseline
+                    p.drawText(QPointF(x, y), glyph);
                     p.end();
                     
                     return pm;
