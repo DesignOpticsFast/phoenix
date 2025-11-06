@@ -170,7 +170,7 @@ bool IconProvider::isCacheBypassed() {
         s_cacheBypassed = QProcessEnvironment::systemEnvironment().contains("PHX_ICON_NOCACHE");
         checked = true;
         if (s_cacheBypassed) {
-            qCInfo(phxIcons) << "Icon cache bypassed via PHX_ICON_NOCACHE environment variable";
+            qCDebug(phxIcons) << "Icon cache bypassed via PHX_ICON_NOCACHE environment variable";
         }
     }
     return s_cacheBypassed;

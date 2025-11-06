@@ -1,6 +1,7 @@
 #include "IconBootstrap.h"
 #include "PhxLogging.h"
 #include "IconProvider.h"  // For IconStyle enum
+#include "app/BuildFlags.h"  // For PHX_DEV_DIAG
 #include <QFontDatabase>
 #include <QFontMetrics>
 #include <QFile>
@@ -121,14 +122,16 @@ bool IconBootstrap::InitFonts() {
   }
   
   // Detect Font Awesome faces (family + styleName) for macOS compatibility
-  // Dump FA families/styles for debugging
-  qCInfo(phxFonts) << "Enumerating Font Awesome families and styles:";
+  // Dump FA families/styles for debugging (guarded by PHX_DEV_DIAG)
+#if defined(PHX_DEV_DIAG)
+  qCDebug(phxFonts) << "Enumerating Font Awesome families and styles:";
   for (const QString& fam : QFontDatabase::families()) {
     if (fam.startsWith("Font Awesome 6")) {
       QStringList styles = QFontDatabase::styles(fam);
-      qCInfo(phxFonts) << "FA family:" << fam << "styles:" << styles;
+      qCDebug(phxFonts) << "FA family:" << fam << "styles:" << styles;
     }
   }
+#endif
   
   // Helper lambda to get styles for a family
   auto stylesOf = [](const QString& fam) -> QStringList {
@@ -168,18 +171,19 @@ bool IconBootstrap::InitFonts() {
     // Keep family-only fallback
   }
   
-  // One summary info log (once per run)
+  // One summary log (once per run, debug level for production)
   std::call_once(s_infoOnce, []() {
     int loadedCount = std::count_if(s_status.begin(), s_status.end(),
                                      [](const FontLoadStatus& s) { return s.ok(); });
-    qCInfo(phxFonts) << "Font Awesome summary:"
+    qCDebug(phxFonts) << "Font Awesome summary:"
                      << "ok=" << g_faAvailable
                      << "loaded=" << loadedCount
                      << "/" << s_status.size();
   });
   
-  // One-time glyph availability probes for common icons
+  // One-time glyph availability probes for common icons (guarded by PHX_DEV_DIAG)
   // This helps verify that manifest codepoints exist in the loaded FA fonts
+#if defined(PHX_DEV_DIAG)
   if (g_faAvailable) {
     // Forward declaration helper for faceHasGlyph (defined in IconProvider.cpp)
     // We'll call it via a lambda that uses QFontDatabase directly
@@ -211,17 +215,18 @@ bool IconBootstrap::InitFonts() {
       {"plus", 0xF067, IconStyle::SharpSolid},
     };
     
-    qCInfo(phxFonts) << "Probing glyph availability for common icons:";
+    qCDebug(phxFonts) << "Probing glyph availability for common icons:";
     for (const auto& pr : probes) {
       auto face = IconBootstrap::faceForStyle(static_cast<int>(pr.st));
       const bool ok = faceHasGlyph(face.family, face.style, static_cast<char32_t>(pr.cp));
-      qCInfo(phxFonts) << "probe" << pr.name
+      qCDebug(phxFonts) << "probe" << pr.name
                        << "cp" << QString::number(pr.cp, 16)
                        << "fam" << face.family
                        << "style" << face.style
                        << "ok" << ok;
     }
   }
+#endif
   
   return g_faAvailable;
 }

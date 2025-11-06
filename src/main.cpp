@@ -43,17 +43,13 @@ int main(int argc, char** argv) {
     app.processEvents(); // Process splash screen display
     
     // Initialize Font Awesome icons (must be before any icon rendering)
-    bool fontsLoaded = IconBootstrap::InitFonts();
+    IconBootstrap::InitFonts();
     
-    // Clear icon cache after font initialization to ensure fresh renders
-    if (fontsLoaded) {
-        IconProvider::clearCache();
-    }
-    
-    // Check for cache bypass flag
+    // Clear icon cache only if explicitly requested via environment variable
+    // (Cache is already cleared on palette/screen changes via setupCacheClearing())
     if (qEnvironmentVariableIsSet("PHX_ICON_NOCACHE")) {
         IconProvider::clearCache();
-        qCInfo(phxIcons) << "Icon cache cleared and bypassed via PHX_ICON_NOCACHE";
+        qCDebug(phxIcons) << "Icon cache cleared and bypassed via PHX_ICON_NOCACHE";
     }
     
     // Setup automatic cache clearing on theme/DPR changes

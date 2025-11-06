@@ -87,3 +87,37 @@ When using Qt Creator, ensure QML debugging is disabled:
 3. **Remove** any additional arguments containing `--qmljsdebugger=...`
 
 This prevents the "QML debugging is enabled. Only use this in a safe environment." banner from appearing at runtime.
+
+## Diagnostics
+
+Phoenix provides several developer diagnostics for troubleshooting icon and font rendering issues:
+
+### Environment Variables
+
+- **`PHX_ICON_NOCACHE=1`** - Bypass the icon cache (useful when debugging icon rendering issues)
+- **`PHX_ICON_DEBUG_OUTLINE=1`** - Draw red outline rectangles around icon rendering areas (useful for verifying layout/logical coordinates)
+
+### Logging
+
+- **`QT_LOGGING_RULES="phx.fonts.debug=true;phx.icons.debug=true"`** - Enable debug-level logs for icon and font subsystems
+  
+  Example:
+  ```bash
+  QT_LOGGING_RULES="phx.fonts.debug=true;phx.icons.debug=true" ./phoenix_app
+  ```
+
+### Compile-Time Diagnostics
+
+- **`PHX_DEV_DIAG`** - Enable startup diagnostics (family/style enumeration, glyph availability probes)
+  
+  To enable:
+  1. Edit `src/app/BuildFlags.h`
+  2. Uncomment `#define PHX_DEV_DIAG 1`
+  3. Rebuild
+  
+  This enables:
+  - Font Awesome family/style enumeration dumps at startup
+  - Glyph availability probes for common icons
+  - Detailed startup diagnostics in `IconBootstrap`
+
+**Note**: By default, all diagnostics are disabled for production builds. The icon system runs quietly with minimal logging overhead.
