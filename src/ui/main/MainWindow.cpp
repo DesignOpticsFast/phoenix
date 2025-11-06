@@ -10,6 +10,8 @@
 #include <QApplication>
 #include <QMenuBar>
 #include <QToolBar>
+#include <QToolButton>
+#include <QLayout>
 #include <QStatusBar>
 #include <QDockWidget>
 #include <QLabel>
@@ -635,6 +637,30 @@ QToolBar* MainWindow::createRightRibbon()
         logRibbonAction("about");
     });
     ribbon->addAction(aboutAction);
+    
+    // Ensure consistent left alignment for all items in the vertical ribbon
+    ribbon->setLayoutDirection(Qt::LeftToRight);
+    ribbon->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    ribbon->setContentsMargins(0, 0, 0, 0);
+    
+    if (QLayout* lay = ribbon->layout()) {
+        lay->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+        lay->setSpacing(4);  // keep vertical rhythm consistent
+    }
+    
+    // Normalize each button widget
+    for (QAction* a : ribbon->actions()) {
+        QWidget* w = ribbon->widgetForAction(a);
+        if (!w) continue;  // separators etc.
+        
+        if (auto* btn = qobject_cast<QToolButton*>(w)) {
+            btn->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+            btn->setLayoutDirection(Qt::LeftToRight);
+            btn->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+            btn->setContentsMargins(0, 0, 0, 0);
+            // Avoid stylesheets; inherent alignment via LTR + text-beside-icon is sufficient
+        }
+    }
     
     return ribbon;
 }
