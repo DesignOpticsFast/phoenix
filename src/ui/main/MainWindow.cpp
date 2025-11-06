@@ -2,6 +2,7 @@
 #include "../dialogs/PreferencesDialog.h"
 #include "../themes/ThemeManager.h"
 #include "../icons/IconProvider.h"
+#include "../icons/PhxLogging.h"
 #include "app/SettingsProvider.h"
 #include "app/SettingsKeys.h"
 #include "app/io/FileIO.h"
@@ -164,7 +165,8 @@ QMenu* MainWindow::createFileMenu()
     
     m_newAction = new QAction(tr("&New"), this);
     m_newAction->setProperty("phx_icon_key", "file-plus");
-    m_newAction->setIcon(IconProvider::icon("file-plus", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
+    const int px = fileMenu->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, fileMenu);
+    m_newAction->setIcon(IconProvider::icon("file-plus", QSize(px, px), fileMenu));
     m_newAction->setShortcut(QKeySequence::New);
     m_newAction->setStatusTip(tr("Create a new file"));
     connect(m_newAction, &QAction::triggered, this, &MainWindow::newFile);
@@ -172,7 +174,7 @@ QMenu* MainWindow::createFileMenu()
     
     m_openAction = new QAction(tr("&Open"), this);
     m_openAction->setProperty("phx_icon_key", "folder-open");
-    m_openAction->setIcon(IconProvider::icon("folder-open", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
+    m_openAction->setIcon(IconProvider::icon("folder-open", QSize(px, px), fileMenu));
     m_openAction->setShortcut(QKeySequence::Open);
     m_openAction->setStatusTip(tr("Open an existing file"));
     connect(m_openAction, &QAction::triggered, this, &MainWindow::openFile);
@@ -182,7 +184,7 @@ QMenu* MainWindow::createFileMenu()
     
     m_saveAction = new QAction(tr("&Save"), this);
     m_saveAction->setProperty("phx_icon_key", "save");
-    m_saveAction->setIcon(IconProvider::icon("save", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
+    m_saveAction->setIcon(IconProvider::icon("save", QSize(px, px), fileMenu));
     m_saveAction->setShortcut(QKeySequence::Save);
     m_saveAction->setStatusTip(tr("Save the current file"));
     connect(m_saveAction, &QAction::triggered, this, &MainWindow::saveFile);
@@ -190,7 +192,7 @@ QMenu* MainWindow::createFileMenu()
     
     m_saveAsAction = new QAction(tr("Save &As"), this);
     m_saveAsAction->setProperty("phx_icon_key", "save-as");
-    m_saveAsAction->setIcon(IconProvider::icon("save-as", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
+    m_saveAsAction->setIcon(IconProvider::icon("save-as", QSize(px, px), fileMenu));
     m_saveAsAction->setShortcut(QKeySequence::SaveAs);
     m_saveAsAction->setStatusTip(tr("Save the current file with a new name"));
     connect(m_saveAsAction, &QAction::triggered, this, &MainWindow::saveAsFile);
@@ -200,7 +202,7 @@ QMenu* MainWindow::createFileMenu()
     
     m_preferencesAction = new QAction(tr("&Preferences..."), this);
     m_preferencesAction->setProperty("phx_icon_key", "settings");
-    m_preferencesAction->setIcon(IconProvider::icon("settings", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
+    m_preferencesAction->setIcon(IconProvider::icon("settings", QSize(px, px), fileMenu));
     m_preferencesAction->setShortcut(QKeySequence::Preferences);
     m_preferencesAction->setStatusTip(tr("Open preferences dialog"));
     connect(m_preferencesAction, &QAction::triggered, this, &MainWindow::showPreferences);
@@ -210,7 +212,7 @@ QMenu* MainWindow::createFileMenu()
     
     m_exitAction = new QAction(tr("E&xit"), this);
     m_exitAction->setProperty("phx_icon_key", "close");
-    m_exitAction->setIcon(IconProvider::icon("close", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
+    m_exitAction->setIcon(IconProvider::icon("close", QSize(px, px), fileMenu));
     m_exitAction->setShortcut(QKeySequence::Quit);
     m_exitAction->setStatusTip(tr("Exit the application"));
     connect(m_exitAction, &QAction::triggered, this, &MainWindow::exitApplication);
@@ -225,14 +227,15 @@ QMenu* MainWindow::createEditorsMenu()
     
     m_lensInspectorAction = new QAction(tr("&Lens Inspector"), this);
     m_lensInspectorAction->setProperty("phx_icon_key", "search");
-    m_lensInspectorAction->setIcon(IconProvider::icon("search", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
+    const int px = editorsMenu->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, editorsMenu);
+    m_lensInspectorAction->setIcon(IconProvider::icon("search", QSize(px, px), editorsMenu));
     m_lensInspectorAction->setStatusTip(tr("Open lens inspector"));
     connect(m_lensInspectorAction, &QAction::triggered, this, &MainWindow::showLensInspector);
     editorsMenu->addAction(m_lensInspectorAction);
     
     m_systemViewerAction = new QAction(tr("&System Viewer"), this);
     m_systemViewerAction->setProperty("phx_icon_key", "view");
-    m_systemViewerAction->setIcon(IconProvider::icon("view", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
+    m_systemViewerAction->setIcon(IconProvider::icon("view", QSize(px, px), editorsMenu));
     m_systemViewerAction->setStatusTip(tr("Open system viewer"));
     connect(m_systemViewerAction, &QAction::triggered, this, &MainWindow::showSystemViewer);
     editorsMenu->addAction(m_systemViewerAction);
@@ -246,14 +249,15 @@ QMenu* MainWindow::createAnalysisMenu()
     
     m_xyPlotAction = new QAction(tr("&XY Plot"), this);
     m_xyPlotAction->setProperty("phx_icon_key", "chart");
-    m_xyPlotAction->setIcon(IconProvider::icon("chart", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
+    const int px = analysisMenu->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, analysisMenu);
+    m_xyPlotAction->setIcon(IconProvider::icon("chart", QSize(px, px), analysisMenu));
     m_xyPlotAction->setStatusTip(tr("Open XY plot analysis"));
     connect(m_xyPlotAction, &QAction::triggered, this, &MainWindow::showXYPlot);
     analysisMenu->addAction(m_xyPlotAction);
     
     m_2dPlotAction = new QAction(tr("&2D Plot"), this);
     m_2dPlotAction->setProperty("phx_icon_key", "chart");
-    m_2dPlotAction->setIcon(IconProvider::icon("chart", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
+    m_2dPlotAction->setIcon(IconProvider::icon("chart", QSize(px, px), analysisMenu));
     m_2dPlotAction->setStatusTip(tr("Open 2D plot analysis"));
     connect(m_2dPlotAction, &QAction::triggered, this, &MainWindow::show2DPlot);
     analysisMenu->addAction(m_2dPlotAction);
@@ -348,7 +352,8 @@ QMenu* MainWindow::createHelpMenu()
     
     QAction* aboutAction = new QAction(tr("&About Phoenix"), this);
     aboutAction->setProperty("phx_icon_key", "info");
-    aboutAction->setIcon(IconProvider::icon("info", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
+    const int px = helpMenu->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, helpMenu);
+    aboutAction->setIcon(IconProvider::icon("info", QSize(px, px), helpMenu));
     aboutAction->setStatusTip(tr("Show about dialog"));
     connect(aboutAction, &QAction::triggered, this, &MainWindow::showAbout);
     helpMenu->addAction(aboutAction);
@@ -1036,7 +1041,14 @@ void MainWindow::refreshAllIconsForTheme()
     // Menubar + menus
     rebuildForWidget(menuBar());
     for (QMenu* m : menuBar()->findChildren<QMenu*>()) {
-        rebuildForWidget(m);
+        const int px = m->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, m);
+        qCDebug(phxIcons) << "MENU REFRESH" << m->title() << "px" << px;
+        for (QAction* a : m->actions()) {
+            const auto key = a->property("phx_icon_key").toString();
+            if (!key.isEmpty()) {
+                a->setIcon(IconProvider::icon(key, QSize(px, px), m));  // Use menu widget m as host
+            }
+        }
     }
     
     // All QToolBars (main, top ribbon, right ribbon, etc.)

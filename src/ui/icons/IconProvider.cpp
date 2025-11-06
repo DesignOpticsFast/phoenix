@@ -21,6 +21,8 @@
 #include <QMetaObject>
 #include <QLoggingCategory>
 #include <QToolBar>
+#include <QMenu>
+#include <QMenuBar>
 #include <QEvent>
 #include <QTimer>
 #include <QFontInfo>
@@ -77,22 +79,22 @@ QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool da
         QJsonObject iconData = s_iconManifest[canonicalName].toObject();
         QString styleStr = iconData["style"].toString("sharp-solid");
         IconStyle resolvedStyle = parseStyleString(styleStr);
-        result = fontIcon(canonicalName, resolvedStyle, size, pal, dpr);
+        result = fontIcon(canonicalName, resolvedStyle, size, pal, dpr, nullptr);  // Old overload has no widget
     }
     
     // 2. Try SVG (branding only)
     if (result.isNull()) {
-        result = svgIcon(canonicalName, size, pal, dpr);
+        result = svgIcon(canonicalName, size, pal, dpr, nullptr);  // Old overload has no widget
     }
     
     // 3. Try system theme
     if (result.isNull()) {
-        result = themeIcon(canonicalName, size, pal, dpr);
+        result = themeIcon(canonicalName, size, pal, dpr, nullptr);  // Old overload has no widget
     }
     
     // 4. Fallback
     if (result.isNull()) {
-        result = fallback(size, pal, dpr);
+        result = fallback(size, pal, dpr, nullptr);  // Old overload has no widget
     }
     
     // Cache the result (unless bypassed)
@@ -135,6 +137,27 @@ QPalette IconProvider::getPaletteForIcon(const QWidget* widget) {
     }
     // Fall back to application palette
     return QApplication::palette();
+}
+
+QColor IconProvider::normalColorFor(const QWidget* w) {
+    const QPalette pal = w ? w->palette() : QApplication::palette();
+    if (qobject_cast<const QMenu*>(w))      return pal.color(QPalette::Text);
+    if (qobject_cast<const QMenuBar*>(w))   return pal.color(QPalette::WindowText);
+    if (qobject_cast<const QToolBar*>(w))   return pal.color(QPalette::ButtonText);
+    return pal.color(QPalette::WindowText);
+}
+
+QColor IconProvider::selectedColorFor(const QWidget* w) {
+    const QPalette pal = w ? w->palette() : QApplication::palette();
+    if (qobject_cast<const QMenu*>(w))      return pal.color(QPalette::HighlightedText);
+    if (qobject_cast<const QMenuBar*>(w))   return pal.color(QPalette::HighlightedText);
+    if (qobject_cast<const QToolBar*>(w))   return pal.color(QPalette::ButtonText);
+    return pal.color(QPalette::HighlightedText);
+}
+
+QColor IconProvider::disabledColorFor(const QWidget* w) {
+    const QPalette pal = w ? w->palette() : QApplication::palette();
+    return pal.color(QPalette::Disabled, QPalette::Text);
 }
 
 QString IconProvider::fontFamily(IconStyle style) {
@@ -312,7 +335,7 @@ IconStyle IconProvider::parseStyleString(const QString& styleStr) {
     return IconStyle::SharpSolid; // Default
 }
 
-QIcon IconProvider::svgIcon(const QString& alias, int size, const QPalette& pal, qreal dpr) {
+QIcon IconProvider::svgIcon(const QString& alias, int size, const QPalette& pal, qreal dpr, const QWidget* widget) {
     const QString path = QString(":/icons/%1.svg").arg(alias);
     if (!QFile::exists(path)) {
         qCDebug(phxIcons).noquote() << "[ICON] svg" << path << "MISS";
@@ -334,23 +357,29 @@ QIcon IconProvider::svgIcon(const QString& alias, int size, const QPalette& pal,
         // tintPixmap() will preserve DPR
         QPixmap normalPm = sourceIcon.pixmap(rw, rh);
         normalPm.setDevicePixelRatio(dpr);
-        QColor normalColor = pal.color(QPalette::ButtonText);
+        QColor normalColor = normalColorFor(widget);
         normalPm = tintPixmap(normalPm, normalColor);
         
         QPixmap disabledPm = sourceIcon.pixmap(rw, rh);
         disabledPm.setDevicePixelRatio(dpr);
-        QColor disabledColor = pal.color(QPalette::Disabled, QPalette::ButtonText);
+        QColor disabledColor = disabledColorFor(widget);
         disabledPm = tintPixmap(disabledPm, disabledColor);
         
         QPixmap activePm = sourceIcon.pixmap(rw, rh);
         activePm.setDevicePixelRatio(dpr);
-        QColor activeColor = pal.color(QPalette::Active, QPalette::ButtonText);
+        QColor activeColor = normalColorFor(widget);  // Active same as normal
         activePm = tintPixmap(activePm, activeColor);
         
+        QPixmap selectedPm = sourceIcon.pixmap(rw, rh);
+        selectedPm.setDevicePixelRatio(dpr);
+        QColor selectedColor = selectedColorFor(widget);
+        selectedPm = tintPixmap(selectedPm, selectedColor);
+        
         QIcon result;
-        result.addPixmap(normalPm, QIcon::Normal);
-        result.addPixmap(disabledPm, QIcon::Disabled);
-        result.addPixmap(activePm, QIcon::Active);
+        result.addPixmap(normalPm, QIcon::Normal, QIcon::Off);
+        result.addPixmap(disabledPm, QIcon::Disabled, QIcon::Off);
+        result.addPixmap(activePm, QIcon::Active, QIcon::Off);
+        result.addPixmap(selectedPm, QIcon::Selected, QIcon::Off);
         return result;
     }
     
@@ -376,7 +405,7 @@ static bool faceHasGlyph(const QString& fam, const QString& style, char32_t cp) 
     return fm.inFont(ch);
 }
 
-QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, const QPalette& pal, qreal dpr) {
+QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, const QPalette& pal, qreal dpr, const QWidget* widget) {
     if (!IconBootstrap::faAvailable()) {
         return QIcon(); // Return null, let caller fallback
     }
@@ -511,11 +540,12 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, con
                     return pm;
                 };
                 
-                // Build icon with all states
+                // Build icon with all states including Selected mode
                 QIcon icon;
-                icon.addPixmap(createStatePixmap(pal.color(QPalette::ButtonText), "Normal"), QIcon::Normal);
-                icon.addPixmap(createStatePixmap(pal.color(QPalette::Disabled, QPalette::ButtonText), "Disabled"), QIcon::Disabled);
-                icon.addPixmap(createStatePixmap(pal.color(QPalette::Active, QPalette::ButtonText), "Active"), QIcon::Active);
+                icon.addPixmap(createStatePixmap(normalColorFor(widget), "Normal"), QIcon::Normal, QIcon::Off);
+                icon.addPixmap(createStatePixmap(disabledColorFor(widget), "Disabled"), QIcon::Disabled, QIcon::Off);
+                icon.addPixmap(createStatePixmap(normalColorFor(widget), "Active"), QIcon::Active, QIcon::Off);
+                icon.addPixmap(createStatePixmap(selectedColorFor(widget), "Selected"), QIcon::Selected, QIcon::Off);
                 
                 return icon;
             }
@@ -525,7 +555,7 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, con
     return QIcon(); // Return null, let caller fallback
 }
 
-QIcon IconProvider::themeIcon(const QString& name, int size, const QPalette& pal, qreal dpr) {
+QIcon IconProvider::themeIcon(const QString& name, int size, const QPalette& pal, qreal dpr, const QWidget* widget) {
     // Map common icon names to system theme names
     static QHash<QString, QString> themeMap = {
         {"file-new", "document-new"},
@@ -552,14 +582,16 @@ QIcon IconProvider::themeIcon(const QString& name, int size, const QPalette& pal
         QPixmap normalPm = icon.pixmap(rw, rh, QIcon::Normal, QIcon::On);
         if (!normalPm.isNull()) {
             normalPm.setDevicePixelRatio(dpr);
-            QColor normalColor = pal.color(QPalette::ButtonText);
-            QColor disabledColor = pal.color(QPalette::Disabled, QPalette::ButtonText);
-            QColor activeColor = pal.color(QPalette::Active, QPalette::ButtonText);
+            QColor normalColor = normalColorFor(widget);
+            QColor disabledColor = disabledColorFor(widget);
+            QColor activeColor = normalColorFor(widget);  // Active same as normal
+            QColor selectedColor = selectedColorFor(widget);
             
             QIcon result;
-            result.addPixmap(tintPixmap(normalPm, normalColor), QIcon::Normal);
-            result.addPixmap(tintPixmap(normalPm, disabledColor), QIcon::Disabled);
-            result.addPixmap(tintPixmap(normalPm, activeColor), QIcon::Active);
+            result.addPixmap(tintPixmap(normalPm, normalColor), QIcon::Normal, QIcon::Off);
+            result.addPixmap(tintPixmap(normalPm, disabledColor), QIcon::Disabled, QIcon::Off);
+            result.addPixmap(tintPixmap(normalPm, activeColor), QIcon::Active, QIcon::Off);
+            result.addPixmap(tintPixmap(normalPm, selectedColor), QIcon::Selected, QIcon::Off);
             return result;
         }
         return icon;
@@ -567,7 +599,7 @@ QIcon IconProvider::themeIcon(const QString& name, int size, const QPalette& pal
     return QIcon(); // Return null, let caller fallback
 }
 
-QIcon IconProvider::fallback(int size, const QPalette& pal, qreal dpr) {
+QIcon IconProvider::fallback(int size, const QPalette& pal, qreal dpr, const QWidget* widget) {
     // Return fallback SVG icon with states
     static constexpr const char* kFallback = ":/icons/fallback.svg";
     
@@ -580,11 +612,12 @@ QIcon IconProvider::fallback(int size, const QPalette& pal, qreal dpr) {
         // Return a minimal themed icon as last resort (at device-pixel size)
         QPixmap pm(rw, rh);
         pm.setDevicePixelRatio(dpr);
-        pm.fill(pal.color(QPalette::ButtonText));
+        pm.fill(normalColorFor(widget));
         QIcon icon;
-        icon.addPixmap(pm, QIcon::Normal);
-        icon.addPixmap(pm, QIcon::Disabled);
-        icon.addPixmap(pm, QIcon::Active);
+        icon.addPixmap(pm, QIcon::Normal, QIcon::Off);
+        icon.addPixmap(pm, QIcon::Disabled, QIcon::Off);
+        icon.addPixmap(pm, QIcon::Active, QIcon::Off);
+        icon.addPixmap(pm, QIcon::Selected, QIcon::Off);
         return icon;
     }
     
@@ -597,14 +630,16 @@ QIcon IconProvider::fallback(int size, const QPalette& pal, qreal dpr) {
     QPixmap normalPm = sourceIcon.pixmap(rw, rh);
     if (!normalPm.isNull()) {
         normalPm.setDevicePixelRatio(dpr);
-        QColor normalColor = pal.color(QPalette::ButtonText);
-        QColor disabledColor = pal.color(QPalette::Disabled, QPalette::ButtonText);
-        QColor activeColor = pal.color(QPalette::Active, QPalette::ButtonText);
+        QColor normalColor = normalColorFor(widget);
+        QColor disabledColor = disabledColorFor(widget);
+        QColor activeColor = normalColorFor(widget);  // Active same as normal
+        QColor selectedColor = selectedColorFor(widget);
         
         QIcon result;
-        result.addPixmap(tintPixmap(normalPm, normalColor), QIcon::Normal);
-        result.addPixmap(tintPixmap(normalPm, disabledColor), QIcon::Disabled);
-        result.addPixmap(tintPixmap(normalPm, activeColor), QIcon::Active);
+        result.addPixmap(tintPixmap(normalPm, normalColor), QIcon::Normal, QIcon::Off);
+        result.addPixmap(tintPixmap(normalPm, disabledColor), QIcon::Disabled, QIcon::Off);
+        result.addPixmap(tintPixmap(normalPm, activeColor), QIcon::Active, QIcon::Off);
+        result.addPixmap(tintPixmap(normalPm, selectedColor), QIcon::Selected, QIcon::Off);
         return result;
     }
     

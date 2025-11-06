@@ -70,9 +70,14 @@ private:
     static void loadManifest();
     static QString resolveAlias(const QString& name); // Resolve alias to canonical name
     static IconStyle parseStyleString(const QString& styleStr); // Parse "sharp-solid" -> IconStyle
-    static QIcon svgIcon(const QString& alias, int size, const QPalette& pal, qreal dpr = 1.0);
-    static QIcon fontIcon(const QString& name, IconStyle style, int size, const QPalette& pal, qreal dpr = 1.0);
-    static QIcon themeIcon(const QString& name, int size, const QPalette& pal, qreal dpr = 1.0); // Try system theme icons
-    static QIcon fallback(int size, const QPalette& pal, qreal dpr = 1.0); // Fallback with palette for states
+    static QIcon svgIcon(const QString& alias, int size, const QPalette& pal, qreal dpr = 1.0, const QWidget* widget = nullptr);
+    static QIcon fontIcon(const QString& name, IconStyle style, int size, const QPalette& pal, qreal dpr = 1.0, const QWidget* widget = nullptr);
+    static QIcon themeIcon(const QString& name, int size, const QPalette& pal, qreal dpr = 1.0, const QWidget* widget = nullptr); // Try system theme icons
+    static QIcon fallback(int size, const QPalette& pal, qreal dpr = 1.0, const QWidget* widget = nullptr); // Fallback with palette for states
     static QPalette getPaletteForIcon(const QWidget* widget); // Get palette from widget or app
+    
+    // Color helpers for widget-aware tinting
+    static QColor normalColorFor(const QWidget* widget);
+    static QColor selectedColorFor(const QWidget* widget);
+    static QColor disabledColorFor(const QWidget* widget);
 };
