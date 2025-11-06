@@ -2,6 +2,7 @@
 #include "PhxLogging.h"
 #include "IconProvider.h"  // For IconStyle enum
 #include <QFontDatabase>
+#include <QFontMetrics>
 #include <QFile>
 #include <QFileInfo>
 #include <QIODevice>
@@ -176,6 +177,51 @@ bool IconBootstrap::InitFonts() {
                      << "loaded=" << loadedCount
                      << "/" << s_status.size();
   });
+  
+  // One-time glyph availability probes for common icons
+  // This helps verify that manifest codepoints exist in the loaded FA fonts
+  if (g_faAvailable) {
+    // Forward declaration helper for faceHasGlyph (defined in IconProvider.cpp)
+    // We'll call it via a lambda that uses QFontDatabase directly
+    auto faceHasGlyph = [](const QString& fam, const QString& style, char32_t cp) -> bool {
+      QFont probe = QFontDatabase::font(fam, style, 12);
+      if (probe.family().isEmpty()) {
+        probe = QFont(fam);
+        if (!style.isEmpty()) {
+          probe.setStyleName(style);
+        }
+      }
+      probe.setStyleStrategy(QFont::NoFontMerging);
+      // Use QFontMetrics to check if the glyph exists in the font
+      QFontMetrics fm(probe);
+      QChar ch(cp);
+      return fm.inFont(ch);
+    };
+    
+    struct Probe {
+      const char* name;
+      uint32_t cp;
+      IconStyle st;
+    };
+    const Probe probes[] = {
+      {"save", 0xF0C7, IconStyle::SharpSolid},
+      {"folder-open", 0xF07C, IconStyle::SharpSolid},
+      {"file-plus", 0xF0FE, IconStyle::SharpSolid},
+      {"info", 0xF129, IconStyle::SharpSolid},
+      {"plus", 0xF067, IconStyle::SharpSolid},
+    };
+    
+    qCInfo(phxFonts) << "Probing glyph availability for common icons:";
+    for (const auto& pr : probes) {
+      auto face = IconBootstrap::faceForStyle(static_cast<int>(pr.st));
+      const bool ok = faceHasGlyph(face.family, face.style, static_cast<char32_t>(pr.cp));
+      qCInfo(phxFonts) << "probe" << pr.name
+                       << "cp" << QString::number(pr.cp, 16)
+                       << "fam" << face.family
+                       << "style" << face.style
+                       << "ok" << ok;
+    }
+  }
   
   return g_faAvailable;
 }

@@ -6,6 +6,7 @@
 #include <QApplication>
 #include <QFont>
 #include <QFontDatabase>
+#include <QFontMetrics>
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QFile>
@@ -337,6 +338,25 @@ QIcon IconProvider::svgIcon(const QString& alias, int size, const QPalette& pal,
     return sourceIcon;
 }
 
+// Helper to check if a face supports a specific codepoint
+static bool faceHasGlyph(const QString& fam, const QString& style, char32_t cp) {
+    // 12 pt is irrelevant; we only probe the face
+    QFont probe = QFontDatabase::font(fam, style, 12);
+    // If style not found, try family-only
+    if (probe.family().isEmpty()) {
+        probe = QFont(fam);
+        if (!style.isEmpty()) {
+            probe.setStyleName(style);
+        }
+    }
+    // Ensure we don't merge in a fallback font
+    probe.setStyleStrategy(QFont::NoFontMerging);
+    // Use QFontMetrics to check if the glyph exists in the font
+    QFontMetrics fm(probe);
+    QChar ch(cp);
+    return fm.inFont(ch);
+}
+
 QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, const QPalette& pal, qreal dpr) {
     if (!IconBootstrap::faAvailable()) {
         return QIcon(); // Return null, let caller fallback
@@ -358,28 +378,72 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, con
             bool ok;
             uint32_t codepoint = codepointStr.toUInt(&ok, 16);
             if (ok) {
+                const char32_t cp = static_cast<char32_t>(codepoint);
+                
+                // Force-select face via QFontDatabase::font (more reliable on macOS)
+                QFont f = QFontDatabase::font(face.family, face.style, 12);
+                if (f.family().isEmpty()) {
+                    qCWarning(phxFonts) << "QFontDatabase::font failed for" << face.family << face.style
+                                        << "falling back to QFont constructor";
+                    f = QFont(face.family);
+                    if (!face.style.isEmpty()) {
+                        f.setStyleName(face.style);
+                    }
+                }
+                
+                // No font merging; we want a hard failure if the glyph doesn't exist
+                f.setStyleStrategy(QFont::NoFontMerging);
+                
+                // Check glyph availability
+                bool has = faceHasGlyph(face.family, face.style, cp);
+                
+                // Style fallback logic if primary face doesn't support the codepoint
+                if (!has) {
+                    if (face.family == "Font Awesome 6 Pro") {
+                        // Bidirectional fallback: try alt style
+                        const QString alt = (face.style == "Solid") ? "Regular" : "Solid";
+                        QFont f2 = QFontDatabase::font(face.family, alt, 12);
+                        if (!f2.family().isEmpty() && faceHasGlyph(face.family, alt, cp)) {
+                            f = f2;
+                            f.setStyleStrategy(QFont::NoFontMerging);
+                            has = true;
+                            qCWarning(phxFonts) << "FA fallback face" << alt << "for cp" << QString::number(codepoint, 16);
+                        }
+                    } else if (face.family == "Font Awesome 6 Duotone" || face.family == "Font Awesome 6 Brands") {
+                        // Try family-only first, then the reported style
+                        if (!face.style.isEmpty()) {
+                            QFont f2 = QFontDatabase::font(face.family, QString(), 12);
+                            if (!f2.family().isEmpty() && faceHasGlyph(face.family, QString(), cp)) {
+                                f = f2;
+                                f.setStyleStrategy(QFont::NoFontMerging);
+                                has = true;
+                                qCWarning(phxFonts) << "FA fallback family-only for" << face.family
+                                                    << "cp" << QString::number(codepoint, 16);
+                            }
+                        }
+                    }
+                }
+                
+                // If no face supports the codepoint, let the pipeline fall through to SVG/theme/fallback
+                if (!has) {
+                    qCWarning(phxFonts) << "No FA face supports codepoint" << QString::number(codepoint, 16)
+                                        << "for icon" << name << "falling through to SVG/theme/fallback";
+                    return QIcon(); // Return null to trigger fallback chain
+                }
+                
                 // Compute device-pixel dimensions
                 const int rw = qCeil(size * dpr);
                 const int rh = qCeil(size * dpr);
                 
-                // Create font with family and styleName (for macOS compatibility)
-                QFont f(face.family);
-                if (!face.style.isEmpty()) {
-                    f.setStyleName(face.style);
-                } else {
-                    // Weight fallbacks only if styleName not set
-                    if (style == IconStyle::SharpSolid || style == IconStyle::ClassicSolid) {
-                        f.setWeight(QFont::Black);
-                    } else if (style == IconStyle::SharpRegular) {
-                        f.setWeight(QFont::Normal);
-                    }
-                }
+                // Apply DPR pixel size AFTER selecting the face
                 f.setPixelSize(qRound(qMin(rw, rh) * 0.9));
                 
                 // Debug logging (once per icon render)
-                qCDebug(phxFonts) << "glyph" << name
+                qCDebug(phxFonts) << "face test" << name
                                   << "fam" << f.family()
                                   << "style" << f.styleName()
+                                  << "cp" << QString::number(codepoint, 16)
+                                  << "supports=true"
                                   << "px" << f.pixelSize()
                                   << "dpr" << dpr
                                   << "rect" << rw << "x" << rh;
@@ -397,7 +461,6 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, con
                     p.setPen(color);
                     
                     // Use QString::fromUcs4 for robust Unicode handling
-                    const char32_t cp = static_cast<char32_t>(codepoint);
                     p.drawText(QRect(0, 0, rw, rh), Qt::AlignCenter, QString::fromUcs4(&cp, 1));
                     p.end();
                     
