@@ -72,8 +72,9 @@ qrc_*.cpp
 # === IDE / OS Metadata ===
 *.user
 *.user.*
-*.DS_Store
+.DS_Store
 */.DS_Store
+__MACOSX/
 *.swp
 *.swo
 *.log

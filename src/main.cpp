@@ -18,10 +18,14 @@
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
     
-    // Disable verbose icon/font logs by default (still toggleable via QT_LOGGING_RULES)
+    // Disable verbose logs by default (still toggleable via QT_LOGGING_RULES)
     QLoggingCategory::setFilterRules(QStringLiteral(
         "phx.icons.debug=false\n"
         "phx.fonts.debug=false\n"
+        "phx.ui.debug=false\n"
+        "phx.palantir.debug=false\n"
+        "phx.palantir.conn.debug=false\n"
+        "phx.palantir.proto.debug=false\n"
     ));
     
     // Set application properties

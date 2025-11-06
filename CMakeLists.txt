@@ -18,6 +18,9 @@ set(CMAKE_AUTORCC ON)
 # === Palantir integration toggle (default OFF for Sprint 4) ===
 option(PHX_WITH_PALANTIR "Enable Palantir integration" OFF)
 
+# === Developer tools toggle (default OFF for release builds) ===
+option(PHX_DEV_TOOLS "Build developer tools" OFF)
+
 # Make the flag visible to all targets
 add_compile_definitions(
     $<$<BOOL:${PHX_WITH_PALANTIR}>:PHX_WITH_PALANTIR=1>
@@ -50,10 +53,12 @@ else()
     message(STATUS "Policy file not found - skipping deprecation checks")
 endif()
 
-# ---- Tools / helper targets -------------------------------------------------
-# Icon audit tool (uses QtCore)
-add_executable(icon_audit tools/icon_audit.cpp)
-target_link_libraries(icon_audit PRIVATE Qt6::Core)
+# ---- Tools / helper targets (dev-only) --------------------------------------
+if(PHX_DEV_TOOLS)
+  # Icon audit tool (uses QtCore)
+  add_executable(icon_audit tools/icon_audit.cpp)
+  target_link_libraries(icon_audit PRIVATE Qt6::Core)
+endif()
 
 # ---- Phoenix application ----------------------------------------------------
 add_executable(phoenix_app
@@ -80,7 +85,6 @@ add_executable(phoenix_app
   src/ui/icons/IconBootstrap.cpp
   src/ui/icons/PhxIconImageProvider.cpp
   src/ui/UILogging.cpp
-  src/tools/IconGallery.cpp
 
   # I/O utilities
   src/app/io/FileIO.cpp
@@ -89,8 +93,11 @@ add_executable(phoenix_app
   $<$<BOOL:${PHX_WITH_PALANTIR}>:src/palantir/PalantirClient.cpp>
   $<$<BOOL:${PHX_WITH_PALANTIR}>:src/palantir/PalantirLogging.cpp>
 
+  # Developer tools (conditional)
+  $<$<BOOL:${PHX_DEV_TOOLS}>:src/tools/IconGallery.cpp>
+
   # headers with Q_OBJECT for AUTOMOC
-  src/tools/IconGallery.h
+  $<$<BOOL:${PHX_DEV_TOOLS}>:src/tools/IconGallery.h>
   $<$<BOOL:${PHX_WITH_PALANTIR}>:src/palantir/PalantirClient.hpp>
 
   # New UI structure - MainWindow
