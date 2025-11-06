@@ -3,6 +3,7 @@
 #include "../themes/ThemeManager.h"
 #include "../icons/IconProvider.h"
 #include "../icons/PhxLogging.h"
+#include "../UILogging.h"
 #include "app/SettingsProvider.h"
 #include "app/SettingsKeys.h"
 #include "app/io/FileIO.h"
@@ -1241,7 +1242,7 @@ void MainWindow::showAbout()
     
     QMessageBox mb(QMessageBox::Information,
                    tr("About Phoenix"),
-                   QString(tr("Phoenix UI for Bedrock\nVersion %1\n\nBuilt with Qt %2\nRunning on %3"))
+                   QString(tr("Phoenix\nVersion %1\n\nBuilt with Qt %2\nRunning on %3"))
                        .arg(QApplication::applicationVersion())
                        .arg(QT_VERSION_STR)
                        .arg(QSysInfo::prettyProductName()),
@@ -1263,7 +1264,7 @@ void MainWindow::showHelp()
 void MainWindow::logUIAction(const QString& action, qint64 elapsed)
 {
     // Log UI action with timing for <50ms chrome response validation
-    qDebug() << "UI Action:" << action << "took" << elapsed << "ms";
+    qCDebug(phxUI) << "UI Action:" << action << "took" << elapsed << "ms";
     
     // Check if response time meets Phase 1 requirements (<50ms)
     if (elapsed > phx::ui::kUITargetResponseMs) {
@@ -1280,7 +1281,7 @@ void MainWindow::logRibbonAction(const QString& action)
     m_actionTimer.start();
     
     // Log the ribbon action
-    qDebug() << "Ribbon Action:" << action;
+    qCDebug(phxUI) << "Ribbon Action:" << action;
     
     // Connect to the actual action completion
     QTimer::singleShot(0, this, [this, action]() {

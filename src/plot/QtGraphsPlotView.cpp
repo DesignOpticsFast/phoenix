@@ -206,5 +206,3 @@ void QtGraphsPlotView::paintEvent(QPaintEvent* event)
         firstPoint = false;
     }
 }
-
-#include "QtGraphsPlotView.moc"

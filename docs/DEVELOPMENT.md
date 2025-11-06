@@ -121,3 +121,54 @@ Phoenix provides several developer diagnostics for troubleshooting icon and font
   - Detailed startup diagnostics in `IconBootstrap`
 
 **Note**: By default, all diagnostics are disabled for production builds. The icon system runs quietly with minimal logging overhead.
+
+## Palantir IPC Client
+
+Phoenix communicates with compute services via the **Palantir** IPC layer. The PalantirClient provides a non-blocking, event-driven interface with a connection state machine.
+
+### Connection Configuration
+
+- **Socket Name**: Configured via `PALANTIR_SOCKET` environment variable (default: `"palantir_bedrock"`)
+  
+  Example:
+  ```bash
+  PALANTIR_SOCKET=/tmp/palantir_custom ./phoenix_app
+  ```
+
+### Connection Lifecycle
+
+PalantirClient uses a finite state machine (FSM) with the following states:
+- **Idle**: Initial state, no connection
+- **Connecting**: Async connection initiated
+- **Connected**: Successfully connected and ready
+- **ErrorBackoff**: Connection error, waiting before retry
+- **PermanentFail**: Maximum retry attempts reached
+
+### Error Handling & Backoff
+
+- **Exponential Backoff**: Reconnection attempts use exponential delays (1s, 2s, 4s, 8s, 16s)
+- **Max Attempts**: After 5 failed attempts, connection enters `PermanentFail` state
+- **Protocol Errors**: Malformed frames (bad magic, version mismatch, oversize payload) trigger immediate disconnect and backoff
+
+### Protocol
+
+Palantir uses a framed binary protocol:
+- **Magic**: `'PLTR'` (0x504C5452)
+- **Byte Order**: BigEndian (network byte order)
+- **Header**: 12 bytes (magic: u32, version: u16, type: u16, length: u32)
+- **Max Message Size**: 8 MiB
+- **Version**: Currently v1
+
+### Message Handling
+
+Messages are dispatched via:
+1. **Signal**: `messageReceived(quint16 type, QByteArray payload)` - for signal/slot consumers
+2. **Handler**: `registerHandler(quint16 type, Handler)` - for direct callback registration
+
+Handlers are called after the signal is emitted, allowing both patterns to coexist.
+
+### Non-Blocking Design
+
+- **No Blocking Calls**: All connection operations are async; the GUI thread never blocks
+- **Event-Driven**: Socket signals (`connected`, `errorOccurred`, `readyRead`) drive state transitions
+- **No Process Spawning**: Phoenix never spawns Bedrock; the Palantir service is managed separately

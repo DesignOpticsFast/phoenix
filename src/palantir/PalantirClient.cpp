@@ -64,8 +64,7 @@ void PalantirClient::sendRequest(quint16 type, const QByteArray& payload)
         return;  // Silent no-op if not connected
     }
 
-    // TODO: Implement framing in Chunk 4
-    // For now, just log
+    // TODO: Implement send framing (header + payload) for Chunk 5+ feature work
     qCDebug(phxPalantirProto) << "sendRequest type:" << type << "payload:" << payload.size() << "bytes";
 }
 

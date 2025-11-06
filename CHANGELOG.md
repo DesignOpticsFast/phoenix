@@ -6,6 +6,16 @@ This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ---
 
+## [0.0.3] – 2025-01-XX
+### Phoenix (Frontend)
+- **PalantirClient Async FSM**: Non-blocking connection state machine with exponential backoff (1s, 2s, 4s, 8s, 16s). Connection states: Idle → Connecting → Connected → ErrorBackoff → PermanentFail. All socket operations are event-driven; GUI thread never blocks.
+- **Framed Protocol Header**: Binary protocol with PLTR magic (0x504C5452), BigEndian byte order, and 12-byte header (magic: u32, version: u16, type: u16, length: u32). Protocol validation with version range checks and 8 MiB payload size limit. Malformed frames trigger immediate disconnect and backoff.
+- **Message Dispatcher Scaffold**: Type→handler registration system for protocol frames. Handlers are called after `messageReceived()` signal emission, allowing both signal/slot and callback patterns. Unregistered message types log debug output.
+- **Version 0.0.3 Display**: Version now appears in splash screen, main window title ("Phoenix 0.0.3 - Optical Design Studio"), and About dialog. All locations use single source of truth from CMake `PROJECT_VERSION`.
+- **Prototype Removal**: Removed STEP prototype code and Bedrock adapter. Deleted obsolete files: MainWindow.cpp/hpp/ui (prototype), StepViewer.cpp/hpp, bedrock_client.cpp/hpp, noop.cpp. Cleaned CMakeLists.txt references. No Bedrock/STEP references remain in Phoenix codebase.
+
+---
+
 ## [Unreleased] – Sprint 4
 ### Phoenix (Frontend)
 - **Icon System Refactor (Sprint 4)**: Font Awesome glyph refactor complete; SVGs limited to branding. All toolbar/menu icons now use FA glyphs through IconProvider with theme-aware tinting. Removed FA UI chrome SVG duplicates from QRC. Added CI pre-build checks for QRC path validation and SVG currentColor enforcement.

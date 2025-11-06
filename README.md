@@ -1,5 +1,6 @@
-# Phoenix — GUI/IDE for Bedrock
+# Phoenix — GUI/IDE for Optical Design
 
+> **Version**: 0.0.3  
 > **Status**: CI workflows stabilized and tested ✅  
 > **Icons**: Font Awesome Pro icon system integrated 🎨  
 > **Development**: dev-01-first workflow established 🚀  
@@ -14,30 +15,31 @@
 
 📋 **[Workflow Dependencies](docs/workflow-dependencies.md)** | 🎨 **[Icon System](docs/icons.md)** | 🚀 **[Development Workflow](docs/DEVELOPMENT_WORKFLOW.md)** | 🛡️ **[CI Workflow System](docs/CI_WORKFLOW_SYSTEM.md)** | 📚 **[API Documentation](docs/)**
 
-**Phoenix** is the Qt-based GUI that orchestrates **Bedrock** primitives:
-visualization, tolerancing, reporting, and (eventually) AI-assisted workflows.
+**Phoenix** is the Qt-based GUI for optical design workflows:
+visualization, tolerancing, reporting, and (eventually) AI-assisted design.
 
-> Phoenix provides the interactive UX layer; Bedrock is the compute foundation.
+> Phoenix provides the interactive UX layer; communication with compute services occurs via **Palantir** (IPC layer), which connects to **Bedrock** (compute foundation).
 
 ---
 
-## 🚀 Current Scope (MVP Phase 1)
+## 🚀 Current Scope (Sprint 4/5)
 
-Sprint: **MVP Phase 1 — New Design (TSE)**
+**Version 0.0.3** — UI Hardening & Palantir Foundation
 
-- Add **“New Design”** toolbar button.
-- Call Bedrock API to create a **Two-Surface Element (TSE)** with hard-wired parameters.
-- Bedrock generates a **STEP file** for the TSE.
-- Phoenix opens a **3D STEP viewer** to display the element.
-- No editing yet — view-only.
+- **Icon System**: Font Awesome Pro integration with theme-aware tinting
+- **Palantir IPC**: Non-blocking connection FSM with exponential backoff
+- **Protocol Layer**: Framed binary protocol (PLTR magic, BigEndian, version/type/length header)
+- **Message Dispatcher**: Type→handler registration scaffold for future features
+- **UI Polish**: Version display in splash, window title, and About dialog
 
 ---
 
 ## 📂 Repo Structure
 phoenix/
 ├── src/
-│    ├── ui/                # Qt windows, STEP viewer
-│    └── adapters/          # Bedrock client adapter
+│    ├── ui/                # Qt windows, dialogs, widgets
+│    ├── palantir/          # Palantir IPC client (non-blocking FSM, protocol framing)
+│    └── app/               # Application core (settings, I/O utilities)
 ├── resources/              # icons, Qt .ui files
 ├── docs/                   # ADRs, design notes
 ├── CMakeLists.txt          # build config

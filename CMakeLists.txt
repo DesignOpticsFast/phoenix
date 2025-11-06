@@ -79,6 +79,7 @@ add_executable(phoenix_app
           src/ui/icons/PhxLogging.cpp
   src/ui/icons/IconBootstrap.cpp
   src/ui/icons/PhxIconImageProvider.cpp
+  src/ui/UILogging.cpp
   src/tools/IconGallery.cpp
 
   # I/O utilities
