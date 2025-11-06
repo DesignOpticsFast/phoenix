@@ -7,6 +7,7 @@
 #include "app/SettingsKeys.h"
 #include "app/io/FileIO.h"
 #include "app/PhxConstants.h"
+#include "version.h"
 #include <QApplication>
 #include <QMenuBar>
 #include <QToolBar>
@@ -100,7 +101,8 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     , m_debugTimer(new QTimer(this))
     , m_startupTime(0)
 {
-    setWindowTitle("Phoenix - Optical Design Studio");
+    setWindowTitle(QStringLiteral("Phoenix %1 - Optical Design Studio")
+                   .arg(QStringLiteral(PHOENIX_VERSION)));
     setMinimumSize(phx::ui::kMainMinSize);
     resize(phx::ui::kDefaultWindowSize);
     
@@ -1222,7 +1224,8 @@ void MainWindow::initializeUI()
 void MainWindow::retranslateUi()
 {
     // Retranslate all UI elements
-    setWindowTitle(tr("Phoenix - Optical Design Studio"));
+    setWindowTitle(tr("Phoenix %1 - Optical Design Studio")
+                   .arg(QStringLiteral(PHOENIX_VERSION)));
     
     // Update menu titles
     // This would need to be called for all menu items

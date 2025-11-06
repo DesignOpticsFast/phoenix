@@ -1,4 +1,5 @@
 #include "PhoenixSplashScreen.h"
+#include "version.h"
 #include <QApplication>
 #include <QPainter>
 #include <QFont>
@@ -170,7 +171,7 @@ void PhoenixSplashScreen::drawContents(QPainter *painter)
     painter->setFont(versionFont);
     painter->setPen(QColor(150, 150, 150));
     
-    QString version = "Version 0.0.1";
+    QString version = QStringLiteral("Version %1").arg(QStringLiteral(PHOENIX_VERSION));
     QFontMetrics versionMetrics(versionFont);
     QRect versionRect = versionMetrics.boundingRect(version);
     int versionX = (width() - versionRect.width()) / 2;

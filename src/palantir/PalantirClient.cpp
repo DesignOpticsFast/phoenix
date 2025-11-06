@@ -165,6 +165,15 @@ void PalantirClient::onSocketReadyRead()
         qCDebug(phxPalantirProto) << "Frame type=" << type << "len=" << length;
         emit messageReceived(type, payload);
 
+        // Try dispatcher handler
+        auto it = handlers_.find(type);
+        if (it != handlers_.end()) {
+            it.value()(payload);
+        } else {
+            qCDebug(phxPalantirProto) << "No handler for type" << type
+                                     << "(payload" << payload.size() << "bytes)";
+        }
+
         // Continue loop to handle multiple frames
     }
 }
@@ -206,6 +215,16 @@ void PalantirClient::resetBackoff()
 {
     backoffAttempt_ = 0;
     backoffTimer_.stop();
+}
+
+void PalantirClient::registerHandler(quint16 type, std::function<void(const QByteArray&)> handler)
+{
+    handlers_.insert(type, std::move(handler));
+}
+
+void PalantirClient::unregisterHandler(quint16 type)
+{
+    handlers_.remove(type);
 }
 
 void PalantirClient::handleProtocolError(const QString& reason)

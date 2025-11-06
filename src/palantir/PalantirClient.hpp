@@ -6,7 +6,9 @@
 #include <QByteArray>
 #include <QString>
 #include <QDataStream>
+#include <QHash>
 #include <memory>
+#include <functional>
 
 class PalantirClient : public QObject
 {
@@ -26,6 +28,10 @@ public:
 
     // Protocol
     void sendRequest(quint16 type, const QByteArray& payload);  // no-op if not Connected
+
+    // Message handler registration
+    void registerHandler(quint16 type, std::function<void(const QByteArray&)> handler);
+    void unregisterHandler(quint16 type);
 
     // Signals for async operations
 signals:
@@ -66,6 +72,10 @@ private:
 
     // Protocol buffer
     QByteArray receiveBuffer_;
+
+    // Message dispatcher
+    using Handler = std::function<void(const QByteArray&)>;
+    QHash<quint16, Handler> handlers_;
 
     // Reference struct for documentation (not used for direct memcpy due to endianness)
     struct MsgHeader {
