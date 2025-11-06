@@ -26,6 +26,45 @@
 #include <QEvent>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QSet>
+#include <QAction>
+#include <QMenu>
+
+namespace {
+    // Gather all menus from both menubar actions and MainWindow tree
+    // This ensures we find all menus regardless of parenting
+    static QList<QMenu*> gatherAllMenus(QMenuBar* menubar, QWidget* root) {
+        QSet<QMenu*> set;
+        
+        // A. Menus referenced by menubar actions (official source of top-level menus)
+        if (menubar) {
+            for (QAction* a : menubar->actions()) {
+                if (QMenu* m = a->menu()) {
+                    set.insert(m);
+                }
+            }
+        }
+        
+        // B. Any QMenus parented in the MainWindow tree (covers new QMenu(title, this))
+        for (QMenu* m : root->findChildren<QMenu*>()) {
+            set.insert(m);
+        }
+        
+        // (Optional) Recurse to collect submenus, if needed later:
+        // auto gatherSubmenus = [&](QMenu* parent, auto&& gatherSubmenusRef) -> void {
+        //     for (QAction* a : parent->actions()) {
+        //         if (QMenu* sm = a->menu()) {
+        //             if (set.contains(sm)) continue;
+        //             set.insert(sm);
+        //             gatherSubmenusRef(sm, gatherSubmenusRef);
+        //         }
+        //     }
+        // };
+        // for (QMenu* m : set) gatherSubmenus(m, gatherSubmenus);
+        
+        return set.values();
+    }
+} // anonymous namespace
 
 MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     : QMainWindow(parent)
@@ -1042,35 +1081,37 @@ void MainWindow::refreshAllIconsForTheme()
         a->setIcon(IconProvider::icon(key, QSize(px, px), w));  // rebuilt with new palette/host
     };
     
+    // Gather all menus from both menubar actions and MainWindow tree
+    const auto menus = gatherAllMenus(menuBar(), this);
+    
+#ifdef PHX_DEV_DIAG
+    {
+        QStringList names;
+        names.reserve(menus.size());
+        for (auto* m : menus) {
+            names << m->title();
+        }
+        qCDebug(phxIcons) << "MENUS FOUND:" << names;
+    }
+#endif
+    
     // Close any open menus first to clear Qt's cached pixmaps
-    QList<QMenu*> openMenus;
-    for (QMenu* m : menuBar()->findChildren<QMenu*>()) {
-        if (m->isVisible()) {
-            openMenus.append(m);
+    for (QMenu* m : menus) {
+        if (m && m->isVisible()) {
             m->hide();  // Close to clear cached pixmaps
         }
     }
     
-    // Menubar actions
-    for (QAction* a : menuBar()->actions()) {
-        rebuildAction(a, menuBar());
-    }
-    
     // Menu actions (use unified lambda with icon visibility forced)
-    for (QMenu* m : menuBar()->findChildren<QMenu*>()) {
+    for (QMenu* m : menus) {
+        if (!m) continue;
+        
         for (QAction* a : m->actions()) {
             rebuildAction(a, m);
             // Force icon visibility in menus (Qt may cache this)
             a->setIconVisibleInMenu(true);
         }
-        // Force menu geometry invalidation and repaint
-        m->updateGeometry();
         m->update();  // repaint menu shell
-        // Force style polish to invalidate cached pixmaps
-        if (m->style()) {
-            m->style()->unpolish(m);
-            m->style()->polish(m);
-        }
     }
     
     // Note: We intentionally don't reopen menus that were closed - user can reopen them
