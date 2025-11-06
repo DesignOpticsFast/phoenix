@@ -27,7 +27,6 @@
 #include <QThread>
 #include <QDebug>
 #include <QShowEvent>
-#include <QStatusBar>
 #include <QEvent>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -556,6 +555,8 @@ QToolBar* MainWindow::createTopRibbon()
     return ribbon;
 }
 
+// Creates the vertical right ribbon toolbar (theme controls + Help/About rows).
+// Uses QWidgetAction rows for post-separator items to maintain left alignment.
 QToolBar* MainWindow::createRightRibbon()
 {
     QToolBar* ribbon = new QToolBar(tr("Right Ribbon"), this);
