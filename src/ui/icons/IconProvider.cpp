@@ -80,41 +80,36 @@ QIcon IconProvider::icon(const QString& logicalName, const QSize& logicalSize, c
     // Note: Do NOT cache widget-aware icons (host palette affects colors)
 }
 
-QPalette IconProvider::getPaletteForIcon(const QWidget* widget) {
-    // Try to get palette from widget (especially toolbars) first
-    if (widget) {
-        // Check if it's a toolbar or has a toolbar parent
-        const QToolBar* toolbar = qobject_cast<const QToolBar*>(widget);
-        if (!toolbar && widget->parent()) {
-            toolbar = qobject_cast<const QToolBar*>(widget->parent());
-        }
-        if (toolbar) {
-            return toolbar->palette();
-        }
-        return widget->palette();
-    }
-    // Fall back to application palette
+QPalette IconProvider::getPaletteForIcon(const QWidget* /*widget*/) {
+    // Always use application palette (updated immediately on theme change)
+    // Widget parameter kept for future use but not used for palette retrieval
     return QApplication::palette();
 }
 
-QColor IconProvider::normalColorFor(const QWidget* w) {
-    const QPalette pal = w ? w->palette() : QApplication::palette();
-    if (qobject_cast<const QMenu*>(w))      return pal.color(QPalette::Text);
-    if (qobject_cast<const QMenuBar*>(w))   return pal.color(QPalette::WindowText);
-    if (qobject_cast<const QToolBar*>(w))   return pal.color(QPalette::ButtonText);
-    return pal.color(QPalette::WindowText);
+// Helper to get application palette (always current, no stale widget palettes)
+static inline QPalette appPal() {
+    // qApp exists in our application context
+    return QApplication::palette();
 }
 
-QColor IconProvider::selectedColorFor(const QWidget* w) {
-    const QPalette pal = w ? w->palette() : QApplication::palette();
-    if (qobject_cast<const QMenu*>(w))      return pal.color(QPalette::HighlightedText);
-    if (qobject_cast<const QMenuBar*>(w))   return pal.color(QPalette::HighlightedText);
-    if (qobject_cast<const QToolBar*>(w))   return pal.color(QPalette::ButtonText);
-    return pal.color(QPalette::HighlightedText);
+QColor IconProvider::normalColorFor(const QWidget* host) {
+    const QPalette pal = appPal();
+    if (qobject_cast<const QMenu*>(host))      return pal.color(QPalette::Active, QPalette::Text);
+    if (qobject_cast<const QMenuBar*>(host))   return pal.color(QPalette::Active, QPalette::WindowText);
+    if (qobject_cast<const QToolBar*>(host))   return pal.color(QPalette::Active, QPalette::ButtonText);
+    return pal.color(QPalette::Active, QPalette::WindowText);
 }
 
-QColor IconProvider::disabledColorFor(const QWidget* w) {
-    const QPalette pal = w ? w->palette() : QApplication::palette();
+QColor IconProvider::selectedColorFor(const QWidget* host) {
+    const QPalette pal = appPal();
+    if (qobject_cast<const QMenu*>(host))      return pal.color(QPalette::Active, QPalette::HighlightedText);
+    if (qobject_cast<const QMenuBar*>(host))   return pal.color(QPalette::Active, QPalette::HighlightedText);
+    if (qobject_cast<const QToolBar*>(host))   return pal.color(QPalette::Active, QPalette::ButtonText);
+    return pal.color(QPalette::Active, QPalette::HighlightedText);
+}
+
+QColor IconProvider::disabledColorFor(const QWidget* /*host*/) {
+    const QPalette pal = appPal();
     return pal.color(QPalette::Disabled, QPalette::Text);
 }
 

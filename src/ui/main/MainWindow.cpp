@@ -118,9 +118,11 @@ bool MainWindow::event(QEvent* e)
                 dw->raise();
             }
         }
-    } else if (e->type() == QEvent::PaletteChange) {
-        // Refresh icons when palette changes (theme change)
-        refreshAllIconsForTheme();
+    } else if (e->type() == QEvent::PaletteChange || e->type() == QEvent::ApplicationPaletteChange) {
+        // Delay icon refresh until after palette propagation
+        QTimer::singleShot(0, this, [this] {
+            refreshAllIconsForTheme();
+        });
     }
     return QMainWindow::event(e);
 }
@@ -989,8 +991,11 @@ void MainWindow::setLanguage(const QString& language)
 
 void MainWindow::onThemeChanged()
 {
-    // Refresh all icons to retint with new theme
-    refreshAllIconsForTheme();
+    // Delay icon refresh until after palette propagation (QApplication::setPalette() is synchronous,
+    // but we want to ensure all widgets have received the palette change event)
+    QTimer::singleShot(0, this, [this] {
+        refreshAllIconsForTheme();
+    });
     // Handle theme changes
     updateDebugInfo();
 }
