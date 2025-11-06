@@ -450,56 +450,60 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, con
                     return QIcon(); // Return null to trigger fallback chain
                 }
                 
-                // Compute device-pixel dimensions
+                // Compute device-pixel dimensions for pixmap backing
                 const int rw = qCeil(size * dpr);
                 const int rh = qCeil(size * dpr);
                 
-                // Apply DPR pixel size AFTER selecting the face
-                f.setPixelSize(qRound(qMin(rw, rh) * 0.9));
+                // Calculate logical dimensions (QPainter uses logical coords on DPR pixmaps)
+                const qreal lw = static_cast<qreal>(rw) / dpr;  // logical width
+                const qreal lh = static_cast<qreal>(rh) / dpr;  // logical height
+                
+                // Apply font pixel size in logical units (0.9 padding for visual fit)
+                f.setPixelSize(qRound(std::min(lw, lh) * 0.9));
                 
                 // Prepare glyph string and font metrics
                 const QString glyph = QString::fromUcs4(&cp, 1);
                 QFontMetricsF fm(f);
                 
-                // Compute baseline-centered coordinates using font metrics
+                // Compute baseline-centered coordinates in logical units
                 // Horizontal: center using advance (handles negative left bearings better)
                 const qreal adv = fm.horizontalAdvance(glyph);
-                const qreal x = (rw - adv) * 0.5;
+                const qreal x = (lw - adv) * 0.5;
                 
                 // Vertical: compute baseline so the visual box (ascent+descent) is centered
                 const qreal ascent = fm.ascent();
                 const qreal descent = fm.descent();
-                const qreal y = (rh + ascent - descent) * 0.5; // baseline position
+                const qreal y = (lh + ascent - descent) * 0.5; // baseline position in logical units
                 
                 // Debug logging (once per icon render)
                 qCDebug(phxFonts) << "CENTERED glyph" << name
-                                  << "adv" << adv
-                                  << "ascent" << ascent << "descent" << descent
+                                  << "lw/lh" << lw << lh
+                                  << "adv" << adv << "asc" << ascent << "des" << descent
                                   << "x" << x << "y(baseline)" << y
-                                  << "rect" << rw << "x" << rh
-                                  << "fam" << f.family() << "/" << f.styleName()
-                                  << "px" << f.pixelSize() << "dpr" << dpr;
+                                  << "dpr" << dpr << "rw/rh" << rw << rh;
                 
                 // Helper lambda to create pixmap for a state
                 auto createStatePixmap = [&](const QColor& color, const QString& stateName) -> QPixmap {
+                    // Create pixmap at device-pixel size (backing storage)
                     QPixmap pm(rw, rh);
-                    pm.setDevicePixelRatio(dpr);
+                    pm.setDevicePixelRatio(dpr); // Tell Qt this represents lw×lh logical pixels
                     pm.fill(Qt::transparent);
                     
                     QPainter p(&pm);
+                    // QPainter now operates in logical coordinates (0..lw, 0..lh)
                     p.setRenderHint(QPainter::TextAntialiasing, true);
                     p.setRenderHint(QPainter::Antialiasing, true);
                     p.setFont(f);
                     p.setPen(color);
                     
-                    // Optional: debug outline (red rectangle around pixmap)
+                    // Optional: debug outline (red rectangle in logical coordinates)
                     if (qEnvironmentVariableIsSet("PHX_ICON_DEBUG_OUTLINE")) {
                         p.setPen(QColor(255, 0, 0, 80));
-                        p.drawRect(QRectF(0, 0, rw - 1, rh - 1));
+                        p.drawRect(QRectF(0, 0, lw - 1, lh - 1));
                         p.setPen(color);
                     }
                     
-                    // Draw glyph at explicit baseline point (x, y)
+                    // Draw glyph at explicit baseline point in logical coordinates
                     // This centers the visual box (ascent+descent) rather than just the baseline
                     p.drawText(QPointF(x, y), glyph);
                     p.end();
