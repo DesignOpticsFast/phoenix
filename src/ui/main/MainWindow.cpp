@@ -12,6 +12,8 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QWidget>
+#include <QWidgetAction>
+#include <QHBoxLayout>
 #include <QLayout>
 #include <QStatusBar>
 #include <QDockWidget>
@@ -32,6 +34,7 @@
 #include <QSet>
 #include <QAction>
 #include <QMenu>
+#include <functional>
 
 namespace {
     // Gather all menus from both menubar actions and MainWindow tree
@@ -619,60 +622,76 @@ QToolBar* MainWindow::createRightRibbon()
     spacer->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Expanding);  // ignore horizontal; push vertically
     ribbon->addWidget(spacer);
     
-    // Help actions
-    QAction* helpAction = new QAction(tr("Help"), this);
-    helpAction->setProperty("phx_icon_key", "help");
-    helpAction->setIcon(IconProvider::icon("help", ribbon->iconSize(), ribbon));
-    helpAction->setToolTip(tr("Open help"));
-    connect(helpAction, &QAction::triggered, this, [this]() { 
-        m_actionTimer.start(); 
-        showHelp(); 
+    // Factory lambda to create left-aligned row widgets for post-separator actions
+    auto makeRibbonRow = [&](QToolBar* ribbon,
+                             const QString& text,
+                             const QString& iconKey,
+                             const QObject* receiver,
+                             std::function<void()> slot) -> QWidgetAction* {
+        auto* wa = new QWidgetAction(ribbon);
+        
+        // Row container with left-aligned layout
+        auto* row = new QWidget(ribbon);
+        auto* hl = new QHBoxLayout(row);
+        hl->setContentsMargins(0, 0, 0, 0);
+        hl->setSpacing(6);
+        
+        // Icon button (handles click)
+        auto* btn = new QToolButton(row);
+        btn->setAutoRaise(true);
+        btn->setIconSize(ribbon->iconSize());
+        btn->setIcon(IconProvider::icon(iconKey, ribbon->iconSize(), ribbon));
+        
+        // Text label (expands to fill width; keeps row content left-aligned)
+        auto* label = new QLabel(text, row);
+        label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        
+        // Layout: [icon-button][label][stretch]
+        hl->addWidget(btn);
+        hl->addWidget(label, 1);  // stretch factor
+        hl->addStretch();
+        
+        // Click handling: clicking the icon triggers slot
+        QObject::connect(btn, &QToolButton::clicked, receiver, slot);
+        
+        // Make entire row clickable: event filter to forward mouse press to btn
+        class RowClickFilter : public QObject {
+        public:
+            explicit RowClickFilter(QWidget* parent) : QObject(parent) {}
+            bool eventFilter(QObject* o, QEvent* e) override {
+                if (e->type() == QEvent::MouseButtonRelease) {
+                    if (auto* w = qobject_cast<QWidget*>(o)) {
+                        if (auto* b = w->findChild<QToolButton*>()) {
+                            b->click();
+                            return true;  // event handled
+                        }
+                    }
+                }
+                return false;  // let other events pass through
+            }
+        };
+        row->installEventFilter(new RowClickFilter(row));
+        
+        wa->setDefaultWidget(row);
+        // Keep a key for refresh (used in refreshAllIconsForTheme)
+        wa->setProperty("phx_icon_key", iconKey);
+        return wa;
+    };
+    
+    // Help and About actions as QWidgetAction rows
+    auto* helpWA = makeRibbonRow(ribbon, tr("Help"), "help", this, [this] {
+        m_actionTimer.start();
+        showHelp();
         logRibbonAction("help");
     });
-    ribbon->addAction(helpAction);
+    ribbon->addAction(helpWA);
     
-    QAction* aboutAction = new QAction(tr("About"), this);
-    aboutAction->setProperty("phx_icon_key", "info");
-    aboutAction->setIcon(IconProvider::icon("info", ribbon->iconSize(), ribbon));
-    aboutAction->setToolTip(tr("Show about dialog"));
-    connect(aboutAction, &QAction::triggered, this, [this]() { 
-        m_actionTimer.start(); 
-        showAbout(); 
+    auto* aboutWA = makeRibbonRow(ribbon, tr("About"), "info", this, [this] {
+        m_actionTimer.start();
+        showAbout();
         logRibbonAction("about");
     });
-    ribbon->addAction(aboutAction);
-    
-    // Expand bottom buttons post-creation to enforce left alignment
-    QTimer::singleShot(0, this, [ribbon, helpAction, aboutAction] {
-        auto expandBtn = [ribbon](QAction* a) {
-            if (!a) return;
-            if (QWidget* w = ribbon->widgetForAction(a)) {
-                if (auto* btn = qobject_cast<QToolButton*>(w)) {
-                    btn->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-                    btn->setLayoutDirection(Qt::LeftToRight);
-                    btn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);  // fill width
-                }
-            }
-        };
-        expandBtn(helpAction);
-        expandBtn(aboutAction);
-        ribbon->update();
-    });
-    
-    // Optional diagnostic to confirm button geometry
-    QTimer::singleShot(20, this, [ribbon, helpAction, aboutAction] {
-        auto report = [ribbon](QAction* a) {
-            if (QWidget* w = ribbon->widgetForAction(a)) {
-                if (auto* b = qobject_cast<QToolButton*>(w)) {
-                    qCDebug(phxIcons) << "[RIBBON BTN]" << b->text()
-                                      << "policy" << b->sizePolicy()
-                                      << "rect" << b->rect();
-                }
-            }
-        };
-        report(helpAction);
-        report(aboutAction);
-    });
+    ribbon->addAction(aboutWA);
     
     // Ensure consistent left alignment for all items in the vertical ribbon
     ribbon->setLayoutDirection(Qt::LeftToRight);
@@ -1165,9 +1184,27 @@ void MainWindow::refreshAllIconsForTheme()
     // Note: We intentionally don't reopen menus that were closed - user can reopen them
     // This ensures Qt rebuilds menu rendering with fresh icons
     
-    // Toolbar actions (use unified lambda + repaint)
+    // Toolbar actions (handle both plain QAction and QWidgetAction rows)
     for (QToolBar* tb : findChildren<QToolBar*>()) {
+        const int px = tb->iconSize().isValid() ? tb->iconSize().width()
+                                                : style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, tb);
+        
         for (QAction* a : tb->actions()) {
+            const QString key = a->property("phx_icon_key").toString();
+            if (key.isEmpty()) continue;  // skip actions without icon key
+            
+            // Check if this is a QWidgetAction with a row widget
+            if (QWidget* w = tb->widgetForAction(a)) {
+                if (auto* btn = w->findChild<QToolButton*>()) {
+                    // QWidgetAction row: update icon in the button
+                    btn->setIcon(QIcon{});  // clear cache
+                    btn->setIcon(IconProvider::icon(key, QSize(px, px), tb));
+                    btn->setIconSize(tb->iconSize());
+                    continue;
+                }
+            }
+            
+            // Fallback: plain QAction path
             rebuildAction(a, tb);
         }
         tb->update();  // repaint toolbar shell
