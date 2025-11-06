@@ -59,7 +59,6 @@ target_link_libraries(icon_audit PRIVATE Qt6::Core)
 add_executable(phoenix_app
   # sources
   src/main.cpp
-  src/ui/StepViewer.cpp
 
   # New UI structure - MainWindow
   src/ui/main/MainWindow.cpp
@@ -86,7 +85,6 @@ add_executable(phoenix_app
   src/app/io/FileIO.cpp
 
   # headers with Q_OBJECT for AUTOMOC
-  src/ui/StepViewer.hpp
   src/tools/IconGallery.h
 
   # New UI structure - MainWindow
@@ -107,7 +105,6 @@ add_executable(phoenix_app
   src/ui/icons/IconProvider.h
   src/ui/icons/IconBootstrap.h
   src/ui/icons/PhxIconImageProvider.h
-  src/ui/MainWindow.ui
 
   # Qt resource file (AUTORCC)
   src/ui/icons/phoenix_icons.qrc
