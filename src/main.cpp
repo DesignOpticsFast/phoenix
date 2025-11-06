@@ -12,6 +12,7 @@
 #include <QSplashScreen>
 #include <QElapsedTimer>
 #include <QLoggingCategory>
+#include <QProcessEnvironment>
 #include <memory>
 
 int main(int argc, char** argv) {
@@ -42,7 +43,18 @@ int main(int argc, char** argv) {
     app.processEvents(); // Process splash screen display
     
     // Initialize Font Awesome icons (must be before any icon rendering)
-    IconBootstrap::InitFonts();
+    bool fontsLoaded = IconBootstrap::InitFonts();
+    
+    // Clear icon cache after font initialization to ensure fresh renders
+    if (fontsLoaded) {
+        IconProvider::clearCache();
+    }
+    
+    // Check for cache bypass flag
+    if (qEnvironmentVariableIsSet("PHX_ICON_NOCACHE")) {
+        IconProvider::clearCache();
+        qCInfo(phxIcons) << "Icon cache cleared and bypassed via PHX_ICON_NOCACHE";
+    }
     
     // Setup automatic cache clearing on theme/DPR changes
     IconProvider::setupCacheClearing();

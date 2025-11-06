@@ -23,6 +23,9 @@
 #include <QToolBar>
 #include <QEvent>
 #include <QTimer>
+#include <QFontInfo>
+#include <QFontMetricsF>
+#include <QProcessEnvironment>
 #include <cmath>
 
 QHash<IconKey, QIcon> IconProvider::s_cache;
@@ -30,6 +33,7 @@ QJsonObject IconProvider::s_iconManifest;
 QHash<QString, QString> IconProvider::s_aliasMap;
 bool IconProvider::s_manifestLoaded = false;
 QTimer* IconProvider::s_cacheDebounceTimer = nullptr;
+static bool s_cacheBypassed = false;
 
 // Helper to compute DPR from widget's screen or primary screen
 static qreal computeDpr(const QWidget* w = nullptr) {
@@ -49,8 +53,8 @@ QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool da
                       << "px=" << size
                       << "dark=" << dark;
     
-    // Check cache first
-    if (s_cache.contains(key)) {
+    // Check cache first (unless bypassed)
+    if (!isCacheBypassed() && s_cache.contains(key)) {
         return s_cache.value(key);
     }
     
@@ -91,8 +95,10 @@ QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool da
         result = fallback(size, pal, dpr);
     }
     
-    // Cache the result
-    s_cache.insert(key, result);
+    // Cache the result (unless bypassed)
+    if (!isCacheBypassed()) {
+        s_cache.insert(key, result);
+    }
     
     return result;
 }
@@ -155,6 +161,19 @@ bool IconProvider::isDarkMode(const QWidget* widget) {
 
 void IconProvider::clearCache() {
     s_cache.clear();
+}
+
+bool IconProvider::isCacheBypassed() {
+    // Check once and cache the result
+    static bool checked = false;
+    if (!checked) {
+        s_cacheBypassed = QProcessEnvironment::systemEnvironment().contains("PHX_ICON_NOCACHE");
+        checked = true;
+        if (s_cacheBypassed) {
+            qCInfo(phxIcons) << "Icon cache bypassed via PHX_ICON_NOCACHE environment variable";
+        }
+    }
+    return s_cacheBypassed;
 }
 
 void IconProvider::scheduleIconCacheClear() {
@@ -449,7 +468,7 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, con
                                   << "rect" << rw << "x" << rh;
                 
                 // Helper lambda to create pixmap for a state
-                auto createStatePixmap = [&](const QColor& color) -> QPixmap {
+                auto createStatePixmap = [&](const QColor& color, const QString& stateName) -> QPixmap {
                     QPixmap pm(rw, rh);
                     pm.setDevicePixelRatio(dpr);
                     pm.fill(Qt::transparent);
@@ -460,8 +479,22 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, con
                     p.setFont(f);
                     p.setPen(color);
                     
+                    // Get resolved font info (what the painter will actually use)
+                    QFontInfo finf(p.font());
+                    const QRect devRect(0, 0, rw, rh);
+                    const QString glyph = QString::fromUcs4(&cp, 1);
+                    QFontMetricsF fm(f);
+                    
+                    // Log intended vs resolved font at render time
+                    qCDebug(phxFonts) << "RENDER glyph" << name << stateName
+                                      << "face" << face.family << "/" << face.style
+                                      << "intended" << f.family() << "/" << f.styleName() << "px" << f.pixelSize()
+                                      << "resolved" << finf.family() << "/" << finf.styleName()
+                                      << "dpr" << dpr << "rect" << devRect
+                                      << "bound" << fm.boundingRect(glyph);
+                    
                     // Use QString::fromUcs4 for robust Unicode handling
-                    p.drawText(QRect(0, 0, rw, rh), Qt::AlignCenter, QString::fromUcs4(&cp, 1));
+                    p.drawText(devRect, Qt::AlignCenter, glyph);
                     p.end();
                     
                     return pm;
@@ -469,9 +502,9 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, con
                 
                 // Build icon with all states
                 QIcon icon;
-                icon.addPixmap(createStatePixmap(pal.color(QPalette::ButtonText)), QIcon::Normal);
-                icon.addPixmap(createStatePixmap(pal.color(QPalette::Disabled, QPalette::ButtonText)), QIcon::Disabled);
-                icon.addPixmap(createStatePixmap(pal.color(QPalette::Active, QPalette::ButtonText)), QIcon::Active);
+                icon.addPixmap(createStatePixmap(pal.color(QPalette::ButtonText), "Normal"), QIcon::Normal);
+                icon.addPixmap(createStatePixmap(pal.color(QPalette::Disabled, QPalette::ButtonText), "Disabled"), QIcon::Disabled);
+                icon.addPixmap(createStatePixmap(pal.color(QPalette::Active, QPalette::ButtonText), "Active"), QIcon::Active);
                 
                 return icon;
             }

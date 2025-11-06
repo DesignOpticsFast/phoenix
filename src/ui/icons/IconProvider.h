@@ -58,6 +58,7 @@ public:
     static void onThemeChanged(); // Clears cache on theme change
     static void setupCacheClearing(); // Setup automatic cache clearing on theme/DPR/palette changes
     static void scheduleIconCacheClear(); // Schedule debounced cache clear
+    static bool isCacheBypassed(); // Check if cache is bypassed (PHX_ICON_NOCACHE env var)
 
 private:
     static QHash<IconKey, QIcon> s_cache;
