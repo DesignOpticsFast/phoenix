@@ -4,6 +4,7 @@
 #include <QLocalSocket>
 #include <QTimer>
 #include <QCoreApplication>
+#include <QDataStream>
 
 PalantirClient::PalantirClient(QObject *parent)
     : QObject(parent)
@@ -102,10 +103,70 @@ void PalantirClient::onSocketStateChanged(QLocalSocket::LocalSocketState state)
 
 void PalantirClient::onSocketReadyRead()
 {
-    // Stub for now (Chunk 4 will implement full protocol parsing)
-    qCDebug(phxPalantirProto) << "readyRead:" << socket_->bytesAvailable() << "bytes";
-    // Accumulate receiveBuffer_ for future parsing
-    receiveBuffer_ += socket_->readAll();
+    // Accumulate incoming data
+    receiveBuffer_.append(socket_->readAll());
+
+    // Parse complete frames
+    while (true) {
+        // Check if we have enough data for header
+        if (receiveBuffer_.size() < kHeaderSize) {
+            break;  // Need more data
+        }
+
+        // Read header from first kHeaderSize bytes
+        QByteArray header = receiveBuffer_.left(kHeaderSize);
+        QDataStream s(&header, QIODevice::ReadOnly);
+        s.setByteOrder(QDataStream::BigEndian);
+
+        quint32 magic;
+        quint16 version;
+        quint16 type;
+        quint32 length;
+
+        s >> magic >> version >> type >> length;
+
+        // Validate magic
+        if (magic != kMagic) {
+            handleProtocolError(QString("bad magic 0x%1 (expected 0x%2)")
+                               .arg(magic, 8, 16, QChar('0'))
+                               .arg(kMagic, 8, 16, QChar('0')));
+            return;
+        }
+
+        // Validate version
+        if (version < kVersionMin || version > kVersionMax) {
+            qCWarning(phxPalantirProto) << "Version mismatch: got v" << version
+                                        << "supported v" << kVersionMin << ".." << kVersionMax;
+            handleProtocolError(QString("version mismatch: v%1 not in %2..%3")
+                               .arg(version).arg(kVersionMin).arg(kVersionMax));
+            return;
+        }
+
+        // Validate length
+        if (length > kMaxMessageSize) {
+            qCWarning(phxPalantirProto) << "Payload too large:" << length << "bytes (max" << kMaxMessageSize << ")";
+            handleProtocolError(QString("payload too large: %1 (max %2)").arg(length).arg(kMaxMessageSize));
+            return;
+        }
+
+        // Check if we have complete frame (header + payload)
+        const int frameSize = kHeaderSize + static_cast<int>(length);
+        if (receiveBuffer_.size() < frameSize) {
+            break;  // Need more data for payload
+        }
+
+        // Extract payload
+        QByteArray payload = receiveBuffer_.mid(kHeaderSize, static_cast<int>(length));
+
+        // Remove consumed frame from buffer
+        receiveBuffer_.remove(0, frameSize);
+
+        // Emit message
+        qCDebug(phxPalantirProto) << "Frame type=" << type << "len=" << length;
+        emit messageReceived(type, payload);
+
+        // Continue loop to handle multiple frames
+    }
 }
 
 void PalantirClient::onBackoffTimeout()
@@ -145,4 +206,12 @@ void PalantirClient::resetBackoff()
 {
     backoffAttempt_ = 0;
     backoffTimer_.stop();
+}
+
+void PalantirClient::handleProtocolError(const QString& reason)
+{
+    qCWarning(phxPalantirProto) << "Protocol error, aborting socket:" << reason;
+    socket_->abort();
+    receiveBuffer_.clear();
+    startBackoff("Protocol error: " + reason);
 }

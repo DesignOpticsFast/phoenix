@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QByteArray>
 #include <QString>
+#include <QDataStream>
 #include <memory>
 
 class PalantirClient : public QObject
@@ -46,6 +47,7 @@ private:
     void setState(ConnState s);
     void startBackoff(const QString& why);
     void resetBackoff();
+    void handleProtocolError(const QString& reason);
 
     std::unique_ptr<QLocalSocket> socket_;
     QTimer backoffTimer_{};
@@ -55,6 +57,21 @@ private:
 
     static constexpr int kMaxBackoffAttempts = 5;
 
-    // Protocol buffer (for Chunk 4)
+    // Protocol constants
+    static constexpr quint32 kMagic          = 0x504C5452u; // 'PLTR'
+    static constexpr quint16 kVersionMin     = 1;
+    static constexpr quint16 kVersionMax     = 1;
+    static constexpr quint32 kMaxMessageSize = 8 * 1024 * 1024; // 8 MiB
+    static constexpr int     kHeaderSize     = 12;
+
+    // Protocol buffer
     QByteArray receiveBuffer_;
+
+    // Reference struct for documentation (not used for direct memcpy due to endianness)
+    struct MsgHeader {
+        quint32 magic;
+        quint16 version;
+        quint16 type;
+        quint32 length;
+    };
 };
