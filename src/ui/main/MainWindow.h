@@ -114,7 +114,10 @@ private:
     void updateStatusMessage(const QString& message);
     
     // Icon selection for actions
-    QIcon getIcon(const QString& name, const QString& fallback = "question");
+    QIcon getIcon(const QString& name, QWidget* widget = nullptr) const;
+    
+    // Theme refresh helper
+    void refreshAllIconsForTheme();
     
     // UI Components
     QMenuBar* m_menuBar;

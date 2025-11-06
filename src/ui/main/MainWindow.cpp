@@ -117,6 +117,9 @@ bool MainWindow::event(QEvent* e)
                 dw->raise();
             }
         }
+    } else if (e->type() == QEvent::PaletteChange) {
+        // Refresh icons when palette changes (theme change)
+        refreshAllIconsForTheme();
     }
     return QMainWindow::event(e);
 }
@@ -159,13 +162,17 @@ QMenu* MainWindow::createFileMenu()
 {
     QMenu* fileMenu = new QMenu("&File", this);
     
-    m_newAction = new QAction(getIcon("file-plus", "file-plus"), tr("&New"), this);
+    m_newAction = new QAction(tr("&New"), this);
+    m_newAction->setProperty("phx_icon_key", "file-plus");
+    m_newAction->setIcon(IconProvider::icon("file-plus", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
     m_newAction->setShortcut(QKeySequence::New);
     m_newAction->setStatusTip(tr("Create a new file"));
     connect(m_newAction, &QAction::triggered, this, &MainWindow::newFile);
     fileMenu->addAction(m_newAction);
     
-    m_openAction = new QAction(getIcon("folder", "folder-open"), tr("&Open"), this);
+    m_openAction = new QAction(tr("&Open"), this);
+    m_openAction->setProperty("phx_icon_key", "folder-open");
+    m_openAction->setIcon(IconProvider::icon("folder-open", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
     m_openAction->setShortcut(QKeySequence::Open);
     m_openAction->setStatusTip(tr("Open an existing file"));
     connect(m_openAction, &QAction::triggered, this, &MainWindow::openFile);
@@ -173,13 +180,17 @@ QMenu* MainWindow::createFileMenu()
     
     fileMenu->addSeparator();
     
-    m_saveAction = new QAction(getIcon("floppy-disk", "save"), tr("&Save"), this);
+    m_saveAction = new QAction(tr("&Save"), this);
+    m_saveAction->setProperty("phx_icon_key", "save");
+    m_saveAction->setIcon(IconProvider::icon("save", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
     m_saveAction->setShortcut(QKeySequence::Save);
     m_saveAction->setStatusTip(tr("Save the current file"));
     connect(m_saveAction, &QAction::triggered, this, &MainWindow::saveFile);
     fileMenu->addAction(m_saveAction);
     
-    m_saveAsAction = new QAction(getIcon("floppy-disk-pen", "save-as"), tr("Save &As"), this);
+    m_saveAsAction = new QAction(tr("Save &As"), this);
+    m_saveAsAction->setProperty("phx_icon_key", "save-as");
+    m_saveAsAction->setIcon(IconProvider::icon("save-as", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
     m_saveAsAction->setShortcut(QKeySequence::SaveAs);
     m_saveAsAction->setStatusTip(tr("Save the current file with a new name"));
     connect(m_saveAsAction, &QAction::triggered, this, &MainWindow::saveAsFile);
@@ -187,7 +198,9 @@ QMenu* MainWindow::createFileMenu()
     
     fileMenu->addSeparator();
     
-    m_preferencesAction = new QAction(getIcon("sliders", "settings"), tr("&Preferences..."), this);
+    m_preferencesAction = new QAction(tr("&Preferences..."), this);
+    m_preferencesAction->setProperty("phx_icon_key", "settings");
+    m_preferencesAction->setIcon(IconProvider::icon("settings", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
     m_preferencesAction->setShortcut(QKeySequence::Preferences);
     m_preferencesAction->setStatusTip(tr("Open preferences dialog"));
     connect(m_preferencesAction, &QAction::triggered, this, &MainWindow::showPreferences);
@@ -195,7 +208,9 @@ QMenu* MainWindow::createFileMenu()
     
     fileMenu->addSeparator();
     
-    m_exitAction = new QAction(getIcon("power-off", "close"), tr("E&xit"), this);
+    m_exitAction = new QAction(tr("E&xit"), this);
+    m_exitAction->setProperty("phx_icon_key", "close");
+    m_exitAction->setIcon(IconProvider::icon("close", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
     m_exitAction->setShortcut(QKeySequence::Quit);
     m_exitAction->setStatusTip(tr("Exit the application"));
     connect(m_exitAction, &QAction::triggered, this, &MainWindow::exitApplication);
@@ -208,12 +223,16 @@ QMenu* MainWindow::createEditorsMenu()
 {
     QMenu* editorsMenu = new QMenu(tr("&Editors"), this);
     
-    m_lensInspectorAction = new QAction(getIcon("lens", "search"), tr("&Lens Inspector"), this);
+    m_lensInspectorAction = new QAction(tr("&Lens Inspector"), this);
+    m_lensInspectorAction->setProperty("phx_icon_key", "search");
+    m_lensInspectorAction->setIcon(IconProvider::icon("search", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
     m_lensInspectorAction->setStatusTip(tr("Open lens inspector"));
     connect(m_lensInspectorAction, &QAction::triggered, this, &MainWindow::showLensInspector);
     editorsMenu->addAction(m_lensInspectorAction);
     
-    m_systemViewerAction = new QAction(getIcon("desktop", "view"), tr("&System Viewer"), this);
+    m_systemViewerAction = new QAction(tr("&System Viewer"), this);
+    m_systemViewerAction->setProperty("phx_icon_key", "view");
+    m_systemViewerAction->setIcon(IconProvider::icon("view", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
     m_systemViewerAction->setStatusTip(tr("Open system viewer"));
     connect(m_systemViewerAction, &QAction::triggered, this, &MainWindow::showSystemViewer);
     editorsMenu->addAction(m_systemViewerAction);
@@ -225,12 +244,16 @@ QMenu* MainWindow::createAnalysisMenu()
 {
     QMenu* analysisMenu = new QMenu(tr("&Analysis"), this);
     
-    m_xyPlotAction = new QAction(getIcon("chart-line", "chart"), tr("&XY Plot"), this);
+    m_xyPlotAction = new QAction(tr("&XY Plot"), this);
+    m_xyPlotAction->setProperty("phx_icon_key", "chart");
+    m_xyPlotAction->setIcon(IconProvider::icon("chart", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
     m_xyPlotAction->setStatusTip(tr("Open XY plot analysis"));
     connect(m_xyPlotAction, &QAction::triggered, this, &MainWindow::showXYPlot);
     analysisMenu->addAction(m_xyPlotAction);
     
-    m_2dPlotAction = new QAction(getIcon("chart-bar", "chart"), tr("&2D Plot"), this);
+    m_2dPlotAction = new QAction(tr("&2D Plot"), this);
+    m_2dPlotAction->setProperty("phx_icon_key", "chart");
+    m_2dPlotAction->setIcon(IconProvider::icon("chart", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
     m_2dPlotAction->setStatusTip(tr("Open 2D plot analysis"));
     connect(m_2dPlotAction, &QAction::triggered, this, &MainWindow::show2DPlot);
     analysisMenu->addAction(m_2dPlotAction);
@@ -323,7 +346,9 @@ QMenu* MainWindow::createHelpMenu()
 {
     QMenu* helpMenu = new QMenu(tr("&Help"), this);
     
-    QAction* aboutAction = new QAction(getIcon("info-circle", "info"), tr("&About Phoenix"), this);
+    QAction* aboutAction = new QAction(tr("&About Phoenix"), this);
+    aboutAction->setProperty("phx_icon_key", "info");
+    aboutAction->setIcon(IconProvider::icon("info", QSize(style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this), style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, this)), this));
     aboutAction->setStatusTip(tr("Show about dialog"));
     connect(aboutAction, &QAction::triggered, this, &MainWindow::showAbout);
     helpMenu->addAction(aboutAction);
@@ -392,59 +417,77 @@ QToolBar* MainWindow::createTopRibbon()
     ribbon->setIconSize(QSize(phx::ui::kRibbonIconPx, phx::ui::kRibbonIconPx));
     
     // File actions
-    QAction* newAction = ribbon->addAction(getIcon("plus", "document-new"), tr("New"));
+    QAction* newAction = new QAction(tr("New"), this);
+    newAction->setProperty("phx_icon_key", "file-plus");
+    newAction->setIcon(IconProvider::icon("file-plus", ribbon->iconSize(), ribbon));
     newAction->setToolTip(tr("Create new file"));
     connect(newAction, &QAction::triggered, this, [this]() { 
         m_actionTimer.start(); 
         newFile(); 
         logRibbonAction("new_file");
     });
+    ribbon->addAction(newAction);
     
-    QAction* openAction = ribbon->addAction(getIcon("folder-open", "document-open"), tr("Open"));
+    QAction* openAction = new QAction(tr("Open"), this);
+    openAction->setProperty("phx_icon_key", "folder-open");
+    openAction->setIcon(IconProvider::icon("folder-open", ribbon->iconSize(), ribbon));
     openAction->setToolTip(tr("Open existing file"));
     connect(openAction, &QAction::triggered, this, [this]() { 
         m_actionTimer.start(); 
         openFile(); 
         logRibbonAction("open_file");
     });
+    ribbon->addAction(openAction);
     
-    QAction* saveAction = ribbon->addAction(getIcon("floppy-disk", "document-save"), tr("Save"));
+    QAction* saveAction = new QAction(tr("Save"), this);
+    saveAction->setProperty("phx_icon_key", "save");
+    saveAction->setIcon(IconProvider::icon("save", ribbon->iconSize(), ribbon));
     saveAction->setToolTip(tr("Save current file"));
     connect(saveAction, &QAction::triggered, this, [this]() { 
         m_actionTimer.start(); 
         saveFile(); 
         logRibbonAction("save_file");
     });
+    ribbon->addAction(saveAction);
     
     ribbon->addSeparator();
     
     // Analysis actions
-    QAction* xyPlotAction = ribbon->addAction(getIcon("chart-line", "chart"), tr("XY Plot"));
+    QAction* xyPlotAction = new QAction(tr("XY Plot"), this);
+    xyPlotAction->setProperty("phx_icon_key", "chart");
+    xyPlotAction->setIcon(IconProvider::icon("chart", ribbon->iconSize(), ribbon));
     xyPlotAction->setToolTip(tr("Open XY plot analysis"));
     connect(xyPlotAction, &QAction::triggered, this, [this]() { 
         m_actionTimer.start(); 
         showXYPlot(); 
         logRibbonAction("xy_plot");
     });
+    ribbon->addAction(xyPlotAction);
     
-    QAction* plot2DAction = ribbon->addAction(getIcon("chart-bar", "chart"), tr("2D Plot"));
+    QAction* plot2DAction = new QAction(tr("2D Plot"), this);
+    plot2DAction->setProperty("phx_icon_key", "chart");
+    plot2DAction->setIcon(IconProvider::icon("chart", ribbon->iconSize(), ribbon));
     plot2DAction->setToolTip(tr("Open 2D plot analysis"));
     connect(plot2DAction, &QAction::triggered, this, [this]() { 
         m_actionTimer.start(); 
         show2DPlot(); 
         logRibbonAction("2d_plot");
     });
+    ribbon->addAction(plot2DAction);
     
     ribbon->addSeparator();
     
     // Tools actions
-    QAction* preferencesAction = ribbon->addAction(getIcon("sliders", "preferences"), tr("Preferences"));
+    QAction* preferencesAction = new QAction(tr("Preferences"), this);
+    preferencesAction->setProperty("phx_icon_key", "settings");
+    preferencesAction->setIcon(IconProvider::icon("settings", ribbon->iconSize(), ribbon));
     preferencesAction->setToolTip(tr("Open preferences"));
     connect(preferencesAction, &QAction::triggered, this, [this]() { 
         m_actionTimer.start(); 
         showPreferences(); 
         logRibbonAction("preferences");
     });
+    ribbon->addAction(preferencesAction);
     
     return ribbon;
 }
@@ -461,26 +504,34 @@ QToolBar* MainWindow::createRightRibbon()
     ribbon->setIconSize(QSize(phx::ui::kToolbarIconPx, phx::ui::kToolbarIconPx));
     
     // Editors actions
-    QAction* lensInspectorAction = ribbon->addAction(getIcon("lens", "search"), tr("Lens Inspector"));
+    QAction* lensInspectorAction = new QAction(tr("Lens Inspector"), this);
+    lensInspectorAction->setProperty("phx_icon_key", "search");
+    lensInspectorAction->setIcon(IconProvider::icon("search", ribbon->iconSize(), ribbon));
     lensInspectorAction->setToolTip(tr("Open lens inspector"));
     connect(lensInspectorAction, &QAction::triggered, this, [this]() { 
         m_actionTimer.start(); 
         showLensInspector(); 
         logRibbonAction("lens_inspector");
     });
+    ribbon->addAction(lensInspectorAction);
     
-    QAction* systemViewerAction = ribbon->addAction(getIcon("desktop", "view"), tr("System Viewer"));
+    QAction* systemViewerAction = new QAction(tr("System Viewer"), this);
+    systemViewerAction->setProperty("phx_icon_key", "view");
+    systemViewerAction->setIcon(IconProvider::icon("view", ribbon->iconSize(), ribbon));
     systemViewerAction->setToolTip(tr("Open system viewer"));
     connect(systemViewerAction, &QAction::triggered, this, [this]() { 
         m_actionTimer.start(); 
         showSystemViewer(); 
         logRibbonAction("system_viewer");
     });
+    ribbon->addAction(systemViewerAction);
     
     ribbon->addSeparator();
     
     // View actions
-    QAction* lightThemeAction = ribbon->addAction(getIcon("sun", "light"), tr("Light Theme"));
+    QAction* lightThemeAction = new QAction(tr("Light Theme"), this);
+    lightThemeAction->setProperty("phx_icon_key", "light");
+    lightThemeAction->setIcon(IconProvider::icon("light", ribbon->iconSize(), ribbon));
     lightThemeAction->setToolTip(tr("Switch to light theme"));
     lightThemeAction->setCheckable(true);
     connect(lightThemeAction, &QAction::triggered, this, [this]() { 
@@ -488,8 +539,11 @@ QToolBar* MainWindow::createRightRibbon()
         setLightTheme(); 
         logRibbonAction("light_theme");
     });
+    ribbon->addAction(lightThemeAction);
     
-    QAction* darkThemeAction = ribbon->addAction(getIcon("moon", "dark"), tr("Dark Theme"));
+    QAction* darkThemeAction = new QAction(tr("Dark Theme"), this);
+    darkThemeAction->setProperty("phx_icon_key", "dark");
+    darkThemeAction->setIcon(IconProvider::icon("dark", ribbon->iconSize(), ribbon));
     darkThemeAction->setToolTip(tr("Switch to dark theme"));
     darkThemeAction->setCheckable(true);
     connect(darkThemeAction, &QAction::triggered, this, [this]() { 
@@ -497,25 +551,32 @@ QToolBar* MainWindow::createRightRibbon()
         setDarkTheme(); 
         logRibbonAction("dark_theme");
     });
+    ribbon->addAction(darkThemeAction);
     
     ribbon->addSeparator();
     
     // Help actions
-    QAction* helpAction = ribbon->addAction(getIcon("question-circle", "help"), tr("Help"));
+    QAction* helpAction = new QAction(tr("Help"), this);
+    helpAction->setProperty("phx_icon_key", "help");
+    helpAction->setIcon(IconProvider::icon("help", ribbon->iconSize(), ribbon));
     helpAction->setToolTip(tr("Open help"));
     connect(helpAction, &QAction::triggered, this, [this]() { 
         m_actionTimer.start(); 
         showHelp(); 
         logRibbonAction("help");
     });
+    ribbon->addAction(helpAction);
     
-    QAction* aboutAction = ribbon->addAction(getIcon("info-circle", "info"), tr("About"));
+    QAction* aboutAction = new QAction(tr("About"), this);
+    aboutAction->setProperty("phx_icon_key", "info");
+    aboutAction->setIcon(IconProvider::icon("info", ribbon->iconSize(), ribbon));
     aboutAction->setToolTip(tr("Show about dialog"));
     connect(aboutAction, &QAction::triggered, this, [this]() { 
         m_actionTimer.start(); 
         showAbout(); 
         logRibbonAction("about");
     });
+    ribbon->addAction(aboutAction);
     
     return ribbon;
 }
@@ -764,13 +825,11 @@ void MainWindow::updateDebugInfo()
     m_debugLabel->setText(debugText);
 }
 
-QIcon MainWindow::getIcon(const QString& name, const QString& fallback)
+QIcon MainWindow::getIcon(const QString& name, QWidget* widget) const
 {
-    Q_UNUSED(fallback); // IconProvider handles all fallbacks now
-    
-    // Use IconProvider with widget-aware overload (automatically uses toolbar palette if available)
-    // Use standard icon size for menus/toolbars
-    return IconProvider::icon(name, QSize(phx::ui::kMenuIconPx, phx::ui::kMenuIconPx), this);
+    QWidget* host = widget ? widget : const_cast<MainWindow*>(this);
+    const int px = host->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, host);
+    return IconProvider::icon(name, QSize(px, px), host);
 }
 
 // File menu actions
@@ -925,29 +984,65 @@ void MainWindow::setLanguage(const QString& language)
 
 void MainWindow::onThemeChanged()
 {
+    // Refresh all icons to retint with new theme
+    refreshAllIconsForTheme();
     // Handle theme changes
     updateDebugInfo();
 }
 
 void MainWindow::applyIcons()
 {
-    const bool dark = m_themeManager->isDarkMode();
+    // This method is kept for backward compatibility but now delegates to refreshAllIconsForTheme()
+    refreshAllIconsForTheme();
+}
+
+void MainWindow::refreshAllIconsForTheme()
+{
+    IconProvider::clearCache();
     
-    // File menu actions
-    m_newAction->setIcon(getIcon("file-plus", "file-plus"));
-    m_openAction->setIcon(getIcon("folder", "folder-open"));
-    m_saveAction->setIcon(getIcon("floppy-disk", "save"));
-    m_saveAsAction->setIcon(getIcon("floppy-disk-pen", "save-as"));
-    m_preferencesAction->setIcon(getIcon("sliders", "settings"));
-    m_exitAction->setIcon(getIcon("power-off", "close"));
+    auto rebuildForWidget = [&](QWidget* host) {
+        if (!host) return;
+        
+        const auto small = host->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, host);
+        
+        auto rebuildAction = [&](QAction* a, QWidget* w) {
+            if (!a) return;
+            
+            const auto key = a->property("phx_icon_key").toString();
+            if (key.isEmpty()) return;  // skip actions without a logical icon key
+            
+            int px = small;
+            if (auto tb = qobject_cast<QToolBar*>(w)) {
+                const auto sz = tb->iconSize();
+                if (sz.isValid() && sz.width() > 0) px = sz.width();
+            }
+            
+            a->setIcon(IconProvider::icon(key, QSize(px, px), w));
+        };
+        
+        // Actions directly on host
+        for (QAction* a : host->actions()) {
+            rebuildAction(a, host);
+        }
+        
+        // Actions on child widgets (toolbuttons, menus, custom containers)
+        for (QWidget* child : host->findChildren<QWidget*>()) {
+            for (QAction* a : child->actions()) {
+                rebuildAction(a, child);
+            }
+        }
+    };
     
-    // Editors menu actions
-    m_lensInspectorAction->setIcon(getIcon("lens", "search"));
-    m_systemViewerAction->setIcon(getIcon("desktop", "view"));
+    // Menubar + menus
+    rebuildForWidget(menuBar());
+    for (QMenu* m : menuBar()->findChildren<QMenu*>()) {
+        rebuildForWidget(m);
+    }
     
-    // Analysis menu actions
-    m_xyPlotAction->setIcon(getIcon("chart-line", "chart"));
-    m_2dPlotAction->setIcon(getIcon("chart-bar", "chart"));
+    // All QToolBars (main, top ribbon, right ribbon, etc.)
+    for (QToolBar* tb : findChildren<QToolBar*>()) {
+        rebuildForWidget(tb);
+    }
 }
 
 void MainWindow::initializeUI()
