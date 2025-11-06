@@ -173,6 +173,7 @@ QMenu* MainWindow::createFileMenu()
     m_newAction->setProperty("phx_icon_key", "file-plus");
     const int px = fileMenu->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, fileMenu);
     m_newAction->setIcon(IconProvider::icon("file-plus", QSize(px, px), fileMenu));
+    m_newAction->setIconVisibleInMenu(true);
     m_newAction->setShortcut(QKeySequence::New);
     m_newAction->setStatusTip(tr("Create a new file"));
     connect(m_newAction, &QAction::triggered, this, &MainWindow::newFile);
@@ -181,6 +182,7 @@ QMenu* MainWindow::createFileMenu()
     m_openAction = new QAction(tr("&Open"), this);
     m_openAction->setProperty("phx_icon_key", "folder-open");
     m_openAction->setIcon(IconProvider::icon("folder-open", QSize(px, px), fileMenu));
+    m_openAction->setIconVisibleInMenu(true);
     m_openAction->setShortcut(QKeySequence::Open);
     m_openAction->setStatusTip(tr("Open an existing file"));
     connect(m_openAction, &QAction::triggered, this, &MainWindow::openFile);
@@ -191,6 +193,7 @@ QMenu* MainWindow::createFileMenu()
     m_saveAction = new QAction(tr("&Save"), this);
     m_saveAction->setProperty("phx_icon_key", "save");
     m_saveAction->setIcon(IconProvider::icon("save", QSize(px, px), fileMenu));
+    m_saveAction->setIconVisibleInMenu(true);
     m_saveAction->setShortcut(QKeySequence::Save);
     m_saveAction->setStatusTip(tr("Save the current file"));
     connect(m_saveAction, &QAction::triggered, this, &MainWindow::saveFile);
@@ -199,6 +202,7 @@ QMenu* MainWindow::createFileMenu()
     m_saveAsAction = new QAction(tr("Save &As"), this);
     m_saveAsAction->setProperty("phx_icon_key", "save-as");
     m_saveAsAction->setIcon(IconProvider::icon("save-as", QSize(px, px), fileMenu));
+    m_saveAsAction->setIconVisibleInMenu(true);
     m_saveAsAction->setShortcut(QKeySequence::SaveAs);
     m_saveAsAction->setStatusTip(tr("Save the current file with a new name"));
     connect(m_saveAsAction, &QAction::triggered, this, &MainWindow::saveAsFile);
@@ -209,6 +213,7 @@ QMenu* MainWindow::createFileMenu()
     m_preferencesAction = new QAction(tr("&Preferences..."), this);
     m_preferencesAction->setProperty("phx_icon_key", "settings");
     m_preferencesAction->setIcon(IconProvider::icon("settings", QSize(px, px), fileMenu));
+    m_preferencesAction->setIconVisibleInMenu(true);
     m_preferencesAction->setShortcut(QKeySequence::Preferences);
     m_preferencesAction->setStatusTip(tr("Open preferences dialog"));
     connect(m_preferencesAction, &QAction::triggered, this, &MainWindow::showPreferences);
@@ -219,6 +224,7 @@ QMenu* MainWindow::createFileMenu()
     m_exitAction = new QAction(tr("E&xit"), this);
     m_exitAction->setProperty("phx_icon_key", "close");
     m_exitAction->setIcon(IconProvider::icon("close", QSize(px, px), fileMenu));
+    m_exitAction->setIconVisibleInMenu(true);
     m_exitAction->setShortcut(QKeySequence::Quit);
     m_exitAction->setStatusTip(tr("Exit the application"));
     connect(m_exitAction, &QAction::triggered, this, &MainWindow::exitApplication);
@@ -235,6 +241,7 @@ QMenu* MainWindow::createEditorsMenu()
     m_lensInspectorAction->setProperty("phx_icon_key", "search");
     const int px = editorsMenu->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, editorsMenu);
     m_lensInspectorAction->setIcon(IconProvider::icon("search", QSize(px, px), editorsMenu));
+    m_lensInspectorAction->setIconVisibleInMenu(true);
     m_lensInspectorAction->setStatusTip(tr("Open lens inspector"));
     connect(m_lensInspectorAction, &QAction::triggered, this, &MainWindow::showLensInspector);
     editorsMenu->addAction(m_lensInspectorAction);
@@ -242,6 +249,7 @@ QMenu* MainWindow::createEditorsMenu()
     m_systemViewerAction = new QAction(tr("&System Viewer"), this);
     m_systemViewerAction->setProperty("phx_icon_key", "view");
     m_systemViewerAction->setIcon(IconProvider::icon("view", QSize(px, px), editorsMenu));
+    m_systemViewerAction->setIconVisibleInMenu(true);
     m_systemViewerAction->setStatusTip(tr("Open system viewer"));
     connect(m_systemViewerAction, &QAction::triggered, this, &MainWindow::showSystemViewer);
     editorsMenu->addAction(m_systemViewerAction);
@@ -257,6 +265,7 @@ QMenu* MainWindow::createAnalysisMenu()
     m_xyPlotAction->setProperty("phx_icon_key", "chart");
     const int px = analysisMenu->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, analysisMenu);
     m_xyPlotAction->setIcon(IconProvider::icon("chart", QSize(px, px), analysisMenu));
+    m_xyPlotAction->setIconVisibleInMenu(true);
     m_xyPlotAction->setStatusTip(tr("Open XY plot analysis"));
     connect(m_xyPlotAction, &QAction::triggered, this, &MainWindow::showXYPlot);
     analysisMenu->addAction(m_xyPlotAction);
@@ -264,6 +273,7 @@ QMenu* MainWindow::createAnalysisMenu()
     m_2dPlotAction = new QAction(tr("&2D Plot"), this);
     m_2dPlotAction->setProperty("phx_icon_key", "chart");
     m_2dPlotAction->setIcon(IconProvider::icon("chart", QSize(px, px), analysisMenu));
+    m_2dPlotAction->setIconVisibleInMenu(true);
     m_2dPlotAction->setStatusTip(tr("Open 2D plot analysis"));
     connect(m_2dPlotAction, &QAction::triggered, this, &MainWindow::show2DPlot);
     analysisMenu->addAction(m_2dPlotAction);
@@ -360,6 +370,7 @@ QMenu* MainWindow::createHelpMenu()
     aboutAction->setProperty("phx_icon_key", "info");
     const int px = helpMenu->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, helpMenu);
     aboutAction->setIcon(IconProvider::icon("info", QSize(px, px), helpMenu));
+    aboutAction->setIconVisibleInMenu(true);
     aboutAction->setStatusTip(tr("Show about dialog"));
     connect(aboutAction, &QAction::triggered, this, &MainWindow::showAbout);
     helpMenu->addAction(aboutAction);
@@ -1042,12 +1053,21 @@ void MainWindow::refreshAllIconsForTheme()
                          << "S" << szs(QIcon::Selected);
     };
     
+    // Close any open menus first to clear Qt's cached pixmaps
+    QList<QMenu*> openMenus;
+    for (QMenu* m : menuBar()->findChildren<QMenu*>()) {
+        if (m->isVisible()) {
+            openMenus.append(m);
+            m->hide();  // Close to clear cached pixmaps
+        }
+    }
+    
     // Menubar actions
     for (QAction* a : menuBar()->actions()) {
         rebuildAction(a, menuBar());
     }
     
-    // Menu actions (use unified lambda)
+    // Menu actions (use unified lambda with icon visibility forced)
     for (QMenu* m : menuBar()->findChildren<QMenu*>()) {
         for (QAction* a : m->actions()) {
             const QString t = a->text();
@@ -1063,6 +1083,8 @@ void MainWindow::refreshAllIconsForTheme()
             }
             
             rebuildAction(a, m);
+            // Force icon visibility in menus (Qt may cache this)
+            a->setIconVisibleInMenu(true);
             
             // Log modes for problematic actions after refresh (debugging)
             if (t.contains("Save As", Qt::CaseInsensitive) || t.contains("Exit", Qt::CaseInsensitive) ||
@@ -1073,8 +1095,18 @@ void MainWindow::refreshAllIconsForTheme()
                 dumpModes(a->icon(), QString("after"));
             }
         }
+        // Force menu geometry invalidation and repaint
+        m->updateGeometry();
         m->update();  // repaint menu shell
+        // Force style polish to invalidate cached pixmaps
+        if (m->style()) {
+            m->style()->unpolish(m);
+            m->style()->polish(m);
+        }
     }
+    
+    // Note: We intentionally don't reopen menus that were closed - user can reopen them
+    // This ensures Qt rebuilds menu rendering with fresh icons
     
     // Toolbar actions (use unified lambda + repaint)
     for (QToolBar* tb : findChildren<QToolBar*>()) {
