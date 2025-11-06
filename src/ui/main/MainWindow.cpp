@@ -11,6 +11,7 @@
 #include <QMenuBar>
 #include <QToolBar>
 #include <QToolButton>
+#include <QWidget>
 #include <QLayout>
 #include <QStatusBar>
 #include <QDockWidget>
@@ -613,7 +614,10 @@ QToolBar* MainWindow::createRightRibbon()
     });
     ribbon->addAction(darkThemeAction);
     
-    ribbon->addSeparator();
+    // Expanding spacer to push Help/About to bottom while preserving left alignment
+    QWidget* spacer = new QWidget(ribbon);
+    spacer->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);  // no horizontal grab; push vertically
+    ribbon->addWidget(spacer);
     
     // Help actions
     QAction* helpAction = new QAction(tr("Help"), this);
