@@ -1,5 +1,6 @@
 #include "IconBootstrap.h"
 #include "PhxLogging.h"
+#include "IconProvider.h"  // For IconStyle enum
 #include <QFontDatabase>
 #include <QFile>
 #include <QFileInfo>
@@ -12,6 +13,10 @@ static QString g_ss, g_sr, g_duo, g_br;
 static bool g_faAvailable = false;
 static QVector<IconBootstrap::FontLoadStatus> s_status;
 static std::once_flag s_infoOnce;
+static IconBootstrap::Face s_faceSolid;
+static IconBootstrap::Face s_faceRegular;
+static IconBootstrap::Face s_faceDuotone;
+static IconBootstrap::Face s_faceBrands;
 
 QStringList IconBootstrap::expectedFontPaths() {
   return QStringList{
@@ -114,6 +119,54 @@ bool IconBootstrap::InitFonts() {
     // g_sr (regular) left empty for now - not used in current manifest
   }
   
+  // Detect Font Awesome faces (family + styleName) for macOS compatibility
+  // Dump FA families/styles for debugging
+  qCInfo(phxFonts) << "Enumerating Font Awesome families and styles:";
+  for (const QString& fam : QFontDatabase::families()) {
+    if (fam.startsWith("Font Awesome 6")) {
+      QStringList styles = QFontDatabase::styles(fam);
+      qCInfo(phxFonts) << "FA family:" << fam << "styles:" << styles;
+    }
+  }
+  
+  // Helper lambda to get styles for a family
+  auto stylesOf = [](const QString& fam) -> QStringList {
+    return QFontDatabase::styles(fam);
+  };
+  
+  // Detect Pro Solid and Regular faces (macOS often has both under same family)
+  const QString proFam = "Font Awesome 6 Pro";
+  if (QFontDatabase::hasFamily(proFam)) {
+    const QStringList st = stylesOf(proFam);
+    if (st.contains("Solid")) {
+      s_faceSolid = { proFam, "Solid" };
+    }
+    if (st.contains("Regular")) {
+      s_faceRegular = { proFam, "Regular" };
+    }
+  }
+  
+  // Duotone and Brands (usually separate families; style often empty or "Regular")
+  const QString duoFam = "Font Awesome 6 Duotone";
+  const QString brandsFam = "Font Awesome 6 Brands";
+  
+  if (QFontDatabase::hasFamily(duoFam)) {
+    s_faceDuotone = { duoFam, QString() }; // style usually empty for duotone
+  }
+  if (QFontDatabase::hasFamily(brandsFam)) {
+    s_faceBrands = { brandsFam, QString() }; // style usually empty for brands
+  }
+  
+  // Fallbacks if styleName not found but family exists
+  if (!s_faceSolid.family.isEmpty() && s_faceSolid.style.isEmpty()) {
+    qCWarning(phxFonts) << "FA Solid styleName missing; falling back to family only";
+    // Keep family-only fallback
+  }
+  if (!s_faceRegular.family.isEmpty() && s_faceRegular.style.isEmpty()) {
+    qCWarning(phxFonts) << "FA Regular styleName missing; falling back to family only";
+    // Keep family-only fallback
+  }
+  
   // One summary info log (once per run)
   std::call_once(s_infoOnce, []() {
     int loadedCount = std::count_if(s_status.begin(), s_status.end(),
@@ -135,3 +188,38 @@ const QString& IconBootstrap::sharpSolidFamily()   { return g_ss; }
 const QString& IconBootstrap::sharpRegularFamily() { return g_sr; }
 const QString& IconBootstrap::duotoneFamily()      { return g_duo; }
 const QString& IconBootstrap::brandsFamily()       { return g_br; }
+
+IconBootstrap::Face IconBootstrap::faceForStyle(int iconStyle) {
+  // Map IconStyle enum to Face
+  // Note: IconStyle::SharpSolid = 0, SharpRegular = 1, Duotone = 2, Brands = 3, ClassicSolid = 4
+  switch (static_cast<IconStyle>(iconStyle)) {
+    case IconStyle::SharpSolid:
+    case IconStyle::ClassicSolid:
+      // Both Solid and ClassicSolid use Pro Solid face
+      if (s_faceSolid.family.isEmpty()) {
+        return Face{ "Font Awesome 6 Pro", QString() };
+      }
+      return s_faceSolid;
+    
+    case IconStyle::SharpRegular:
+      if (s_faceRegular.family.isEmpty()) {
+        return Face{ "Font Awesome 6 Pro", QString() };
+      }
+      return s_faceRegular;
+    
+    case IconStyle::Duotone:
+      if (s_faceDuotone.family.isEmpty()) {
+        return Face{ "Font Awesome 6 Duotone", QString() };
+      }
+      return s_faceDuotone;
+    
+    case IconStyle::Brands:
+      if (s_faceBrands.family.isEmpty()) {
+        return Face{ "Font Awesome 6 Brands", QString() };
+      }
+      return s_faceBrands;
+    
+    default:
+      return Face{ "Font Awesome 6 Pro", QString() };
+  }
+}

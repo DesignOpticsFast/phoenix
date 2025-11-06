@@ -342,15 +342,9 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, con
         return QIcon(); // Return null, let caller fallback
     }
     
-    QString fontFamily;
-    switch (style) {
-        case IconStyle::SharpSolid: fontFamily = IconBootstrap::sharpSolidFamily(); break;
-        case IconStyle::SharpRegular: fontFamily = IconBootstrap::sharpRegularFamily(); break;
-        case IconStyle::Duotone: fontFamily = IconBootstrap::duotoneFamily(); break;
-        case IconStyle::Brands: fontFamily = IconBootstrap::brandsFamily(); break;
-        default: fontFamily = IconBootstrap::sharpSolidFamily(); break;
-    }
-    if (fontFamily.isEmpty()) {
+    // Get Face (family + styleName) for the requested style
+    IconBootstrap::Face face = IconBootstrap::faceForStyle(static_cast<int>(style));
+    if (face.family.isEmpty()) {
         return QIcon(); // Return null, let caller fallback
     }
     
@@ -368,13 +362,24 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, con
                 const int rw = qCeil(size * dpr);
                 const int rh = qCeil(size * dpr);
                 
-                // Create font with pixel size scaled by DPR (0.9 for padding to avoid clipping)
-                QFont f(fontFamily);
+                // Create font with family and styleName (for macOS compatibility)
+                QFont f(face.family);
+                if (!face.style.isEmpty()) {
+                    f.setStyleName(face.style);
+                } else {
+                    // Weight fallbacks only if styleName not set
+                    if (style == IconStyle::SharpSolid || style == IconStyle::ClassicSolid) {
+                        f.setWeight(QFont::Black);
+                    } else if (style == IconStyle::SharpRegular) {
+                        f.setWeight(QFont::Normal);
+                    }
+                }
                 f.setPixelSize(qRound(qMin(rw, rh) * 0.9));
                 
                 // Debug logging (once per icon render)
                 qCDebug(phxFonts) << "glyph" << name
-                                  << "family" << f.family()
+                                  << "fam" << f.family()
+                                  << "style" << f.styleName()
                                   << "px" << f.pixelSize()
                                   << "dpr" << dpr
                                   << "rect" << rw << "x" << rh;
