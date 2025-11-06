@@ -26,7 +26,6 @@
 #include <QEvent>
 #include <QFileDialog>
 #include <QFileInfo>
-#include <QSet>
 
 MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     : QMainWindow(parent)
@@ -161,8 +160,6 @@ void MainWindow::setupMenuBar()
     QMenu* helpMenu = createHelpMenu();
     m_menuBar->addMenu(helpMenu);
     
-    // Bind late refresh hooks for all menus (defeats per-menu caching)
-    bindMenuLateRefresh();
 }
 
 QMenu* MainWindow::createFileMenu()
@@ -1023,6 +1020,8 @@ void MainWindow::applyIcons()
 
 void MainWindow::refreshAllIconsForTheme()
 {
+    qCDebug(phxIcons) << "GLOBAL ICON REFRESH (menus+toolbars) after theme/palette change";
+    
     IconProvider::clearCache();
     
     // Unified rebuildAction lambda: always clear→set to drop cached pixmaps
@@ -1043,16 +1042,6 @@ void MainWindow::refreshAllIconsForTheme()
         a->setIcon(IconProvider::icon(key, QSize(px, px), w));  // rebuilt with new palette/host
     };
     
-    // Helper to dump available icon modes (for debugging)
-    auto dumpModes = [](const QIcon& ic, const QString& context) {
-        auto szs = [&](QIcon::Mode m) { return ic.availableSizes(m, QIcon::Off); };
-        qCDebug(phxIcons) << "MODES" << context
-                         << "N" << szs(QIcon::Normal)
-                         << "D" << szs(QIcon::Disabled)
-                         << "A" << szs(QIcon::Active)
-                         << "S" << szs(QIcon::Selected);
-    };
-    
     // Close any open menus first to clear Qt's cached pixmaps
     QList<QMenu*> openMenus;
     for (QMenu* m : menuBar()->findChildren<QMenu*>()) {
@@ -1070,30 +1059,9 @@ void MainWindow::refreshAllIconsForTheme()
     // Menu actions (use unified lambda with icon visibility forced)
     for (QMenu* m : menuBar()->findChildren<QMenu*>()) {
         for (QAction* a : m->actions()) {
-            const QString t = a->text();
-            
-            // Log modes for problematic actions before refresh (debugging)
-            if (t.contains("Save As", Qt::CaseInsensitive) || t.contains("Exit", Qt::CaseInsensitive) ||
-                t.contains("Lens", Qt::CaseInsensitive)    || t.contains("System", Qt::CaseInsensitive) ||
-                t.contains("XY", Qt::CaseInsensitive)      || t.contains("2D", Qt::CaseInsensitive)     ||
-                t.contains("About", Qt::CaseInsensitive)) {
-                const auto key = a->property("phx_icon_key").toString();
-                qCDebug(phxIcons) << "MENU BEFORE" << m->title() << t << "key" << key;
-                dumpModes(a->icon(), QString("before"));
-            }
-            
             rebuildAction(a, m);
             // Force icon visibility in menus (Qt may cache this)
             a->setIconVisibleInMenu(true);
-            
-            // Log modes for problematic actions after refresh (debugging)
-            if (t.contains("Save As", Qt::CaseInsensitive) || t.contains("Exit", Qt::CaseInsensitive) ||
-                t.contains("Lens", Qt::CaseInsensitive)    || t.contains("System", Qt::CaseInsensitive) ||
-                t.contains("XY", Qt::CaseInsensitive)      || t.contains("2D", Qt::CaseInsensitive)     ||
-                t.contains("About", Qt::CaseInsensitive)) {
-                qCDebug(phxIcons) << "MENU AFTER" << m->title() << t;
-                dumpModes(a->icon(), QString("after"));
-            }
         }
         // Force menu geometry invalidation and repaint
         m->updateGeometry();
@@ -1114,39 +1082,6 @@ void MainWindow::refreshAllIconsForTheme()
             rebuildAction(a, tb);
         }
         tb->update();  // repaint toolbar shell
-    }
-}
-
-void MainWindow::bindMenuLateRefresh()
-{
-    // Static set to track menus we've already bound (avoid duplicate connections)
-    static QSet<QMenu*> s_bound;
-    
-    auto bindLateRefresh = [this](QMenu* menu) {
-        if (!menu || s_bound.contains(menu)) return;
-        s_bound.insert(menu);
-        
-        connect(menu, &QMenu::aboutToShow, this, [this, menu] {
-            const int px = menu->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, menu);
-            qCDebug(phxIcons) << "LATE REFRESH" << menu->title();
-            for (QAction* a : menu->actions()) {
-                const auto key = a->property("phx_icon_key").toString();
-                if (key.isEmpty()) continue;
-                
-                // Clear → set to force Qt to drop any cached pixmap
-                a->setIcon(QIcon());
-                a->setIcon(IconProvider::icon(key, QSize(px, px), menu));
-            }
-            menu->update();
-            if (auto* w = menu->window()) {
-                w->update();
-            }
-        });
-    };
-    
-    // Bind for every QMenu in the menubar
-    for (QMenu* m : menuBar()->findChildren<QMenu*>()) {
-        bindLateRefresh(m);
     }
 }
 
