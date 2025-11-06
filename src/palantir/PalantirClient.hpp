@@ -9,10 +9,9 @@
 #include <QObject>
 #include <QByteArray>
 #include <QString>
+#include <QHash>
 #include <memory>
 #include <functional>
-#include <map>
-#include <atomic>
 
 #include "palantir.pb.h"
 
@@ -25,12 +24,12 @@ public:
     ~PalantirClient() override;
 
     // Connection management
-    bool connectToServer();
+    [[nodiscard]] bool connectToServer();
     void disconnectFromServer();
-    bool isConnected() const;
+    [[nodiscard]] bool isConnected() const;
 
     // Job management
-    QString startJob(const palantir::ComputeSpec& spec);
+    [[nodiscard]] QString startJob(const palantir::ComputeSpec& spec);
     void cancelJob(const QString& jobId);
     void requestCapabilities();
 
@@ -78,14 +77,14 @@ private:
     QByteArray receiveBuffer_;
     
     // Connection state
-    std::atomic<bool> connected_;
+    bool connected_;  // Qt event-loop single-threaded, atomic not required
     int reconnectAttempts_;
     static const int MAX_RECONNECT_ATTEMPTS = 5;
     static const int RECONNECT_INTERVAL_MS = 1000;
     
     // Job tracking
-    std::map<QString, palantir::ComputeSpec> activeJobs_;
-    std::map<QString, QByteArray> jobDataBuffers_;
+    QHash<QString, palantir::ComputeSpec> activeJobs_;
+    QHash<QString, QByteArray> jobDataBuffers_;
     
     // Server capabilities
     palantir::Capabilities serverCapabilities_;

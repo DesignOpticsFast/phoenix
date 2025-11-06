@@ -84,8 +84,13 @@ add_executable(phoenix_app
   # I/O utilities
   src/app/io/FileIO.cpp
 
+  # Palantir integration (conditional)
+  $<$<BOOL:${PHX_WITH_PALANTIR}>:src/palantir/PalantirClient.cpp>
+  $<$<BOOL:${PHX_WITH_PALANTIR}>:src/palantir/PalantirLogging.cpp>
+
   # headers with Q_OBJECT for AUTOMOC
   src/tools/IconGallery.h
+  $<$<BOOL:${PHX_WITH_PALANTIR}>:src/palantir/PalantirClient.hpp>
 
   # New UI structure - MainWindow
   src/ui/main/MainWindow.h

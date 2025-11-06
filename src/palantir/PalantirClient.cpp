@@ -3,10 +3,10 @@
 // behind the feature flag and replaced with stubs in the next chunk.
 
 #include "PalantirClient.hpp"
+#include "PalantirLogging.h"
 
 #include <QLocalSocket>
 #include <QTimer>
-#include <QDebug>
 #include <QThread>
 #include <QCoreApplication>
 #include <QStandardPaths>
@@ -59,7 +59,7 @@ bool PalantirClient::connectToServer()
     }
     
     // If connection failed, start Bedrock server
-    qDebug() << "Starting Bedrock server...";
+    qCDebug(phxPalantirConn) << "Starting Bedrock server...";
     QProcess* bedrockProcess = new QProcess(this);
     bedrockProcess->start("bedrock_server", QStringList() << "--socket" << socketName);
     
@@ -203,7 +203,7 @@ void PalantirClient::handleStartReply(const palantir::StartReply& reply)
     } else {
         QString error = QString::fromStdString(reply.error_message());
         emit jobFailed(jobId, error);
-        activeJobs_.erase(jobId);
+        activeJobs_.remove(jobId);
     }
 }
 
@@ -229,7 +229,7 @@ void PalantirClient::handleResultMeta(const palantir::ResultMeta& meta)
         emit jobCancelled(jobId);
     }
     
-    activeJobs_.erase(jobId);
+    activeJobs_.remove(jobId);
 }
 
 void PalantirClient::handleDataChunk(const palantir::DataChunk& chunk)
@@ -239,11 +239,11 @@ void PalantirClient::handleDataChunk(const palantir::DataChunk& chunk)
     // Store data chunk
     jobDataBuffers_[jobId] += QByteArray(chunk.data().data(), chunk.data().size());
     
-    // If this is the last chunk, emit completion
-    if (chunk.chunk_index() == chunk.total_chunks() - 1) {
-        // TODO: Process complete data and emit result
-        jobDataBuffers_.erase(jobId);
-    }
+        // If this is the last chunk, emit completion
+        if (chunk.chunk_index() == chunk.total_chunks() - 1) {
+            // TODO: Process complete data and emit result
+            jobDataBuffers_.remove(jobId);
+        }
 }
 
 void PalantirClient::handleCapabilities(const palantir::Capabilities& caps)
@@ -308,7 +308,7 @@ void PalantirClient::parseIncomingData()
         // Parse message type and dispatch
         // TODO: Implement message type parsing and dispatch
         // For now, just log the received data
-        qDebug() << "Received message of length:" << length;
+        qCDebug(phxPalantirProto) << "Received message of length:" << length;
     }
 }
 
@@ -353,5 +353,3 @@ void PalantirClient::attemptReconnect()
     reconnectAttempts_++;
     connectToServer();
 }
-
-#include "PalantirClient.moc"
