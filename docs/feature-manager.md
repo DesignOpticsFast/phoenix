@@ -1,6 +1,6 @@
 # Feature Manager (Phoenix facade)
 
-A non-blocking, cancellable, telemetry-aware boundary between Phoenix and Bedrock.
+A non-blocking, cancellable, telemetry-aware boundary between Phoenix and Bedrock. Communicates via Palantir IPC layer.
 
 ## Goals
 

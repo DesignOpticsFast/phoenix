@@ -152,6 +152,8 @@ PalantirClient uses a finite state machine (FSM) with the following states:
 
 ### Protocol
 
+> ⚠️ **Note (v0.0.3)**: Phoenix currently uses a framed binary protocol (`'PLTR'` magic) over `QLocalSocket`. Future versions may migrate to gRPC or Arrow Flight for enhanced performance and type safety.
+
 Palantir uses a framed binary protocol:
 - **Magic**: `'PLTR'` (0x504C5452)
 - **Byte Order**: BigEndian (network byte order)
