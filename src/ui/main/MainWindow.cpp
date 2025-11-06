@@ -616,7 +616,7 @@ QToolBar* MainWindow::createRightRibbon()
     
     // Expanding spacer to push Help/About to bottom while preserving left alignment
     QWidget* spacer = new QWidget(ribbon);
-    spacer->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);  // no horizontal grab; push vertically
+    spacer->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Expanding);  // ignore horizontal; push vertically
     ribbon->addWidget(spacer);
     
     // Help actions
@@ -642,6 +642,38 @@ QToolBar* MainWindow::createRightRibbon()
     });
     ribbon->addAction(aboutAction);
     
+    // Expand bottom buttons post-creation to enforce left alignment
+    QTimer::singleShot(0, this, [ribbon, helpAction, aboutAction] {
+        auto expandBtn = [ribbon](QAction* a) {
+            if (!a) return;
+            if (QWidget* w = ribbon->widgetForAction(a)) {
+                if (auto* btn = qobject_cast<QToolButton*>(w)) {
+                    btn->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+                    btn->setLayoutDirection(Qt::LeftToRight);
+                    btn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);  // fill width
+                }
+            }
+        };
+        expandBtn(helpAction);
+        expandBtn(aboutAction);
+        ribbon->update();
+    });
+    
+    // Optional diagnostic to confirm button geometry
+    QTimer::singleShot(20, this, [ribbon, helpAction, aboutAction] {
+        auto report = [ribbon](QAction* a) {
+            if (QWidget* w = ribbon->widgetForAction(a)) {
+                if (auto* b = qobject_cast<QToolButton*>(w)) {
+                    qCDebug(phxIcons) << "[RIBBON BTN]" << b->text()
+                                      << "policy" << b->sizePolicy()
+                                      << "rect" << b->rect();
+                }
+            }
+        };
+        report(helpAction);
+        report(aboutAction);
+    });
+    
     // Ensure consistent left alignment for all items in the vertical ribbon
     ribbon->setLayoutDirection(Qt::LeftToRight);
     ribbon->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
@@ -651,14 +683,6 @@ QToolBar* MainWindow::createRightRibbon()
         lay->setAlignment(Qt::AlignLeft | Qt::AlignTop);
         lay->setSpacing(4);  // keep vertical rhythm consistent
     }
-    
-    // Scoped stylesheet to force left alignment of all QToolButtons in the right ribbon
-    ribbon->setStyleSheet(
-        "#rightRibbon QToolButton {"
-        "  text-align: left;"
-        "  padding-left: 4px;"
-        "}"
-    );
     
     return ribbon;
 }
