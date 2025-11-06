@@ -1,355 +1,148 @@
-// NOTE (Sprint 4): This implementation is valid only when PHX_WITH_PALANTIR=1.
-// Existing blocking calls are tolerated for now; they will be guarded or moved
-// behind the feature flag and replaced with stubs in the next chunk.
-
 #include "PalantirClient.hpp"
 #include "PalantirLogging.h"
 
 #include <QLocalSocket>
 #include <QTimer>
-#include <QThread>
 #include <QCoreApplication>
-#include <QStandardPaths>
-#include <QDir>
-#include <QProcess>
-#include <QDateTime>
-#include <QRandomGenerator>
 
 PalantirClient::PalantirClient(QObject *parent)
     : QObject(parent)
-    , socket_(std::make_unique<QLocalSocket>(this))
-    , connected_(false)
-    , reconnectAttempts_(0)
-    , capabilitiesReceived_(false)
 {
+    socket_.reset(new QLocalSocket(this));
+
     // Connect socket signals
     connect(socket_.get(), &QLocalSocket::connected, this, &PalantirClient::onSocketConnected);
-    connect(socket_.get(), &QLocalSocket::disconnected, this, &PalantirClient::onSocketDisconnected);
-    connect(socket_.get(), &QLocalSocket::errorOccurred,
-            this, &PalantirClient::onSocketError);
+    connect(socket_.get(), &QLocalSocket::errorOccurred, this, &PalantirClient::onSocketError);
+    connect(socket_.get(), &QLocalSocket::stateChanged, this, &PalantirClient::onSocketStateChanged);
     connect(socket_.get(), &QLocalSocket::readyRead, this, &PalantirClient::onSocketReadyRead);
-    
-    // Setup reconnect timer
-    reconnectTimer_.setSingleShot(true);
-    connect(&reconnectTimer_, &QTimer::timeout, this, &PalantirClient::onReconnectTimer);
+
+    // Setup backoff timer
+    backoffTimer_.setSingleShot(true);
+    connect(&backoffTimer_, &QTimer::timeout, this, &PalantirClient::onBackoffTimeout);
+
+    // Resolve socket name from environment or use default
+    socketName_ = qEnvironmentVariable("PALANTIR_SOCKET", "palantir_bedrock");
 }
 
 PalantirClient::~PalantirClient()
 {
-    disconnectFromServer();
+    disconnectAsync();
 }
 
-bool PalantirClient::connectToServer()
+bool PalantirClient::connectAsync()
 {
-    if (connected_) {
-        return true;
-    }
-    
-    // Start Bedrock server if not running
-    QString socketName = "palantir_bedrock_" + QString::number(QCoreApplication::applicationPid());
-    
-    // Try to connect to existing server
-    socket_->connectToServer(socketName);
-    
-    if (socket_->waitForConnected(1000)) {
-        connected_ = true;
-        emit connected();
-        requestCapabilities();
-        return true;
-    }
-    
-    // If connection failed, start Bedrock server
-    qCDebug(phxPalantirConn) << "Starting Bedrock server...";
-    QProcess* bedrockProcess = new QProcess(this);
-    bedrockProcess->start("bedrock_server", QStringList() << "--socket" << socketName);
-    
-    if (!bedrockProcess->waitForStarted(5000)) {
-        emit errorOccurred("Failed to start Bedrock server");
+    if (state_ == ConnState::Connected ||
+        state_ == ConnState::Connecting ||
+        state_ == ConnState::PermanentFail) {
         return false;
     }
-    
-    // Wait for server to be ready
-    QThread::msleep(1000);
-    
-    // Try to connect again
-    socket_->connectToServer(socketName);
-    if (socket_->waitForConnected(5000)) {
-        connected_ = true;
-        emit connected();
-        requestCapabilities();
-        return true;
-    }
-    
-    emit errorOccurred("Failed to connect to Bedrock server");
-    return false;
+
+    socket_->connectToServer(socketName_);
+    setState(ConnState::Connecting);
+    qCDebug(phxPalantirConn) << "Initiated connection to" << socketName_;
+    return true;
 }
 
-void PalantirClient::disconnectFromServer()
+void PalantirClient::disconnectAsync()
 {
-    if (connected_) {
-        socket_->disconnectFromServer();
-        connected_ = false;
-        emit disconnected();
-    }
-    stopReconnectTimer();
+    socket_->abort();
+    resetBackoff();
+    setState(ConnState::Idle);
+    emit disconnected();
+    qCDebug(phxPalantirConn) << "Disconnected from server";
 }
 
-bool PalantirClient::isConnected() const
+ConnState PalantirClient::connectionState() const noexcept
 {
-    return connected_;
+    return state_;
 }
 
-QString PalantirClient::startJob(const palantir::ComputeSpec& spec)
+void PalantirClient::sendRequest(quint16 type, const QByteArray& payload)
 {
-    if (!connected_) {
-        emit errorOccurred("Not connected to server");
-        return QString();
+    if (state_ != ConnState::Connected) {
+        return;  // Silent no-op if not connected
     }
-    
-    // Generate job ID
-    QString jobId = QString("job_%1_%2").arg(QDateTime::currentMSecsSinceEpoch()).arg(QRandomGenerator::global()->generate());
-    
-    // Create StartJob message
-    palantir::StartJob startJob;
-    startJob.mutable_job_id()->set_id(jobId.toStdString());
-    startJob.mutable_spec()->CopyFrom(spec);
-    
-    // Send message
-    sendMessage(startJob);
-    
-    // Track job
-    activeJobs_[jobId] = spec;
-    
-    return jobId;
-}
 
-void PalantirClient::cancelJob(const QString& jobId)
-{
-    if (!connected_) {
-        return;
-    }
-    
-    palantir::Cancel cancel;
-    cancel.mutable_job_id()->set_id(jobId.toStdString());
-    
-    sendMessage(cancel);
-}
-
-void PalantirClient::requestCapabilities()
-{
-    if (!connected_) {
-        return;
-    }
-    
-    palantir::CapabilitiesRequest request;
-    sendMessage(request);
+    // TODO: Implement framing in Chunk 4
+    // For now, just log
+    qCDebug(phxPalantirProto) << "sendRequest type:" << type << "payload:" << payload.size() << "bytes";
 }
 
 void PalantirClient::onSocketConnected()
 {
-    connected_ = true;
-    reconnectAttempts_ = 0;
-    stopReconnectTimer();
+    setState(ConnState::Connected);
+    resetBackoff();
     emit connected();
-    requestCapabilities();
-}
-
-void PalantirClient::onSocketDisconnected()
-{
-    connected_ = false;
-    emit disconnected();
-    startReconnectTimer();
+    qCDebug(phxPalantirConn) << "Socket connected";
 }
 
 void PalantirClient::onSocketError(QLocalSocket::LocalSocketError error)
 {
-    QString errorMsg;
-    switch (error) {
-        case QLocalSocket::ServerNotFoundError:
-            errorMsg = "Server not found";
-            break;
-        case QLocalSocket::ConnectionRefusedError:
-            errorMsg = "Connection refused";
-            break;
-        case QLocalSocket::PeerClosedError:
-            errorMsg = "Server closed connection";
-            break;
-        default:
-            errorMsg = "Socket error: " + QString::number(error);
-            break;
+    QString errorMsg = socket_->errorString();
+    if (errorMsg.isEmpty()) {
+        errorMsg = "Socket error: " + QString::number(static_cast<int>(error));
     }
-    
-    emit errorOccurred(errorMsg);
-    startReconnectTimer();
+
+    if (state_ == ConnState::Connecting || state_ == ConnState::Connected) {
+        startBackoff(errorMsg);
+    } else if (state_ == ConnState::ErrorBackoff) {
+        // Log but don't restart (timer already running)
+        qCDebug(phxPalantirConn) << "Socket error during backoff:" << errorMsg;
+    }
+}
+
+void PalantirClient::onSocketStateChanged(QLocalSocket::LocalSocketState state)
+{
+    if (state == QLocalSocket::UnconnectedState) {
+        if (state_ == ConnState::Connecting || state_ == ConnState::Connected) {
+            startBackoff("Socket disconnected");
+        }
+    }
 }
 
 void PalantirClient::onSocketReadyRead()
 {
-    parseIncomingData();
-}
-
-void PalantirClient::onReconnectTimer()
-{
-    attemptReconnect();
-}
-
-void PalantirClient::handleStartReply(const palantir::StartReply& reply)
-{
-    QString jobId = QString::fromStdString(reply.job_id().id());
-    QString status = QString::fromStdString(reply.status());
-    
-    if (status == "OK") {
-        emit jobStarted(jobId);
-    } else {
-        QString error = QString::fromStdString(reply.error_message());
-        emit jobFailed(jobId, error);
-        activeJobs_.remove(jobId);
-    }
-}
-
-void PalantirClient::handleProgress(const palantir::Progress& progress)
-{
-    QString jobId = QString::fromStdString(progress.job_id().id());
-    QString status = QString::fromStdString(progress.status());
-    
-    emit jobProgress(jobId, progress.progress_pct(), status);
-}
-
-void PalantirClient::handleResultMeta(const palantir::ResultMeta& meta)
-{
-    QString jobId = QString::fromStdString(meta.job_id().id());
-    QString status = QString::fromStdString(meta.status());
-    
-    if (status == "SUCCEEDED") {
-        emit jobCompleted(jobId, meta);
-    } else if (status == "FAILED") {
-        QString error = QString::fromStdString(meta.error_message());
-        emit jobFailed(jobId, error);
-    } else if (status == "CANCELLED") {
-        emit jobCancelled(jobId);
-    }
-    
-    activeJobs_.remove(jobId);
-}
-
-void PalantirClient::handleDataChunk(const palantir::DataChunk& chunk)
-{
-    QString jobId = QString::fromStdString(chunk.job_id().id());
-    
-    // Store data chunk
-    jobDataBuffers_[jobId] += QByteArray(chunk.data().data(), chunk.data().size());
-    
-        // If this is the last chunk, emit completion
-        if (chunk.chunk_index() == chunk.total_chunks() - 1) {
-            // TODO: Process complete data and emit result
-            jobDataBuffers_.remove(jobId);
-        }
-}
-
-void PalantirClient::handleCapabilities(const palantir::Capabilities& caps)
-{
-    serverCapabilities_ = caps;
-    capabilitiesReceived_ = true;
-    emit capabilitiesReceived(caps);
-}
-
-void PalantirClient::handlePong(const palantir::Pong& pong)
-{
-    // Handle ping response
-    Q_UNUSED(pong);
-}
-
-void PalantirClient::sendMessage(const google::protobuf::Message& message)
-{
-    if (!connected_) {
-        return;
-    }
-    
-    // Serialize message
-    std::string serialized;
-    if (!message.SerializeToString(&serialized)) {
-        emit errorOccurred("Failed to serialize message");
-        return;
-    }
-    
-    // Create length-prefixed message
-    QByteArray data;
-    uint32_t length = static_cast<uint32_t>(serialized.size());
-    
-    // Write length (little-endian)
-    data.append(reinterpret_cast<const char*>(&length), 4);
-    data.append(serialized.data(), serialized.size());
-    
-    // Send data
-    qint64 written = socket_->write(data);
-    if (written != data.size()) {
-        emit errorOccurred("Failed to send complete message");
-    }
-}
-
-void PalantirClient::parseIncomingData()
-{
+    // Stub for now (Chunk 4 will implement full protocol parsing)
+    qCDebug(phxPalantirProto) << "readyRead:" << socket_->bytesAvailable() << "bytes";
+    // Accumulate receiveBuffer_ for future parsing
     receiveBuffer_ += socket_->readAll();
-    
-    while (receiveBuffer_.size() >= 4) {
-        // Read message length
-        uint32_t length;
-        memcpy(&length, receiveBuffer_.data(), 4);
-        
-        if (receiveBuffer_.size() < 4 + length) {
-            // Need more data
-            return;
-        }
-        
-        // Extract message data
-        QByteArray messageData = receiveBuffer_.mid(4, length);
-        receiveBuffer_.remove(0, 4 + length);
-        
-        // Parse message type and dispatch
-        // TODO: Implement message type parsing and dispatch
-        // For now, just log the received data
-        qCDebug(phxPalantirProto) << "Received message of length:" << length;
+}
+
+void PalantirClient::onBackoffTimeout()
+{
+    qCDebug(phxPalantirConn) << "Backoff timeout, retrying connection";
+    connectAsync();
+}
+
+void PalantirClient::setState(ConnState s)
+{
+    if (state_ != s) {
+        state_ = s;
+        emit connectionStateChanged(state_);
+        qCDebug(phxPalantirConn) << "State changed to:" << static_cast<int>(state_);
     }
 }
 
-QByteArray PalantirClient::readMessage()
+void PalantirClient::startBackoff(const QString& why)
 {
-    if (receiveBuffer_.size() < 4) {
-        return QByteArray();
-    }
-    
-    uint32_t length;
-    memcpy(&length, receiveBuffer_.data(), 4);
-    
-    if (receiveBuffer_.size() < 4 + length) {
-        return QByteArray();
-    }
-    
-    QByteArray message = receiveBuffer_.mid(4, length);
-    receiveBuffer_.remove(0, 4 + length);
-    
-    return message;
-}
-
-void PalantirClient::startReconnectTimer()
-{
-    if (reconnectAttempts_ < MAX_RECONNECT_ATTEMPTS) {
-        reconnectTimer_.start(RECONNECT_INTERVAL_MS);
-    }
-}
-
-void PalantirClient::stopReconnectTimer()
-{
-    reconnectTimer_.stop();
-}
-
-void PalantirClient::attemptReconnect()
-{
-    if (reconnectAttempts_ >= MAX_RECONNECT_ATTEMPTS) {
-        emit errorOccurred("Maximum reconnection attempts reached");
+    if (backoffAttempt_ >= kMaxBackoffAttempts) {
+        setState(ConnState::PermanentFail);
+        emit permanentDisconnect(why);
+        qCDebug(phxPalantirConn) << "Permanent disconnect after" << kMaxBackoffAttempts << "attempts:" << why;
         return;
     }
-    
-    reconnectAttempts_++;
-    connectToServer();
+
+    setState(ConnState::ErrorBackoff);
+    const int delayMs = qMin(16000, 1000 << backoffAttempt_);  // 1s, 2s, 4s, 8s, 16s
+    backoffTimer_.start(delayMs);
+    emit connectionError(why);
+    ++backoffAttempt_;
+    qCDebug(phxPalantirConn) << "Starting backoff attempt" << backoffAttempt_
+                             << "delay" << delayMs << "ms:" << why;
+}
+
+void PalantirClient::resetBackoff()
+{
+    backoffAttempt_ = 0;
+    backoffTimer_.stop();
 }

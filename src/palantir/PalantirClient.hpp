@@ -1,7 +1,3 @@
-// NOTE (Sprint 4): This implementation is valid only when PHX_WITH_PALANTIR=1.
-// Existing blocking calls are tolerated for now; they will be guarded or moved
-// behind the feature flag and replaced with stubs in the next chunk.
-
 #pragma once
 
 #include <QLocalSocket>
@@ -9,90 +5,56 @@
 #include <QObject>
 #include <QByteArray>
 #include <QString>
-#include <QHash>
 #include <memory>
-#include <functional>
-
-#include "palantir.pb.h"
 
 class PalantirClient : public QObject
 {
     Q_OBJECT
 
 public:
+    enum class ConnState : quint8 { Idle, Connecting, Connected, ErrorBackoff, PermanentFail };
+    Q_ENUM(ConnState)
+
     explicit PalantirClient(QObject *parent = nullptr);
     ~PalantirClient() override;
 
     // Connection management
-    [[nodiscard]] bool connectToServer();
-    void disconnectFromServer();
-    [[nodiscard]] bool isConnected() const;
+    [[nodiscard]] bool connectAsync();     // returns false if already Connecting/Connected/PermanentFail
+    void disconnectAsync();
+    [[nodiscard]] ConnState connectionState() const noexcept;
 
-    // Job management
-    [[nodiscard]] QString startJob(const palantir::ComputeSpec& spec);
-    void cancelJob(const QString& jobId);
-    void requestCapabilities();
+    // Protocol
+    void sendRequest(quint16 type, const QByteArray& payload);  // no-op if not Connected
 
     // Signals for async operations
 signals:
     void connected();
     void disconnected();
-    void jobStarted(const QString& jobId);
-    void jobProgress(const QString& jobId, double progressPct, const QString& status);
-    void jobCompleted(const QString& jobId, const palantir::ResultMeta& meta);
-    void jobFailed(const QString& jobId, const QString& error);
-    void jobCancelled(const QString& jobId);
-    void capabilitiesReceived(const palantir::Capabilities& caps);
-    void errorOccurred(const QString& error);
+    void connectionStateChanged(PalantirClient::ConnState);
+    void connectionError(QString message);
+    void permanentDisconnect(QString message);
+    void messageReceived(quint16 type, QByteArray payload);
 
 private slots:
     void onSocketConnected();
-    void onSocketDisconnected();
-    void onSocketError(QLocalSocket::LocalSocketError error);
+    void onSocketError(QLocalSocket::LocalSocketError);
+    void onSocketStateChanged(QLocalSocket::LocalSocketState);
     void onSocketReadyRead();
-    void onReconnectTimer();
+    void onBackoffTimeout();
 
 private:
-    // Message handling
-    void handleStartReply(const palantir::StartReply& reply);
-    void handleProgress(const palantir::Progress& progress);
-    void handleResultMeta(const palantir::ResultMeta& meta);
-    void handleDataChunk(const palantir::DataChunk& chunk);
-    void handleCapabilities(const palantir::Capabilities& caps);
-    void handlePong(const palantir::Pong& pong);
+    void setState(ConnState s);
+    void startBackoff(const QString& why);
+    void resetBackoff();
 
-    // Protocol helpers
-    void sendMessage(const google::protobuf::Message& message);
-    void parseIncomingData();
-    QByteArray readMessage();
-    
-    // Connection management
-    void startReconnectTimer();
-    void stopReconnectTimer();
-    void attemptReconnect();
-
-    // Socket and protocol
     std::unique_ptr<QLocalSocket> socket_;
-    QTimer reconnectTimer_;
+    QTimer backoffTimer_{};
+    ConnState state_{ConnState::Idle};
+    int backoffAttempt_{0};
+    QString socketName_;
+
+    static constexpr int kMaxBackoffAttempts = 5;
+
+    // Protocol buffer (for Chunk 4)
     QByteArray receiveBuffer_;
-    
-    // Connection state
-    bool connected_;  // Qt event-loop single-threaded, atomic not required
-    int reconnectAttempts_;
-    static const int MAX_RECONNECT_ATTEMPTS = 5;
-    static const int RECONNECT_INTERVAL_MS = 1000;
-    
-    // Job tracking
-    QHash<QString, palantir::ComputeSpec> activeJobs_;
-    QHash<QString, QByteArray> jobDataBuffers_;
-    
-    // Server capabilities
-    palantir::Capabilities serverCapabilities_;
-    bool capabilitiesReceived_;
 };
-
-
-
-
-
-
