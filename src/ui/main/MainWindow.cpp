@@ -1049,19 +1049,47 @@ void MainWindow::refreshAllIconsForTheme()
     
     // Menubar + menus
     rebuildForWidget(menuBar());
+    
+    // Helper to dump available icon modes (for debugging)
+    auto dumpModes = [](const QIcon& ic, const QString& context) {
+        auto szs = [&](QIcon::Mode m) { return ic.availableSizes(m, QIcon::Off); };
+        qCDebug(phxIcons) << "MODES" << context
+                         << "N" << szs(QIcon::Normal)
+                         << "D" << szs(QIcon::Disabled)
+                         << "A" << szs(QIcon::Active)
+                         << "S" << szs(QIcon::Selected);
+    };
+    
     for (QMenu* m : menuBar()->findChildren<QMenu*>()) {
         const int px = m->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, m);
         for (QAction* a : m->actions()) {
             const auto key = a->property("phx_icon_key").toString();
             if (key.isEmpty()) continue;
             
+            const QString t = a->text();
+            
+            // Log modes for problematic actions before refresh
+            if (t.contains("Save As", Qt::CaseInsensitive) || t.contains("Exit", Qt::CaseInsensitive) ||
+                t.contains("Lens", Qt::CaseInsensitive)    || t.contains("System", Qt::CaseInsensitive) ||
+                t.contains("XY", Qt::CaseInsensitive)      || t.contains("2D", Qt::CaseInsensitive)     ||
+                t.contains("About", Qt::CaseInsensitive)) {
+                qCDebug(phxIcons) << "MENU BEFORE" << m->title() << t << "key" << key;
+                dumpModes(a->icon(), QString("before"));
+            }
+            
             // Force cache drop then rebuild with correct host/palette
             a->setIcon(QIcon());  // CLEAR first
-            a->setIcon(IconProvider::icon(key, QSize(px, px), m));  // SET new
+            QIcon fresh = IconProvider::icon(key, QSize(px, px), m);  // SET new
+            a->setIcon(fresh);
             
-            qCDebug(phxIcons) << "REFRESH" << m->title() << "action" << a->text()
-                             << "key" << key
-                             << "host" << m->metaObject()->className();
+            // Log modes for problematic actions after refresh
+            if (t.contains("Save As", Qt::CaseInsensitive) || t.contains("Exit", Qt::CaseInsensitive) ||
+                t.contains("Lens", Qt::CaseInsensitive)    || t.contains("System", Qt::CaseInsensitive) ||
+                t.contains("XY", Qt::CaseInsensitive)      || t.contains("2D", Qt::CaseInsensitive)     ||
+                t.contains("About", Qt::CaseInsensitive)) {
+                qCDebug(phxIcons) << "MENU AFTER" << m->title() << t;
+                dumpModes(fresh, QString("after"));
+            }
         }
         m->update();  // repaint menu shell
     }
@@ -1083,6 +1111,7 @@ void MainWindow::bindMenuLateRefresh()
         
         connect(menu, &QMenu::aboutToShow, this, [this, menu] {
             const int px = menu->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, menu);
+            qCDebug(phxIcons) << "LATE REFRESH" << menu->title();
             for (QAction* a : menu->actions()) {
                 const auto key = a->property("phx_icon_key").toString();
                 if (key.isEmpty()) continue;

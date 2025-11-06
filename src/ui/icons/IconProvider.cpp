@@ -58,23 +58,34 @@ QIcon IconProvider::icon(const QString& logicalName, const QSize& logicalSize, c
     // Resolve alias to canonical name
     const QString canonical = resolveAlias(logicalName);
     
+    // Instrumentation: log which path is used
+    auto logPath = [&](const char* path) {
+        qCDebug(phxIcons) << "ICON PATH" << logicalName << "host" 
+                         << (host ? host->metaObject()->className() : "null")
+                         << "size" << logicalSize << "path" << path;
+    };
+    
     // Priority: glyph → svg → theme → fallback (always pass host)
     if (IconBootstrap::faAvailable() && s_iconManifest.contains(canonical)) {
         const auto obj = s_iconManifest[canonical].toObject();
         const IconStyle st = parseStyleString(obj.value("style").toString("sharp-solid"));
         if (auto ic = fontIcon(canonical, st, s, pal, dpr, host); !ic.isNull()) {
+            logPath("glyph");
             return ic;
         }
     }
     
     if (auto ic = svgIcon(canonical, s, pal, dpr, host); !ic.isNull()) {
+        logPath("svg");
         return ic;
     }
     
     if (auto ic = themeIcon(canonical, s, pal, dpr, host); !ic.isNull()) {
+        logPath("theme");
         return ic;
     }
     
+    logPath("fallback");
     return fallback(s, pal, dpr, host);
     
     // Note: Do NOT cache widget-aware icons (host palette affects colors)
@@ -318,11 +329,6 @@ QIcon IconProvider::svgIcon(const QString& alias, int size, const QPalette& pal,
         QColor disabledColor = disabledColorFor(widget);
         disabledPm = tintPixmap(disabledPm, disabledColor);
         
-        QPixmap activePm = sourceIcon.pixmap(rw, rh);
-        activePm.setDevicePixelRatio(dpr);
-        QColor activeColor = normalColorFor(widget);  // Active same as normal
-        activePm = tintPixmap(activePm, activeColor);
-        
         QPixmap selectedPm = sourceIcon.pixmap(rw, rh);
         selectedPm.setDevicePixelRatio(dpr);
         QColor selectedColor = selectedColorFor(widget);
@@ -331,8 +337,15 @@ QIcon IconProvider::svgIcon(const QString& alias, int size, const QPalette& pal,
         QIcon result;
         result.addPixmap(normalPm, QIcon::Normal, QIcon::Off);
         result.addPixmap(disabledPm, QIcon::Disabled, QIcon::Off);
-        result.addPixmap(activePm, QIcon::Active, QIcon::Off);
-        result.addPixmap(selectedPm, QIcon::Selected, QIcon::Off);
+        
+        // For QMenu hosts, Active mode mirrors Selected (both use highlight color)
+        if (qobject_cast<const QMenu*>(widget)) {
+            result.addPixmap(selectedPm, QIcon::Selected, QIcon::Off);
+            result.addPixmap(selectedPm, QIcon::Active, QIcon::Off);  // Mirror Selected into Active for QMenu
+        } else {
+            result.addPixmap(normalPm, QIcon::Active, QIcon::Off);
+            result.addPixmap(selectedPm, QIcon::Selected, QIcon::Off);
+        }
         return result;
     }
     
@@ -497,8 +510,17 @@ QIcon IconProvider::fontIcon(const QString& name, IconStyle style, int size, con
                 QIcon icon;
                 icon.addPixmap(createStatePixmap(normalColorFor(widget), "Normal"), QIcon::Normal, QIcon::Off);
                 icon.addPixmap(createStatePixmap(disabledColorFor(widget), "Disabled"), QIcon::Disabled, QIcon::Off);
-                icon.addPixmap(createStatePixmap(normalColorFor(widget), "Active"), QIcon::Active, QIcon::Off);
-                icon.addPixmap(createStatePixmap(selectedColorFor(widget), "Selected"), QIcon::Selected, QIcon::Off);
+                
+                // For QMenu hosts, Active mode mirrors Selected (both use highlight color)
+                // This ensures menu highlights work regardless of whether Qt style uses Active or Selected
+                if (qobject_cast<const QMenu*>(widget)) {
+                    QPixmap selectedPm = createStatePixmap(selectedColorFor(widget), "Selected");
+                    icon.addPixmap(selectedPm, QIcon::Selected, QIcon::Off);
+                    icon.addPixmap(selectedPm, QIcon::Active, QIcon::Off);  // Mirror Selected into Active for QMenu
+                } else {
+                    icon.addPixmap(createStatePixmap(normalColorFor(widget), "Active"), QIcon::Active, QIcon::Off);
+                    icon.addPixmap(createStatePixmap(selectedColorFor(widget), "Selected"), QIcon::Selected, QIcon::Off);
+                }
                 
                 return icon;
             }
@@ -537,14 +559,21 @@ QIcon IconProvider::themeIcon(const QString& name, int size, const QPalette& pal
             normalPm.setDevicePixelRatio(dpr);
             QColor normalColor = normalColorFor(widget);
             QColor disabledColor = disabledColorFor(widget);
-            QColor activeColor = normalColorFor(widget);  // Active same as normal
             QColor selectedColor = selectedColorFor(widget);
             
             QIcon result;
             result.addPixmap(tintPixmap(normalPm, normalColor), QIcon::Normal, QIcon::Off);
             result.addPixmap(tintPixmap(normalPm, disabledColor), QIcon::Disabled, QIcon::Off);
-            result.addPixmap(tintPixmap(normalPm, activeColor), QIcon::Active, QIcon::Off);
-            result.addPixmap(tintPixmap(normalPm, selectedColor), QIcon::Selected, QIcon::Off);
+            
+            // For QMenu hosts, Active mode mirrors Selected (both use highlight color)
+            QPixmap selectedPm = tintPixmap(normalPm, selectedColor);
+            if (qobject_cast<const QMenu*>(widget)) {
+                result.addPixmap(selectedPm, QIcon::Selected, QIcon::Off);
+                result.addPixmap(selectedPm, QIcon::Active, QIcon::Off);  // Mirror Selected into Active for QMenu
+            } else {
+                result.addPixmap(tintPixmap(normalPm, normalColor), QIcon::Active, QIcon::Off);
+                result.addPixmap(selectedPm, QIcon::Selected, QIcon::Off);
+            }
             return result;
         }
         return icon;
@@ -563,14 +592,26 @@ QIcon IconProvider::fallback(int size, const QPalette& pal, qreal dpr, const QWi
     if (!QFile::exists(kFallback)) {
         qCCritical(phxIcons) << "Fallback icon missing:" << kFallback;
         // Return a minimal themed icon as last resort (at device-pixel size)
-        QPixmap pm(rw, rh);
-        pm.setDevicePixelRatio(dpr);
-        pm.fill(normalColorFor(widget));
+        QPixmap normalPm(rw, rh);
+        normalPm.setDevicePixelRatio(dpr);
+        normalPm.fill(normalColorFor(widget));
+        
+        QPixmap selectedPm(rw, rh);
+        selectedPm.setDevicePixelRatio(dpr);
+        selectedPm.fill(selectedColorFor(widget));
+        
         QIcon icon;
-        icon.addPixmap(pm, QIcon::Normal, QIcon::Off);
-        icon.addPixmap(pm, QIcon::Disabled, QIcon::Off);
-        icon.addPixmap(pm, QIcon::Active, QIcon::Off);
-        icon.addPixmap(pm, QIcon::Selected, QIcon::Off);
+        icon.addPixmap(normalPm, QIcon::Normal, QIcon::Off);
+        icon.addPixmap(normalPm, QIcon::Disabled, QIcon::Off);
+        
+        // For QMenu hosts, Active mode mirrors Selected (both use highlight color)
+        if (qobject_cast<const QMenu*>(widget)) {
+            icon.addPixmap(selectedPm, QIcon::Selected, QIcon::Off);
+            icon.addPixmap(selectedPm, QIcon::Active, QIcon::Off);  // Mirror Selected into Active for QMenu
+        } else {
+            icon.addPixmap(normalPm, QIcon::Active, QIcon::Off);
+            icon.addPixmap(selectedPm, QIcon::Selected, QIcon::Off);
+        }
         return icon;
     }
     
@@ -585,14 +626,21 @@ QIcon IconProvider::fallback(int size, const QPalette& pal, qreal dpr, const QWi
         normalPm.setDevicePixelRatio(dpr);
         QColor normalColor = normalColorFor(widget);
         QColor disabledColor = disabledColorFor(widget);
-        QColor activeColor = normalColorFor(widget);  // Active same as normal
         QColor selectedColor = selectedColorFor(widget);
         
         QIcon result;
         result.addPixmap(tintPixmap(normalPm, normalColor), QIcon::Normal, QIcon::Off);
         result.addPixmap(tintPixmap(normalPm, disabledColor), QIcon::Disabled, QIcon::Off);
-        result.addPixmap(tintPixmap(normalPm, activeColor), QIcon::Active, QIcon::Off);
-        result.addPixmap(tintPixmap(normalPm, selectedColor), QIcon::Selected, QIcon::Off);
+        
+        // For QMenu hosts, Active mode mirrors Selected (both use highlight color)
+        QPixmap selectedPm = tintPixmap(normalPm, selectedColor);
+        if (qobject_cast<const QMenu*>(widget)) {
+            result.addPixmap(selectedPm, QIcon::Selected, QIcon::Off);
+            result.addPixmap(selectedPm, QIcon::Active, QIcon::Off);  // Mirror Selected into Active for QMenu
+        } else {
+            result.addPixmap(tintPixmap(normalPm, normalColor), QIcon::Active, QIcon::Off);
+            result.addPixmap(selectedPm, QIcon::Selected, QIcon::Off);
+        }
         return result;
     }
     
