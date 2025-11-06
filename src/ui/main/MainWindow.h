@@ -118,6 +118,7 @@ private:
     
     // Theme refresh helper
     void refreshAllIconsForTheme();
+    void bindMenuLateRefresh();  // Bind aboutToShow hooks for late refresh
     
     // UI Components
     QMenuBar* m_menuBar;

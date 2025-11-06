@@ -26,6 +26,7 @@
 #include <QEvent>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QSet>
 
 MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     : QMainWindow(parent)
@@ -159,6 +160,9 @@ void MainWindow::setupMenuBar()
     // Help menu
     QMenu* helpMenu = createHelpMenu();
     m_menuBar->addMenu(helpMenu);
+    
+    // Bind late refresh hooks for all menus (defeats per-menu caching)
+    bindMenuLateRefresh();
 }
 
 QMenu* MainWindow::createFileMenu()
@@ -1047,18 +1051,56 @@ void MainWindow::refreshAllIconsForTheme()
     rebuildForWidget(menuBar());
     for (QMenu* m : menuBar()->findChildren<QMenu*>()) {
         const int px = m->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, m);
-        qCDebug(phxIcons) << "MENU REFRESH" << m->title() << "px" << px;
         for (QAction* a : m->actions()) {
             const auto key = a->property("phx_icon_key").toString();
-            if (!key.isEmpty()) {
-                a->setIcon(IconProvider::icon(key, QSize(px, px), m));  // Use menu widget m as host
-            }
+            if (key.isEmpty()) continue;
+            
+            // Force cache drop then rebuild with correct host/palette
+            a->setIcon(QIcon());  // CLEAR first
+            a->setIcon(IconProvider::icon(key, QSize(px, px), m));  // SET new
+            
+            qCDebug(phxIcons) << "REFRESH" << m->title() << "action" << a->text()
+                             << "key" << key
+                             << "host" << m->metaObject()->className();
         }
+        m->update();  // repaint menu shell
     }
     
     // All QToolBars (main, top ribbon, right ribbon, etc.)
     for (QToolBar* tb : findChildren<QToolBar*>()) {
         rebuildForWidget(tb);
+    }
+}
+
+void MainWindow::bindMenuLateRefresh()
+{
+    // Static set to track menus we've already bound (avoid duplicate connections)
+    static QSet<QMenu*> s_bound;
+    
+    auto bindLateRefresh = [this](QMenu* menu) {
+        if (!menu || s_bound.contains(menu)) return;
+        s_bound.insert(menu);
+        
+        connect(menu, &QMenu::aboutToShow, this, [this, menu] {
+            const int px = menu->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, menu);
+            for (QAction* a : menu->actions()) {
+                const auto key = a->property("phx_icon_key").toString();
+                if (key.isEmpty()) continue;
+                
+                // Clear → set to force Qt to drop any cached pixmap
+                a->setIcon(QIcon());
+                a->setIcon(IconProvider::icon(key, QSize(px, px), menu));
+            }
+            menu->update();
+            if (auto* w = menu->window()) {
+                w->update();
+            }
+        });
+    };
+    
+    // Bind for every QMenu in the menubar
+    for (QMenu* m : menuBar()->findChildren<QMenu*>()) {
+        bindLateRefresh(m);
     }
 }
 
