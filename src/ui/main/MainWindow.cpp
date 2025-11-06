@@ -1014,41 +1014,23 @@ void MainWindow::refreshAllIconsForTheme()
 {
     IconProvider::clearCache();
     
-    auto rebuildForWidget = [&](QWidget* host) {
-        if (!host) return;
+    // Unified rebuildAction lambda: always clear→set to drop cached pixmaps
+    auto rebuildAction = [](QAction* a, QWidget* w) {
+        if (!a) return;
         
-        const auto small = host->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, host);
+        const auto key = a->property("phx_icon_key").toString();
+        if (key.isEmpty()) return;  // skip actions without a logical icon key
         
-        auto rebuildAction = [&](QAction* a, QWidget* w) {
-            if (!a) return;
-            
-            const auto key = a->property("phx_icon_key").toString();
-            if (key.isEmpty()) return;  // skip actions without a logical icon key
-            
-            int px = small;
-            if (auto tb = qobject_cast<QToolBar*>(w)) {
-                const auto sz = tb->iconSize();
-                if (sz.isValid() && sz.width() > 0) px = sz.width();
-            }
-            
-            a->setIcon(IconProvider::icon(key, QSize(px, px), w));
-        };
-        
-        // Actions directly on host
-        for (QAction* a : host->actions()) {
-            rebuildAction(a, host);
+        int px = w->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, w);
+        if (auto tb = qobject_cast<QToolBar*>(w)) {
+            const auto sz = tb->iconSize();
+            if (sz.isValid() && sz.width() > 0) px = sz.width();
         }
         
-        // Actions on child widgets (toolbuttons, menus, custom containers)
-        for (QWidget* child : host->findChildren<QWidget*>()) {
-            for (QAction* a : child->actions()) {
-                rebuildAction(a, child);
-            }
-        }
+        // Clear cached pixmap then rebuild with new palette/host
+        a->setIcon(QIcon());  // clear cached pixmap
+        a->setIcon(IconProvider::icon(key, QSize(px, px), w));  // rebuilt with new palette/host
     };
-    
-    // Menubar + menus
-    rebuildForWidget(menuBar());
     
     // Helper to dump available icon modes (for debugging)
     auto dumpModes = [](const QIcon& ic, const QString& context) {
@@ -1060,43 +1042,46 @@ void MainWindow::refreshAllIconsForTheme()
                          << "S" << szs(QIcon::Selected);
     };
     
+    // Menubar actions
+    for (QAction* a : menuBar()->actions()) {
+        rebuildAction(a, menuBar());
+    }
+    
+    // Menu actions (use unified lambda)
     for (QMenu* m : menuBar()->findChildren<QMenu*>()) {
-        const int px = m->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, m);
         for (QAction* a : m->actions()) {
-            const auto key = a->property("phx_icon_key").toString();
-            if (key.isEmpty()) continue;
-            
             const QString t = a->text();
             
-            // Log modes for problematic actions before refresh
+            // Log modes for problematic actions before refresh (debugging)
             if (t.contains("Save As", Qt::CaseInsensitive) || t.contains("Exit", Qt::CaseInsensitive) ||
                 t.contains("Lens", Qt::CaseInsensitive)    || t.contains("System", Qt::CaseInsensitive) ||
                 t.contains("XY", Qt::CaseInsensitive)      || t.contains("2D", Qt::CaseInsensitive)     ||
                 t.contains("About", Qt::CaseInsensitive)) {
+                const auto key = a->property("phx_icon_key").toString();
                 qCDebug(phxIcons) << "MENU BEFORE" << m->title() << t << "key" << key;
                 dumpModes(a->icon(), QString("before"));
             }
             
-            // Force cache drop then rebuild with correct host/palette
-            a->setIcon(QIcon());  // CLEAR first
-            QIcon fresh = IconProvider::icon(key, QSize(px, px), m);  // SET new
-            a->setIcon(fresh);
+            rebuildAction(a, m);
             
-            // Log modes for problematic actions after refresh
+            // Log modes for problematic actions after refresh (debugging)
             if (t.contains("Save As", Qt::CaseInsensitive) || t.contains("Exit", Qt::CaseInsensitive) ||
                 t.contains("Lens", Qt::CaseInsensitive)    || t.contains("System", Qt::CaseInsensitive) ||
                 t.contains("XY", Qt::CaseInsensitive)      || t.contains("2D", Qt::CaseInsensitive)     ||
                 t.contains("About", Qt::CaseInsensitive)) {
                 qCDebug(phxIcons) << "MENU AFTER" << m->title() << t;
-                dumpModes(fresh, QString("after"));
+                dumpModes(a->icon(), QString("after"));
             }
         }
         m->update();  // repaint menu shell
     }
     
-    // All QToolBars (main, top ribbon, right ribbon, etc.)
+    // Toolbar actions (use unified lambda + repaint)
     for (QToolBar* tb : findChildren<QToolBar*>()) {
-        rebuildForWidget(tb);
+        for (QAction* a : tb->actions()) {
+            rebuildAction(a, tb);
+        }
+        tb->update();  // repaint toolbar shell
     }
 }
 
