@@ -45,81 +45,39 @@ static qreal computeDpr(const QWidget* w = nullptr) {
     return 1.0;
 }
 
-QIcon IconProvider::icon(const QString& name, IconStyle style, int size, bool dark, qreal dpr) {
-    IconKey key{name, style, size, dark, dpr};
-    
-    // Trace once per request (debug level to reduce noise)
-    qCDebug(phxIcons).noquote() << "[ICON] req"
-                      << "name=" << name
-                      << "style=" << int(style)
-                      << "px=" << size
-                      << "dark=" << dark;
-    
-    // Check cache first (unless bypassed)
-    if (!isCacheBypassed() && s_cache.contains(key)) {
-        return s_cache.value(key);
-    }
+QIcon IconProvider::icon(const QString& logicalName, const QSize& logicalSize, const QWidget* host) {
+    const int s = std::max(1, std::min(logicalSize.width(), logicalSize.height()));
+    const qreal dpr = computeDpr(host);
+    const QPalette pal = getPaletteForIcon(host);
     
     // Load manifest if needed
     if (!s_manifestLoaded) {
         loadManifest();
     }
     
-    // NEW PRIORITY ORDER: glyph → SVG → theme → fallback
-    QIcon result;
-    QString canonicalName = resolveAlias(name);
+    // Resolve alias to canonical name
+    const QString canonical = resolveAlias(logicalName);
     
-    // Get palette for consistent color role usage
-    const QPalette pal = QApplication::palette();
-    // Ensure DPR is at least 1.0
-    dpr = qMax(1.0, dpr);
-    
-    // 1. Try FA glyph (if available and manifest has entry)
-    if (IconBootstrap::faAvailable() && s_iconManifest.contains(canonicalName)) {
-        QJsonObject iconData = s_iconManifest[canonicalName].toObject();
-        QString styleStr = iconData["style"].toString("sharp-solid");
-        IconStyle resolvedStyle = parseStyleString(styleStr);
-        result = fontIcon(canonicalName, resolvedStyle, size, pal, dpr, nullptr);  // Old overload has no widget
+    // Priority: glyph → svg → theme → fallback (always pass host)
+    if (IconBootstrap::faAvailable() && s_iconManifest.contains(canonical)) {
+        const auto obj = s_iconManifest[canonical].toObject();
+        const IconStyle st = parseStyleString(obj.value("style").toString("sharp-solid"));
+        if (auto ic = fontIcon(canonical, st, s, pal, dpr, host); !ic.isNull()) {
+            return ic;
+        }
     }
     
-    // 2. Try SVG (branding only)
-    if (result.isNull()) {
-        result = svgIcon(canonicalName, size, pal, dpr, nullptr);  // Old overload has no widget
+    if (auto ic = svgIcon(canonical, s, pal, dpr, host); !ic.isNull()) {
+        return ic;
     }
     
-    // 3. Try system theme
-    if (result.isNull()) {
-        result = themeIcon(canonicalName, size, pal, dpr, nullptr);  // Old overload has no widget
+    if (auto ic = themeIcon(canonical, s, pal, dpr, host); !ic.isNull()) {
+        return ic;
     }
     
-    // 4. Fallback
-    if (result.isNull()) {
-        result = fallback(size, pal, dpr, nullptr);  // Old overload has no widget
-    }
+    return fallback(s, pal, dpr, host);
     
-    // Cache the result (unless bypassed)
-    if (!isCacheBypassed()) {
-        s_cache.insert(key, result);
-    }
-    
-    return result;
-}
-
-QIcon IconProvider::icon(const QString& logicalName, const QSize& size, const QPalette& pal) {
-    const int s = std::max(1, qMin(size.width(), size.height()));
-    const qreal dpr = computeDpr();
-    
-    bool isDark = pal.window().color().lightness() < 128;
-    return icon(logicalName, IconStyle::SharpSolid, s, isDark, dpr);
-}
-
-QIcon IconProvider::icon(const QString& logicalName, const QSize& size, const QWidget* widget) {
-    const int s = std::max(1, qMin(size.width(), size.height()));
-    const qreal dpr = computeDpr(widget);
-    
-    QPalette pal = getPaletteForIcon(widget);
-    bool isDark = pal.window().color().lightness() < 128;
-    return icon(logicalName, IconStyle::SharpSolid, s, isDark, dpr);
+    // Note: Do NOT cache widget-aware icons (host palette affects colors)
 }
 
 QPalette IconProvider::getPaletteForIcon(const QWidget* widget) {

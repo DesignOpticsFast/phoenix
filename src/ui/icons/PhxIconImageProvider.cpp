@@ -28,8 +28,8 @@ QPixmap PhxIconImageProvider::requestPixmap(const QString& id, QSize* requestedS
         }
     }
     
-    // Request icon with proper DPR
-    QIcon icon = IconProvider::icon(name, style, size, dark, dpr);
+    // Request icon (use nullptr as host for QML - app palette will be used)
+    QIcon icon = IconProvider::icon(name, QSize(size, size), nullptr);
     
     if (icon.isNull()) {
         // Return empty pixmap if icon not found

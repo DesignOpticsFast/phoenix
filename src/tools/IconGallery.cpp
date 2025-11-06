@@ -83,12 +83,10 @@ void IconGallery::populateIcons() {
         iconLabel->setMinimumSize(100, 100);
         iconLabel->setStyleSheet("border: 1px solid #ccc; margin: 2px;");
         
-        // Get icon
-        IconStyle style = static_cast<IconStyle>(m_styleCombo->currentIndex());
+        // Get icon (use nullptr as host for gallery - app palette will be used)
         int size = m_sizeSpinBox->value();
-        bool dark = m_darkCheckBox->isChecked();
         
-        QIcon icon = IconProvider::icon(iconName, style, size, dark);
+        QIcon icon = IconProvider::icon(iconName, QSize(size, size), nullptr);
         iconLabel->setPixmap(icon.pixmap(size, size));
         
         // Add name label

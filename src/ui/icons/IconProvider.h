@@ -45,12 +45,8 @@ inline size_t qHash(const IconKey& key, size_t seed = 0) noexcept {
 
 class IconProvider {
 public:
-    // Original signature (kept for compatibility)
-    static QIcon icon(const QString& name, IconStyle style = IconStyle::SharpSolid, 
-                     int size = 16, bool dark = false, qreal dpr = 1.0);
-    // New overload for widget usage (tries widget palette first, falls back to app palette)
-    static QIcon icon(const QString& logicalName, const QSize& size, const QPalette& pal);
-    static QIcon icon(const QString& logicalName, const QSize& size, const QWidget* widget = nullptr);
+    // Single widget-aware entrypoint (always uses host widget's palette)
+    static QIcon icon(const QString& logicalName, const QSize& logicalSize, const QWidget* host);
     static QString fontFamily(IconStyle style);
     static bool isDarkMode(const QWidget* widget = nullptr);
     static void clearCache();
