@@ -652,19 +652,13 @@ QToolBar* MainWindow::createRightRibbon()
         lay->setSpacing(4);  // keep vertical rhythm consistent
     }
     
-    // Normalize each button widget
-    for (QAction* a : ribbon->actions()) {
-        QWidget* w = ribbon->widgetForAction(a);
-        if (!w) continue;  // separators etc.
-        
-        if (auto* btn = qobject_cast<QToolButton*>(w)) {
-            btn->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-            btn->setLayoutDirection(Qt::LeftToRight);
-            btn->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-            btn->setContentsMargins(0, 0, 0, 0);
-            // Avoid stylesheets; inherent alignment via LTR + text-beside-icon is sufficient
-        }
-    }
+    // Scoped stylesheet to force left alignment of all QToolButtons in the right ribbon
+    ribbon->setStyleSheet(
+        "#rightRibbon QToolButton {"
+        "  text-align: left;"
+        "  padding-left: 4px;"
+        "}"
+    );
     
     return ribbon;
 }
