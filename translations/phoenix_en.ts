@@ -83,12 +83,12 @@ Continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="199"/>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="208"/>
         <source>Defaults Restored</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="200"/>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="209"/>
         <source>Settings were reset. Please restart Phoenix to apply all changes.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -96,43 +96,43 @@ Continue?</source>
 <context>
     <name>LanguagePage</name>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="46"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="47"/>
         <source>Language Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="58"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="59"/>
         <source>Interface Language:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="63"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="64"/>
         <source>Current Language:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="74"/>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="174"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="75"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="178"/>
         <source>Language changes will take effect after restarting the application.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="87"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="88"/>
         <source>English</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="87"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="88"/>
         <source>Deutsch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="147"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="151"/>
         <source>Pending: %1 (applies after restart)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="173"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="177"/>
         <source>Restart Required</source>
         <translation type="unfinished"></translation>
     </message>
@@ -610,12 +610,12 @@ Running on %3</source>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="19"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="20"/>
         <source>German</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="19"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="20"/>
         <source>English</source>
         <translation type="unfinished"></translation>
     </message>

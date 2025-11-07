@@ -3,6 +3,7 @@
 #include "app/SettingsKeys.h"
 #include <QMessageBox>
 #include <QLocale>
+#include <QSignalBlocker>
 
 namespace {
 QString normalizedCode(const QString& value)
@@ -26,7 +27,7 @@ LanguagePage::LanguagePage(QSettings& s, QWidget *parent)
     , m_currentLanguageLabel(nullptr)
     , m_pendingLabel(nullptr)
     , m_settings(s)
-    , m_isInitializing(false)
+    , m_initializing(false)
 {
     setupUi();
     populateLanguages();
@@ -53,8 +54,8 @@ void LanguagePage::setupUi()
     // Language combo box
     m_languageCombo = new QComboBox(this);
     m_languageCombo->setMinimumWidth(200);
-    connect(m_languageCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &LanguagePage::onLanguageChanged);
+    connect(m_languageCombo, QOverload<int>::of(&QComboBox::activated),
+            this, &LanguagePage::onLanguageActivated);
     formLayout->addRow(tr("Interface Language:"), m_languageCombo);
     
     // Current language display
@@ -94,7 +95,7 @@ void LanguagePage::populateLanguages()
 
 void LanguagePage::loadSettings()
 {
-    m_isInitializing = true;
+    m_initializing = true;
 
     QString stored = normalizedCode(m_settings.value(PhxKeys::UI_LANGUAGE).toString());
     if (stored.isEmpty()) {
@@ -115,10 +116,13 @@ void LanguagePage::loadSettings()
         index = 0;
     }
 
-    m_languageCombo->setCurrentIndex(index);
+    {
+        QSignalBlocker blocker(m_languageCombo);
+        m_languageCombo->setCurrentIndex(index);
+    }
     updatePendingStatus();
 
-    m_isInitializing = false;
+    m_initializing = false;
 }
 
 void LanguagePage::saveSettings()
@@ -126,13 +130,13 @@ void LanguagePage::saveSettings()
     // Settings are stored immediately when the user selects a language.
 }
 
-void LanguagePage::onLanguageChanged(int index)
+void LanguagePage::onLanguageActivated(int index)
 {
     if (index < 0 || index >= m_languageCodes.size()) {
         return;
     }
 
-    if (m_isInitializing) {
+    if (m_initializing) {
         return;
     }
 

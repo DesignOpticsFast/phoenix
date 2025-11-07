@@ -21,7 +21,7 @@ public:
     void saveSettings();
 
 private slots:
-    void onLanguageChanged(int index);
+    void onLanguageActivated(int index);
 
 private:
     void setupUi();
@@ -36,7 +36,7 @@ private:
 
     QStringList m_languageCodes;
     QStringList m_languageNames;
-    bool m_isInitializing;
+    bool m_initializing = false;
     QString m_activeLanguage;
     QString m_storedLanguage;
 };

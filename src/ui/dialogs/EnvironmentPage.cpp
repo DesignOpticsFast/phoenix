@@ -191,6 +191,15 @@ void EnvironmentPage::onResetToDefaults()
         return;
     }
 
+    m_settings.remove(QStringLiteral("ui/language"));
+    m_settings.remove(QStringLiteral("ui/locale"));
+    m_settings.remove(QStringLiteral("ui/theme"));
+    m_settings.remove(QStringLiteral("i18n/language"));
+    m_settings.remove(QStringLiteral("i18n/locale"));
+    m_settings.remove(QStringLiteral("mainwindow/geometry"));
+    m_settings.remove(QStringLiteral("mainwindow/state"));
+    m_settings.remove(QStringLiteral("session/open_files"));
+    m_settings.remove(QStringLiteral("telemetry/graph_terms"));
     m_settings.clear();
     m_settings.sync();
 
