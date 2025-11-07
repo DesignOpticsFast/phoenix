@@ -37,7 +37,7 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 
 # ---- Qt packages (find these BEFORE defining targets) -----------------------
 # Qt Graphs replaces old Qt Charts; ensure the component list matches your code.
-find_package(Qt6 REQUIRED COMPONENTS Widgets Concurrent Core Graphs)
+find_package(Qt6 6.6 REQUIRED COMPONENTS Widgets Concurrent Core Graphs LinguistTools)
 
 # ---- QML Debugging: explicitly disable -------------------------------------
 # Ensure QML debugging macro is NOT defined even if the IDE injects it.
@@ -60,8 +60,8 @@ if(PHX_DEV_TOOLS)
   target_link_libraries(icon_audit PRIVATE Qt6::Core)
 endif()
 
-# ---- Phoenix application ----------------------------------------------------
-add_executable(phoenix_app
+# ---- Phoenix sources --------------------------------------------------------
+set(PHOENIX_SOURCES
   # sources
   src/main.cpp
 
@@ -81,7 +81,7 @@ add_executable(phoenix_app
 
   # Icon system sources
   src/ui/icons/IconProvider.cpp
-          src/ui/icons/PhxLogging.cpp
+  src/ui/icons/PhxLogging.cpp
   src/ui/icons/IconBootstrap.cpp
   src/ui/icons/PhxIconImageProvider.cpp
   src/ui/UILogging.cpp
@@ -89,16 +89,9 @@ add_executable(phoenix_app
   # I/O utilities
   src/app/io/FileIO.cpp
 
-  # Palantir integration (conditional)
-  $<$<BOOL:${PHX_WITH_PALANTIR}>:src/palantir/PalantirClient.cpp>
-  $<$<BOOL:${PHX_WITH_PALANTIR}>:src/palantir/PalantirLogging.cpp>
-
-  # Developer tools (conditional)
-  $<$<BOOL:${PHX_DEV_TOOLS}>:src/tools/IconGallery.cpp>
-
-  # headers with Q_OBJECT for AUTOMOC
-  $<$<BOOL:${PHX_DEV_TOOLS}>:src/tools/IconGallery.h>
-  $<$<BOOL:${PHX_WITH_PALANTIR}>:src/palantir/PalantirClient.hpp>
+  # Internationalization
+  src/app/LocaleInit.cpp
+  src/app/LocaleInit.hpp
 
   # New UI structure - MainWindow
   src/ui/main/MainWindow.h
@@ -121,10 +114,112 @@ add_executable(phoenix_app
 
   # Qt resource file (AUTORCC)
   src/ui/icons/phoenix_icons.qrc
-
-  # macOS bundle icon (defined below on APPLE)
-  $<$<PLATFORM_ID:Darwin>:${APP_ICNS}>
 )
+
+if(PHX_WITH_PALANTIR)
+  list(APPEND PHOENIX_SOURCES
+    src/palantir/PalantirClient.cpp
+    src/palantir/PalantirLogging.cpp
+    src/palantir/PalantirClient.hpp
+  )
+endif()
+
+if(PHX_DEV_TOOLS)
+  list(APPEND PHOENIX_SOURCES
+    src/tools/IconGallery.cpp
+    src/tools/IconGallery.h
+  )
+endif()
+
+# ---- Phoenix application ----------------------------------------------------
+add_executable(phoenix_app
+  ${PHOENIX_SOURCES}
+)
+
+# ---- Translations ------------------------------------------------------------
+set(PHOENIX_TS
+  ${CMAKE_SOURCE_DIR}/translations/phoenix_en.ts
+  ${CMAKE_SOURCE_DIR}/translations/phoenix_de.ts
+)
+
+qt_add_lupdate(
+  LUPDATE_TARGET phoenix_update_ts
+  TS_FILES ${PHOENIX_TS}
+  SOURCES ${PHOENIX_SOURCES}
+  OPTIONS -no-obsolete
+)
+
+qt_add_lrelease(
+  LRELEASE_TARGET phoenix_qm
+  TS_FILES ${PHOENIX_TS}
+  QM_FILES_OUTPUT_VARIABLE PHOENIX_QM_FILES
+)
+
+add_custom_target(translations-update
+  DEPENDS phoenix_update_ts
+  COMMENT "Update translation catalogs (.ts)"
+)
+
+add_custom_target(translations
+  DEPENDS phoenix_qm
+  COMMENT "Compile translations (.ts -> .qm)"
+)
+
+if(TARGET phoenix_qm)
+  add_dependencies(phoenix_app phoenix_qm)
+else()
+  message(WARNING "phoenix_qm target unavailable; translations must be built via the translations target")
+endif()
+
+if(APPLE)
+  set(PHOENIX_TRANSLATIONS_INSTALL_DIR "Phoenix.app/Contents/Resources/translations" CACHE PATH "Install location for Phoenix translation files")
+else()
+  include(GNUInstallDirs)
+  set(PHOENIX_TRANSLATIONS_INSTALL_DIR "${CMAKE_INSTALL_BINDIR}/../translations" CACHE PATH "Install location for Phoenix translation files")
+endif()
+
+set(PHOENIX_RUNTIME_TRANSLATIONS_DIR "$<TARGET_FILE_DIR:phoenix_app>/translations")
+if(APPLE)
+  set(PHOENIX_RUNTIME_TRANSLATIONS_DIR "$<TARGET_FILE_DIR:phoenix_app>/../Resources/translations")
+endif()
+
+get_target_property(QT_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
+if(QT_QMAKE_EXECUTABLE)
+  get_filename_component(QT_BIN_DIR "${QT_QMAKE_EXECUTABLE}" DIRECTORY)
+  get_filename_component(QT_INSTALL_PREFIX "${QT_BIN_DIR}/.." ABSOLUTE)
+  set(QT_TRANSLATIONS_DIR "${QT_INSTALL_PREFIX}/translations")
+endif()
+
+add_custom_command(TARGET phoenix_app POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${PHOENIX_RUNTIME_TRANSLATIONS_DIR}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PHOENIX_QM_FILES} "${PHOENIX_RUNTIME_TRANSLATIONS_DIR}"
+)
+
+# Install Phoenix QMs alongside bundled Qt base translations
+if(QT_TRANSLATIONS_DIR)
+  add_custom_command(TARGET phoenix_app POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${QT_TRANSLATIONS_DIR}/qtbase_en.qm"
+      "${QT_TRANSLATIONS_DIR}/qtbase_de.qm"
+      "${PHOENIX_RUNTIME_TRANSLATIONS_DIR}"
+    COMMENT "Copy qtbase_en/de.qm into runtime translations"
+  )
+endif()
+
+install(FILES ${PHOENIX_QM_FILES}
+  DESTINATION ${PHOENIX_TRANSLATIONS_INSTALL_DIR}
+  COMPONENT Runtime
+)
+
+if(QT_TRANSLATIONS_DIR)
+  install(FILES
+    "${QT_TRANSLATIONS_DIR}/qtbase_en.qm"
+    "${QT_TRANSLATIONS_DIR}/qtbase_de.qm"
+    DESTINATION ${PHOENIX_TRANSLATIONS_INSTALL_DIR}
+    COMPONENT Runtime
+    OPTIONAL
+  )
+endif()
 
 # Include paths for the app
 target_include_directories(phoenix_app PRIVATE

@@ -4,6 +4,7 @@
 #include "../icons/IconProvider.h"
 #include "../icons/PhxLogging.h"
 #include "../UILogging.h"
+#include "app/LocaleInit.hpp"
 #include "app/SettingsProvider.h"
 #include "app/SettingsKeys.h"
 #include "app/io/FileIO.h"
@@ -24,7 +25,6 @@
 #include <QTimer>
 #include <QElapsedTimer>
 #include <QLocale>
-#include <QTranslator>
 #include <QProcess>
 #include <QThread>
 #include <QDebug>
@@ -97,7 +97,6 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     , m_systemThemeAction(nullptr)
     , m_themeGroup(nullptr)
     , m_settingsProvider(sp)
-    , m_translator(new QTranslator(this))
     , m_themeManager(nullptr)  // Defer initialization to avoid circular dependency
     , m_debugTimer(new QTimer(this))
     , m_startupTime(0)
@@ -370,36 +369,12 @@ QMenu* MainWindow::createViewMenu()
     QMenu* languageMenu = new QMenu(tr("&Language"), this);
     
     QAction* englishAction = new QAction(tr("&English"), this);
-    connect(englishAction, &QAction::triggered, this, [this]() { setLanguage("en"); });
+    connect(englishAction, &QAction::triggered, this, [this]() { setLanguage(QStringLiteral("en")); });
     languageMenu->addAction(englishAction);
     
-    QAction* germanAction = new QAction(tr("&German"), this);
-    connect(germanAction, &QAction::triggered, this, [this]() { setLanguage("de"); });
+    QAction* germanAction = new QAction(tr("&Deutsch"), this);
+    connect(germanAction, &QAction::triggered, this, [this]() { setLanguage(QStringLiteral("de")); });
     languageMenu->addAction(germanAction);
-    
-    QAction* frenchAction = new QAction(tr("&French"), this);
-    connect(frenchAction, &QAction::triggered, this, [this]() { setLanguage("fr"); });
-    languageMenu->addAction(frenchAction);
-    
-    QAction* spanishAction = new QAction(tr("&Spanish"), this);
-    connect(spanishAction, &QAction::triggered, this, [this]() { setLanguage("es"); });
-    languageMenu->addAction(spanishAction);
-    
-    QAction* chineseTradAction = new QAction(tr("Chinese (&Traditional)"), this);
-    connect(chineseTradAction, &QAction::triggered, this, [this]() { setLanguage("zh_TW"); });
-    languageMenu->addAction(chineseTradAction);
-    
-    QAction* chineseSimpAction = new QAction(tr("Chinese (&Simplified)"), this);
-    connect(chineseSimpAction, &QAction::triggered, this, [this]() { setLanguage("zh_CN"); });
-    languageMenu->addAction(chineseSimpAction);
-    
-    QAction* koreanAction = new QAction(tr("&Korean"), this);
-    connect(koreanAction, &QAction::triggered, this, [this]() { setLanguage("ko"); });
-    languageMenu->addAction(koreanAction);
-    
-    QAction* japaneseAction = new QAction(tr("&Japanese"), this);
-    connect(japaneseAction, &QAction::triggered, this, [this]() { setLanguage("ja"); });
-    languageMenu->addAction(japaneseAction);
     
     viewMenu->addMenu(languageMenu);
     
@@ -813,10 +788,17 @@ void MainWindow::setupConnections()
 void MainWindow::setupTranslations()
 {
     if (!m_settingsProvider) return;
-    // Load current language from settings
+
     auto& s = m_settingsProvider->settings();
-    QString language = s.value(PhxKeys::I18N_LANGUAGE, "en").toString();
-    setLanguage(language);
+    QString language = s.value(PhxKeys::UI_LANGUAGE).toString();
+    if (language.isEmpty()) {
+        language = s.value(PhxKeys::I18N_LANGUAGE, QStringLiteral("en")).toString();
+    }
+    if (language != QStringLiteral("de")) {
+        language = QStringLiteral("en");
+    }
+
+    m_currentLocale = QLocale(i18n::localeForLanguage(language));
 }
 
 void MainWindow::setupTheme()
@@ -1091,24 +1073,28 @@ void MainWindow::setSystemTheme()
 
 void MainWindow::setLanguage(const QString& language)
 {
-    if (language == m_currentLocale.name().left(2)) return;
-    
-    // Remove old translator
-    QApplication::removeTranslator(m_translator);
-    
-    // Load new translation
-    QString translationFile = QString(":/translations/phoenix_%1.qm").arg(language);
-    if (m_translator->load(translationFile)) {
-        QApplication::installTranslator(m_translator);
-        m_currentLocale = QLocale(language);
-        if (m_settingsProvider) {
-            auto& s = m_settingsProvider->settings();
-            s.setValue(PhxKeys::I18N_LANGUAGE, language);
-        }
-        
-        // Retranslate UI
-        retranslateUi();
+    const QString normalized = (language == QStringLiteral("de")) ? QStringLiteral("de") : QStringLiteral("en");
+
+    if (m_currentLocale.name().left(2) == normalized) {
+        return;
     }
+
+    if (m_settingsProvider) {
+        auto& s = m_settingsProvider->settings();
+        s.setValue(PhxKeys::UI_LANGUAGE, normalized);
+        s.setValue(PhxKeys::UI_LOCALE, i18n::localeForLanguage(normalized));
+        s.setValue(PhxKeys::I18N_LANGUAGE, normalized); // legacy key for compatibility
+        s.sync();
+    }
+
+    m_currentLocale = QLocale(i18n::localeForLanguage(normalized));
+    updateDebugInfo();
+
+    QMessageBox::information(
+        this,
+        tr("Restart Required"),
+        tr("Language will apply after restart.")
+    );
 }
 
 void MainWindow::onThemeChanged()

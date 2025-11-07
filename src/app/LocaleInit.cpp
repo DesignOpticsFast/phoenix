@@ -1,0 +1,159 @@
+#include "LocaleInit.hpp"
+
+#include <QApplication>
+#include <QCoreApplication>
+#include <QDebug>
+#include <QDir>
+#include <QLibraryInfo>
+#include <QLocale>
+#include <QProcessEnvironment>
+#include <QSettings>
+#include <QStringList>
+#include <QTranslator>
+
+namespace {
+QString normalizedLang(const QString& value)
+{
+    const QString lowered = value.trimmed().toLower();
+    if (lowered == QStringLiteral("de")) {
+        return QStringLiteral("de");
+    }
+    return QStringLiteral("en");
+}
+
+QString languageFromArgs(const QStringList& args)
+{
+    for (int i = 1; i < args.size(); ++i) {
+        const QString arg = args.at(i);
+        if (arg == QStringLiteral("--lang") && i + 1 < args.size()) {
+            return args.at(i + 1);
+        }
+        if (arg.startsWith(QStringLiteral("--lang="))) {
+            return arg.mid(QStringLiteral("--lang=").length());
+        }
+    }
+    return {};
+}
+
+QStringList translationSearchPaths()
+{
+    QStringList paths;
+    const QString qtTranslations = QLibraryInfo::path(QLibraryInfo::TranslationsPath);
+    if (!qtTranslations.isEmpty()) {
+        paths << qtTranslations;
+    }
+
+#ifdef Q_OS_MAC
+    QDir bundleDir(QCoreApplication::applicationDirPath());
+    if (bundleDir.cdUp() && bundleDir.cd(QStringLiteral("Resources")) && bundleDir.cd(QStringLiteral("translations"))) {
+        paths << bundleDir.absolutePath();
+    }
+#endif
+
+    paths << (QCoreApplication::applicationDirPath() + QStringLiteral("/translations"));
+
+    paths.removeDuplicates();
+    return paths;
+}
+
+bool loadTranslator(QTranslator& translator, const QString& prefix, const QString& lang, const QStringList& searchPaths, QString& resolvedPath)
+{
+    for (const auto& dirPath : searchPaths) {
+        if (translator.load(QStringLiteral("%1_%2.qm").arg(prefix, lang), dirPath)) {
+            if (!translator.isEmpty()) {
+                resolvedPath = dirPath;
+                return true;
+            }
+        }
+    }
+    resolvedPath.clear();
+    return false;
+}
+
+void ensureSettingsDefaults(const QString& lang, const QString& locale, bool hadStoredLang)
+{
+    QSettings settings;
+    if (!hadStoredLang) {
+        settings.setValue(QStringLiteral("ui/language"), lang);
+    }
+    settings.setValue(QStringLiteral("ui/locale"), locale);
+}
+} // namespace
+
+namespace i18n {
+
+QString localeForLanguage(const QString& shortLang)
+{
+    return (shortLang == QStringLiteral("de")) ? QStringLiteral("de_DE") : QStringLiteral("en_US");
+}
+
+Result setup(QApplication& app)
+{
+    Result result;
+
+    static QTranslator qtTranslator;
+    static QTranslator appTranslator;
+
+    app.removeTranslator(&qtTranslator);
+    app.removeTranslator(&appTranslator);
+
+    QSettings settings;
+    const QString storedLang = settings.value(QStringLiteral("ui/language")).toString();
+    const bool hadStoredLang = !storedLang.isEmpty();
+
+    QString lang = storedLang;
+
+    if (lang.isEmpty()) {
+        lang = languageFromArgs(QCoreApplication::arguments());
+    }
+    if (lang.isEmpty()) {
+        lang = qEnvironmentVariable("PHOENIX_LANG");
+    }
+    if (lang.isEmpty()) {
+        lang = QLocale::system().name().left(2);
+    }
+
+    lang = normalizedLang(lang);
+
+    result.lang = lang;
+    result.locale = localeForLanguage(lang);
+
+    QLocale::setDefault(QLocale(result.locale));
+
+    const QStringList searchPaths = translationSearchPaths();
+    qInfo().noquote() << "[i18n] translation search paths:" << searchPaths.join(QStringLiteral("; " ));
+
+    bool qtLoaded = loadTranslator(qtTranslator, QStringLiteral("qtbase"), lang, searchPaths, result.qtBasePath);
+    bool appLoaded = loadTranslator(appTranslator, QStringLiteral("phoenix"), lang, searchPaths, result.appPath);
+
+    if (!qtLoaded || !appLoaded) {
+        if (lang != QStringLiteral("en")) {
+            qWarning() << "[i18n] Missing translators for" << lang << "— falling back to English.";
+        }
+        lang = QStringLiteral("en");
+        result.lang = lang;
+        result.locale = localeForLanguage(lang);
+        QLocale::setDefault(QLocale(result.locale));
+
+        qtLoaded = loadTranslator(qtTranslator, QStringLiteral("qtbase"), lang, searchPaths, result.qtBasePath);
+        appLoaded = loadTranslator(appTranslator, QStringLiteral("phoenix"), lang, searchPaths, result.appPath);
+    }
+
+    if (qtLoaded && !qtTranslator.isEmpty()) {
+        app.installTranslator(&qtTranslator);
+    }
+    if (appLoaded && !appTranslator.isEmpty()) {
+        app.installTranslator(&appTranslator);
+    }
+
+    ensureSettingsDefaults(result.lang, result.locale, hadStoredLang);
+
+    qInfo().nospace() << "[i18n] lang=" << result.lang
+                      << " locale=" << result.locale
+                      << " qtBasePath=" << (result.qtBasePath.isEmpty() ? QStringLiteral("<none>") : result.qtBasePath)
+                      << " appPath=" << (result.appPath.isEmpty() ? QStringLiteral("<none>") : result.appPath);
+
+    return result;
+}
+
+} // namespace i18n

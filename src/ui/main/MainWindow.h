@@ -9,7 +9,6 @@
 #include <QTimer>
 #include <QElapsedTimer>
 #include <QLocale>
-#include <QTranslator>
 #include <QPointer>
 
 QT_BEGIN_NAMESPACE
@@ -159,7 +158,6 @@ private:
     // Settings and state
     QPointer<class SettingsProvider> m_settingsProvider;
     QLocale m_currentLocale;
-    QTranslator* m_translator;
     ThemeManager* m_themeManager;
     
     // Debug info timer

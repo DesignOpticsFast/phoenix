@@ -4,6 +4,7 @@
 #include "ui/icons/IconProvider.h"
 #include "ui/icons/PhxLogging.h"
 #include "ui/themes/ThemeManager.h"
+#include "app/LocaleInit.hpp"
 #include "app/SettingsProvider.h"
 #include "version.h"
 #include <QApplication>
@@ -29,10 +30,13 @@ int main(int argc, char** argv) {
     ));
     
     // Set application properties
-    app.setApplicationName("Phoenix");
-    app.setApplicationVersion(QStringLiteral(PHOENIX_VERSION));
-    app.setOrganizationName("Phoenix");
-    app.setOrganizationDomain("phoenix.dev");
+    QCoreApplication::setApplicationName("Phoenix");
+    QCoreApplication::setApplicationVersion(QStringLiteral(PHOENIX_VERSION));
+    QCoreApplication::setOrganizationName("Phoenix");
+    QCoreApplication::setOrganizationDomain("phoenix.dev");
+    
+    auto i18nResult = i18n::setup(app);
+    Q_UNUSED(i18nResult);
     
     // Set application icon for Dock on macOS
     app.setWindowIcon(QIcon(":/phoenix-icon.svg"));

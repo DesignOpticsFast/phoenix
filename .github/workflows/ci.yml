@@ -279,6 +279,9 @@ jobs:
         run: cmake --build build/dev-01-relwithdebinfo -j $(nproc || echo 4)
         continue-on-error: false
 
+      - name: Translation drift guard
+        run: ./ci/check_translations.sh build/dev-01-relwithdebinfo
+
       - name: Unit tests
         if: hashFiles('build/dev-01-relwithdebinfo/CTestTestfile.cmake') != ''
         run: ctest --test-dir build/dev-01-relwithdebinfo --output-on-failure

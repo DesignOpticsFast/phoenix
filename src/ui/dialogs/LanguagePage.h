@@ -7,6 +7,7 @@
 #include <QHBoxLayout>
 #include <QFormLayout>
 #include <QSettings>
+#include <QStringList>
 
 class LanguagePage : public QWidget
 {
@@ -19,21 +20,21 @@ public:
     void loadSettings();
     void saveSettings();
 
-signals:
-    void languageChanged(const QString& language);
-
 private slots:
     void onLanguageChanged(int index);
 
 private:
     void setupUi();
     void populateLanguages();
-    void updateCurrentLanguageDisplay();
+    void updateCurrentLanguageDisplay(int index);
+    void applyLanguageSelection(const QString& code);
 
     QComboBox* m_languageCombo;
     QLabel* m_currentLanguageLabel;
     QSettings& m_settings;
-    
+
     QStringList m_languageCodes;
     QStringList m_languageNames;
+    bool m_isInitializing;
+    QString m_selectedLanguage;
 };
