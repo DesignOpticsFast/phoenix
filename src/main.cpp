@@ -15,6 +15,7 @@
 #include <QLoggingCategory>
 #include <QProcessEnvironment>
 #include <memory>
+#include "app/I18nSelfTest.hpp"
 
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
@@ -35,6 +36,22 @@ int main(int argc, char** argv) {
     QCoreApplication::setOrganizationName("Phoenix");
     QCoreApplication::setOrganizationDomain("phoenix.dev");
     
+    const QStringList args = QCoreApplication::arguments();
+    const bool testI18n = args.contains(QStringLiteral("--test-i18n"));
+    QString optLang;
+    for (int i = 0; i < args.size(); ++i) {
+        if (args[i] == QStringLiteral("--lang") && i + 1 < args.size()) {
+            optLang = args[i + 1];
+        } else if (args[i].startsWith(QStringLiteral("--lang="))) {
+            optLang = args[i].mid(7);
+        }
+    }
+
+    if (testI18n) {
+        qputenv("QT_QPA_PLATFORM", QByteArray("offscreen"));
+        return i18nselftest::run(app, optLang);
+    }
+
     auto i18nResult = i18n::setup(app);
     Q_UNUSED(i18nResult);
     

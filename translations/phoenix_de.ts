@@ -121,7 +121,7 @@ Fortfahren?</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/LanguagePage.cpp" line="75"/>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="185"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="184"/>
         <source>Language changes will take effect after restarting the application.</source>
         <translation>Sprachänderungen werden nach einem Neustart der Anwendung wirksam.</translation>
     </message>
@@ -136,12 +136,12 @@ Fortfahren?</translation>
         <translation>Deutsch</translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="158"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="157"/>
         <source>Pending: %1 (applies after restart)</source>
         <translation>Ausstehend: %1 (wirkt nach einem Neustart)</translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="184"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="183"/>
         <source>Restart Required</source>
         <translation>Neustart erforderlich</translation>
     </message>

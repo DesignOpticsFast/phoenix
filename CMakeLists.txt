@@ -89,9 +89,11 @@ set(PHOENIX_SOURCES
   # I/O utilities
   src/app/io/FileIO.cpp
 
-  # Internationalization
+  # I18n utilities
   src/app/LocaleInit.cpp
   src/app/LocaleInit.hpp
+  src/app/I18nSelfTest.cpp
+  src/app/I18nSelfTest.hpp
 
   # New UI structure - MainWindow
   src/ui/main/MainWindow.h
@@ -190,36 +192,26 @@ if(QT_QMAKE_EXECUTABLE)
   set(QT_TRANSLATIONS_DIR "${QT_INSTALL_PREFIX}/translations")
 endif()
 
-add_custom_command(TARGET phoenix_app POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E make_directory "${PHOENIX_RUNTIME_TRANSLATIONS_DIR}"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PHOENIX_QM_FILES} "${PHOENIX_RUNTIME_TRANSLATIONS_DIR}"
-)
-
-# Install Phoenix QMs alongside bundled Qt base translations
-if(QT_TRANSLATIONS_DIR)
-  add_custom_command(TARGET phoenix_app POST_BUILD
+function(wire_translations_for TARGET_NAME)
+  if(NOT TARGET ${TARGET_NAME})
+    return()
+  endif()
+  if(APPLE)
+    set(_dst "$<TARGET_FILE_DIR:${TARGET_NAME}>/../Resources/translations")
+  else()
+    set(_dst "$<TARGET_FILE_DIR:${TARGET_NAME}>/translations")
+  endif()
+  add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_dst}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PHOENIX_QM_FILES} "${_dst}"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-      "${QT_TRANSLATIONS_DIR}/qtbase_en.qm"
-      "${QT_TRANSLATIONS_DIR}/qtbase_de.qm"
-      "${PHOENIX_RUNTIME_TRANSLATIONS_DIR}"
-    COMMENT "Copy qtbase_en/de.qm into runtime translations"
+            "${QT_TRANSLATIONS_DIR}/qtbase_en.qm"
+            "${QT_TRANSLATIONS_DIR}/qtbase_de.qm"
+            "${_dst}"
   )
-endif()
+endfunction()
 
-install(FILES ${PHOENIX_QM_FILES}
-  DESTINATION ${PHOENIX_TRANSLATIONS_INSTALL_DIR}
-  COMPONENT Runtime
-)
-
-if(QT_TRANSLATIONS_DIR)
-  install(FILES
-    "${QT_TRANSLATIONS_DIR}/qtbase_en.qm"
-    "${QT_TRANSLATIONS_DIR}/qtbase_de.qm"
-    DESTINATION ${PHOENIX_TRANSLATIONS_INSTALL_DIR}
-    COMPONENT Runtime
-    OPTIONAL
-  )
-endif()
+wire_translations_for(phoenix_app)
 
 # Include paths for the app
 target_include_directories(phoenix_app PRIVATE
