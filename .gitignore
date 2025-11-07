@@ -111,3 +111,6 @@ phoenix_ci_audit/
 ci-audit-package/
 *.zip
 
+
+# UnderLord runtime state (ephemeral)
+.underlord/state/
