@@ -107,18 +107,17 @@ void LanguagePage::loadSettings()
 
     QString applied = normalizedCode(m_settings.value(PhxKeys::UI_APPLIED_LANGUAGE).toString());
     if (applied.isEmpty()) {
-        applied = normalizedCode(QLocale().name().left(2));
-    }
-    if (applied.isEmpty()) {
         applied = stored;
     }
 
     m_appliedLanguage = applied;
     m_storedLanguage = stored;
 
+    qInfo() << "[LanguagePage] loadSettings stored=" << m_storedLanguage << "applied=" << m_appliedLanguage;
+
     m_currentLanguageLabel->setText(humanNameFromCode(m_appliedLanguage));
 
-    int index = m_languageCodes.indexOf(stored);
+    int index = m_languageCodes.indexOf(m_storedLanguage);
     if (index < 0) {
         index = 0;
     }
@@ -182,6 +181,5 @@ void LanguagePage::applyLanguageSelection(const QString& code)
     QMessageBox::information(
         this,
         tr("Restart Required"),
-        tr("Language changes will take effect after restarting the application.")
-    );
+        tr("Language changes will take effect after restarting the application."));
 }

@@ -74,10 +74,12 @@ bool loadTranslator(QTranslator& translator, const QString& prefix, const QStrin
 void ensureSettingsDefaults(const QString& lang, const QString& locale, bool hadStoredLang)
 {
     QSettings settings;
-    if (!hadStoredLang) {
+    if (!hadStoredLang && !settings.contains(PhxKeys::UI_LANGUAGE)) {
         settings.setValue(PhxKeys::UI_LANGUAGE, lang);
     }
-    settings.setValue(PhxKeys::UI_LOCALE, locale);
+    if (!settings.contains(PhxKeys::UI_LOCALE)) {
+        settings.setValue(PhxKeys::UI_LOCALE, locale);
+    }
 }
 } // namespace
 
@@ -122,10 +124,14 @@ Result setup(QApplication& app)
     QLocale::setDefault(QLocale(result.locale));
 
     const QStringList searchPaths = translationSearchPaths();
-    qInfo().noquote() << "[i18n] translation search paths:" << searchPaths.join(QStringLiteral("; " ));
+    qInfo().noquote() << "[i18n] translation search paths:" << searchPaths.join(QStringLiteral("; "));
 
     bool qtLoaded = loadTranslator(qtTranslator, QStringLiteral("qtbase"), lang, searchPaths, result.qtBasePath);
     bool appLoaded = loadTranslator(appTranslator, QStringLiteral("phoenix"), lang, searchPaths, result.appPath);
+    qInfo().nospace() << "[i18n] load qtbase (" << lang << ") => " << (qtLoaded ? "OK" : "FAIL")
+                      << ", path=" << (result.qtBasePath.isEmpty() ? QStringLiteral("<none>") : result.qtBasePath);
+    qInfo().nospace() << "[i18n] load phoenix (" << lang << ") => " << (appLoaded ? "OK" : "FAIL")
+                      << ", path=" << (result.appPath.isEmpty() ? QStringLiteral("<none>") : result.appPath);
 
     if (!qtLoaded || !appLoaded) {
         if (lang != QStringLiteral("en")) {
@@ -138,6 +144,10 @@ Result setup(QApplication& app)
 
         qtLoaded = loadTranslator(qtTranslator, QStringLiteral("qtbase"), lang, searchPaths, result.qtBasePath);
         appLoaded = loadTranslator(appTranslator, QStringLiteral("phoenix"), lang, searchPaths, result.appPath);
+        qInfo().nospace() << "[i18n] fallback qtbase => " << (qtLoaded ? "OK" : "FAIL")
+                          << ", path=" << (result.qtBasePath.isEmpty() ? QStringLiteral("<none>") : result.qtBasePath);
+        qInfo().nospace() << "[i18n] fallback phoenix => " << (appLoaded ? "OK" : "FAIL")
+                          << ", path=" << (result.appPath.isEmpty() ? QStringLiteral("<none>") : result.appPath);
     }
 
     if (qtLoaded && !qtTranslator.isEmpty()) {
@@ -155,7 +165,8 @@ Result setup(QApplication& app)
     qInfo().nospace() << "[i18n] lang=" << result.lang
                       << " locale=" << result.locale
                       << " qtBasePath=" << (result.qtBasePath.isEmpty() ? QStringLiteral("<none>") : result.qtBasePath)
-                      << " appPath=" << (result.appPath.isEmpty() ? QStringLiteral("<none>") : result.appPath);
+                      << " appPath=" << (result.appPath.isEmpty() ? QStringLiteral("<none>") : result.appPath)
+                      << " stored=" << storedLang;
 
     return result;
 }

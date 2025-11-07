@@ -1,10 +1,10 @@
-# UnderLord non-interactive defaults
 interaction:
   noninteractive: true
   assume_yes: true
-  confirm_apply_patch: false
-  confirm_overwrite_files: false
-  show_diff_previews: false
-  keep_files_on_success: true
-  keep_files_on_failure: true
   prompt_at_end: false
+
+finalize:
+  prompt: false
+  keep_changes: true
+  keep_files: true
+  mode: keep
