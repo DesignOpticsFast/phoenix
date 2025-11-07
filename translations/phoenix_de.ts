@@ -4,108 +4,136 @@
 <context>
     <name>EnvironmentPage</name>
     <message>
-        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="41"/>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="46"/>
         <source>System Information</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="46"/>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="51"/>
         <source>QSettings Location:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="50"/>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="55"/>
         <source>Qt Version:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="54"/>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="59"/>
         <source>Platform:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="58"/>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="63"/>
         <source>Application Version:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="63"/>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="68"/>
         <source>Font Awesome Families</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="117"/>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="88"/>
+        <source>Reset to Factory Defaults…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="138"/>
         <source>Loaded %1/%2 Font Awesome fonts.
 
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="130"/>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="151"/>
         <source>Font families:
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="137"/>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="158"/>
         <source>Expected fonts:
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="143"/>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="164"/>
         <source>
 Status:
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="154"/>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="175"/>
         <source>
 See log for details.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="185"/>
+        <source>Reset Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="186"/>
+        <source>This will clear all saved preferences and restore defaults.
+
+Continue?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="199"/>
+        <source>Defaults Restored</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/dialogs/EnvironmentPage.cpp" line="200"/>
+        <source>Settings were reset. Please restart Phoenix to apply all changes.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>LanguagePage</name>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="28"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="46"/>
         <source>Language Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="40"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="58"/>
         <source>Interface Language:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="45"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="63"/>
         <source>Current Language:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="52"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="74"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="174"/>
         <source>Language changes will take effect after restarting the application.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="63"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="87"/>
         <source>English</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="63"/>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="87"/>
         <source>Deutsch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="141"/>
-        <source>Restart Required</source>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="147"/>
+        <source>Pending: %1 (applies after restart)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="142"/>
-        <source>Language will apply after restart.</source>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="173"/>
+        <source>Restart Required</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -576,6 +604,19 @@ Running on %3</source>
     <message>
         <location filename="../src/ui/dialogs/PreferencesDialog.cpp" line="95"/>
         <source>Apply</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QObject</name>
+    <message>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="19"/>
+        <source>German</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/dialogs/LanguagePage.cpp" line="19"/>
+        <source>English</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

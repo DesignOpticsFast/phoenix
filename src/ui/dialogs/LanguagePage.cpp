@@ -2,11 +2,29 @@
 #include "app/LocaleInit.hpp"
 #include "app/SettingsKeys.h"
 #include <QMessageBox>
+#include <QLocale>
+
+namespace {
+QString normalizedCode(const QString& value)
+{
+    const QString lowered = value.trimmed().toLower();
+    if (lowered == QStringLiteral("de")) {
+        return QStringLiteral("de");
+    }
+    return QStringLiteral("en");
+}
+
+QString humanNameFromCode(const QString& code)
+{
+    return (code == QStringLiteral("de")) ? QObject::tr("German") : QObject::tr("English");
+}
+}
 
 LanguagePage::LanguagePage(QSettings& s, QWidget *parent)
     : QWidget(parent)
     , m_languageCombo(nullptr)
     , m_currentLanguageLabel(nullptr)
+    , m_pendingLabel(nullptr)
     , m_settings(s)
     , m_isInitializing(false)
 {
@@ -45,7 +63,11 @@ void LanguagePage::setupUi()
     formLayout->addRow(tr("Current Language:"), m_currentLanguageLabel);
     
     mainLayout->addLayout(formLayout);
-    mainLayout->addStretch();
+
+    m_pendingLabel = new QLabel(this);
+    m_pendingLabel->setStyleSheet("color: #aa8800; font-style: italic;");
+    m_pendingLabel->setVisible(false);
+    mainLayout->addWidget(m_pendingLabel);
     
     // Info text
     QLabel* infoLabel = new QLabel(
@@ -55,6 +77,8 @@ void LanguagePage::setupUi()
     infoLabel->setStyleSheet("color: #888; font-size: 11px;");
     infoLabel->setWordWrap(true);
     mainLayout->addWidget(infoLabel);
+    
+    mainLayout->addStretch();
 }
 
 void LanguagePage::populateLanguages()
@@ -72,23 +96,27 @@ void LanguagePage::loadSettings()
 {
     m_isInitializing = true;
 
-    QString code = m_settings.value(PhxKeys::UI_LANGUAGE).toString();
-    if (code.isEmpty()) {
-        code = m_settings.value(PhxKeys::I18N_LANGUAGE).toString();
+    QString stored = normalizedCode(m_settings.value(PhxKeys::UI_LANGUAGE).toString());
+    if (stored.isEmpty()) {
+        stored = normalizedCode(m_settings.value(PhxKeys::I18N_LANGUAGE).toString());
     }
-    if (code != QStringLiteral("de")) {
-        code = QStringLiteral("en");
+    if (stored.isEmpty()) {
+        stored = QStringLiteral("en");
     }
 
-    m_selectedLanguage = code;
+    QString active = normalizedCode(QLocale().name().left(2));
+    m_activeLanguage = active;
+    m_storedLanguage = stored;
 
-    int index = m_languageCodes.indexOf(code);
+    m_currentLanguageLabel->setText(humanNameFromCode(active));
+
+    int index = m_languageCodes.indexOf(stored);
     if (index < 0) {
         index = 0;
     }
 
     m_languageCombo->setCurrentIndex(index);
-    updateCurrentLanguageDisplay(index);
+    updatePendingStatus();
 
     m_isInitializing = false;
 }
@@ -104,8 +132,6 @@ void LanguagePage::onLanguageChanged(int index)
         return;
     }
 
-    updateCurrentLanguageDisplay(index);
-
     if (m_isInitializing) {
         return;
     }
@@ -114,31 +140,37 @@ void LanguagePage::onLanguageChanged(int index)
     applyLanguageSelection(code);
 }
 
-void LanguagePage::updateCurrentLanguageDisplay(int index)
+void LanguagePage::updatePendingStatus()
 {
-    if (index >= 0 && index < m_languageNames.size()) {
-        m_currentLanguageLabel->setText(m_languageNames.at(index));
+    const bool hasPending = !m_storedLanguage.isEmpty() && m_storedLanguage != m_activeLanguage;
+    if (hasPending) {
+        m_pendingLabel->setText(tr("Pending: %1 (applies after restart)").arg(humanNameFromCode(m_storedLanguage)));
+        m_pendingLabel->setVisible(true);
+    } else {
+        m_pendingLabel->clear();
+        m_pendingLabel->setVisible(false);
     }
 }
 
 void LanguagePage::applyLanguageSelection(const QString& code)
 {
-    if (code.isEmpty() || code == m_selectedLanguage) {
+    const QString normalized = normalizedCode(code);
+    if (normalized.isEmpty() || normalized == m_storedLanguage) {
+        updatePendingStatus();
         return;
     }
 
-    m_settings.setValue(PhxKeys::UI_LANGUAGE, code);
-    m_settings.setValue(PhxKeys::UI_LOCALE, i18n::localeForLanguage(code));
+    m_settings.setValue(PhxKeys::UI_LANGUAGE, normalized);
+    m_settings.setValue(PhxKeys::UI_LOCALE, i18n::localeForLanguage(normalized));
+    m_settings.setValue(PhxKeys::I18N_LANGUAGE, normalized);
     m_settings.sync();
 
-    // Legacy key update for compatibility
-    m_settings.setValue(PhxKeys::I18N_LANGUAGE, code);
-
-    m_selectedLanguage = code;
+    m_storedLanguage = normalized;
+    updatePendingStatus();
 
     QMessageBox::information(
         this,
         tr("Restart Required"),
-        tr("Language will apply after restart.")
+        tr("Language changes will take effect after restarting the application.")
     );
 }

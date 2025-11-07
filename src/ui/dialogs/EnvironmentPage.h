@@ -9,6 +9,8 @@
 #include <QGroupBox>
 #include <QSettings>
 
+class QPushButton;
+
 class EnvironmentPage : public QWidget
 {
     Q_OBJECT
@@ -20,6 +22,9 @@ public:
     void loadSettings();
     void saveSettings();
 
+private slots:
+    void onResetToDefaults();
+
 private:
     void setupUI();
     void updateSystemInfo();
@@ -30,6 +35,7 @@ private:
     QFormLayout* m_systemInfoLayout;
     QGroupBox* m_fontAwesomeGroup;
     QVBoxLayout* m_fontAwesomeLayout;
+    QPushButton* m_resetButton;
     
     // System information labels
     QLabel* m_qsettingsLocationLabel;

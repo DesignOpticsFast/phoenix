@@ -10,6 +10,10 @@
 #include <QApplication>
 #include <QStandardPaths>
 #include <QDebug>
+#include <QPushButton>
+#include <QFrame>
+#include <QMessageBox>
+#include <algorithm>
 
 EnvironmentPage::EnvironmentPage(QSettings& s, QWidget *parent)
     : QWidget(parent)
@@ -18,6 +22,7 @@ EnvironmentPage::EnvironmentPage(QSettings& s, QWidget *parent)
     , m_systemInfoLayout(nullptr)
     , m_fontAwesomeGroup(nullptr)
     , m_fontAwesomeLayout(nullptr)
+    , m_resetButton(nullptr)
     , m_qsettingsLocationLabel(nullptr)
     , m_qtVersionLabel(nullptr)
     , m_platformLabel(nullptr)
@@ -69,6 +74,22 @@ void EnvironmentPage::setupUI()
     m_fontAwesomeLayout->addWidget(m_fontAwesomeTextEdit);
     
     m_mainLayout->addWidget(m_fontAwesomeGroup);
+    
+    // Separator and reset controls
+    QFrame* separator = new QFrame(this);
+    separator->setFrameShape(QFrame::HLine);
+    separator->setFrameShadow(QFrame::Sunken);
+    m_mainLayout->addWidget(separator);
+
+    QHBoxLayout* resetLayout = new QHBoxLayout();
+    resetLayout->setContentsMargins(0, 0, 0, 0);
+    resetLayout->addStretch();
+
+    m_resetButton = new QPushButton(tr("Reset to Factory Defaults…"), this);
+    connect(m_resetButton, &QPushButton::clicked, this, &EnvironmentPage::onResetToDefaults);
+    resetLayout->addWidget(m_resetButton);
+
+    m_mainLayout->addLayout(resetLayout);
     
     // Add stretch to push everything to the top
     m_mainLayout->addStretch();
@@ -155,4 +176,28 @@ void EnvironmentPage::updateSystemInfo()
     }
     
     m_fontAwesomeTextEdit->setPlainText(fontInfo);
+}
+
+void EnvironmentPage::onResetToDefaults()
+{
+    const auto response = QMessageBox::warning(
+        this,
+        tr("Reset Settings"),
+        tr("This will clear all saved preferences and restore defaults.\n\nContinue?"),
+        QMessageBox::Yes | QMessageBox::No,
+        QMessageBox::No);
+
+    if (response != QMessageBox::Yes) {
+        return;
+    }
+
+    m_settings.clear();
+    m_settings.sync();
+
+    QMessageBox::information(
+        this,
+        tr("Defaults Restored"),
+        tr("Settings were reset. Please restart Phoenix to apply all changes."));
+
+    updateSystemInfo();
 }

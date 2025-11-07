@@ -26,15 +26,17 @@ private slots:
 private:
     void setupUi();
     void populateLanguages();
-    void updateCurrentLanguageDisplay(int index);
+    void updatePendingStatus();
     void applyLanguageSelection(const QString& code);
 
     QComboBox* m_languageCombo;
     QLabel* m_currentLanguageLabel;
+    QLabel* m_pendingLabel;
     QSettings& m_settings;
 
     QStringList m_languageCodes;
     QStringList m_languageNames;
     bool m_isInitializing;
-    QString m_selectedLanguage;
+    QString m_activeLanguage;
+    QString m_storedLanguage;
 };
