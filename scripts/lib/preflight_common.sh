@@ -59,9 +59,14 @@ preflight_configure_build() {
   local verbose="${2:-false}"
   [[ "$verbose" == "true" ]] && set -x
 
+  echo "[preflight] CMAKE_PREFIX_PATH(before)='${CMAKE_PREFIX_PATH:-}'"
+  echo "[preflight] Qt6_DIR(before)='${Qt6_DIR:-}'"
+
   # Clean CMAKE_PREFIX_PATH using helper
   if [[ -n "${CMAKE_PREFIX_PATH:-}" ]]; then
-    CMAKE_PREFIX_PATH="$(sanitize_path_var "$CMAKE_PREFIX_PATH")"
+    # Do NOT sanitize CMAKE_PREFIX_PATH — it is a colon-separated search path.
+    # CMAKE_PREFIX_PATH="$(sanitize_path_var "$CMAKE_PREFIX_PATH")"
+    :
   else
     CMAKE_PREFIX_PATH="/opt/Qt/6.10.0/gcc_64"
   fi

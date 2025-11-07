@@ -18,6 +18,16 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+cmake_path="$(command -v cmake 2>/dev/null || true)"
+[ -n "$cmake_path" ] || cmake_path="<missing>"
+cmake_version="$(cmake --version 2>/dev/null | head -1 || true)"
+[ -n "$cmake_version" ] || cmake_version="<unknown>"
+
+echo "[preflight] cmake=$cmake_path ; version=$cmake_version"
+echo "[preflight] Qt6_DIR=${Qt6_DIR:-<unset>}"
+echo "[preflight] CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH:-<unset>}"
+echo
+
 # Check Cursor autonomy mode
 echo "Checking Cursor autonomy mode..."
 AUTON_OK=1
@@ -69,6 +79,14 @@ echo "Host: $(hostname)"
 echo "User: $(whoami)"
 echo "OS: $(uname -sr)"
 echo "Working directory: $REPO_ROOT"
+echo
+
+echo "[preflight] Qt smoke check…"
+if scripts/dev/qt6_smoke.sh /tmp/qt-smoke; then
+    echo "[preflight] Qt smoke: OK"
+else
+    echo "[preflight] Qt smoke: FAILED (continuing); inspect /tmp/qt-smoke/configure.log if preserved"
+fi
 echo
 
 echo "2️⃣  Build Toolchain"
@@ -130,15 +148,34 @@ if [ "${SKIP_BUILD:-0}" = "1" ]; then
 else
     echo "Creating test build in $BUILD_DIR..."
     
-    if cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Debug >/dev/null 2>&1; then
+    GEN="cmake"
+    if command -v qt-cmake >/dev/null 2>&1; then
+        GEN="qt-cmake"
+    fi
+
+    mkdir -p "$BUILD_DIR"
+
+    cmake_args=(-S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release)
+    [ -n "${CMAKE_PREFIX_PATH:-}" ] && cmake_args+=("-DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}")
+    [ -n "${Qt6_DIR:-}" ] && cmake_args+=("-DQt6_DIR=${Qt6_DIR}")
+
+    if "$GEN" "${cmake_args[@]}"; then
         echo -e "${GREEN}✅${NC} CMake configuration successful"
     else
-        echo -e "${RED}❌${NC} CMake configuration failed"
-        ((FAILURES++))
-        rm -rf "$BUILD_DIR"
-        exit 1
+        echo "[preflight] Configure failed; retrying with CMAKE_FIND_DEBUG_MODE=ON..."
+        rm -f /tmp/preflight.log
+        if "$GEN" "${cmake_args[@]}" -DCMAKE_FIND_DEBUG_MODE=ON |& tee /tmp/preflight.log; then
+            echo -e "${GREEN}✅${NC} CMake configuration successful (with debug)"
+        else
+            echo "[preflight] Configure still failing. See /tmp/preflight.log for search paths."
+            ((FAILURES++))
+            rm -rf "$BUILD_DIR"
+            exit 1
+        fi
     fi
-    
+
+    grep -E "Qt6Config\.cmake|Found Qt6|Qt6 version" -R --include='CMake*' "$BUILD_DIR" 2>/dev/null || true
+
     echo "Building..."
     if cmake --build "$BUILD_DIR" --target all -j >/dev/null 2>&1; then
         echo -e "${GREEN}✅${NC} Build successful"
