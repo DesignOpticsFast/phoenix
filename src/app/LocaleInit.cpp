@@ -1,4 +1,5 @@
 #include "LocaleInit.hpp"
+#include "SettingsKeys.h"
 
 #include <QApplication>
 #include <QCoreApplication>
@@ -74,9 +75,9 @@ void ensureSettingsDefaults(const QString& lang, const QString& locale, bool had
 {
     QSettings settings;
     if (!hadStoredLang) {
-        settings.setValue(QStringLiteral("ui/language"), lang);
+        settings.setValue(PhxKeys::UI_LANGUAGE, lang);
     }
-    settings.setValue(QStringLiteral("ui/locale"), locale);
+    settings.setValue(PhxKeys::UI_LOCALE, locale);
 }
 } // namespace
 
@@ -98,7 +99,7 @@ Result setup(QApplication& app)
     app.removeTranslator(&appTranslator);
 
     QSettings settings;
-    const QString storedLang = settings.value(QStringLiteral("ui/language")).toString();
+    const QString storedLang = settings.value(PhxKeys::UI_LANGUAGE).toString();
     const bool hadStoredLang = !storedLang.isEmpty();
 
     QString lang = storedLang;
@@ -147,6 +148,9 @@ Result setup(QApplication& app)
     }
 
     ensureSettingsDefaults(result.lang, result.locale, hadStoredLang);
+    settings.setValue(PhxKeys::UI_APPLIED_LANGUAGE, result.lang);
+    settings.setValue(PhxKeys::UI_APPLIED_LOCALE, result.locale);
+    settings.sync();
 
     qInfo().nospace() << "[i18n] lang=" << result.lang
                       << " locale=" << result.locale

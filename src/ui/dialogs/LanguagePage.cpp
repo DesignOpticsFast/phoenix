@@ -105,11 +105,18 @@ void LanguagePage::loadSettings()
         stored = QStringLiteral("en");
     }
 
-    QString active = normalizedCode(QLocale().name().left(2));
-    m_activeLanguage = active;
+    QString applied = normalizedCode(m_settings.value(PhxKeys::UI_APPLIED_LANGUAGE).toString());
+    if (applied.isEmpty()) {
+        applied = normalizedCode(QLocale().name().left(2));
+    }
+    if (applied.isEmpty()) {
+        applied = stored;
+    }
+
+    m_appliedLanguage = applied;
     m_storedLanguage = stored;
 
-    m_currentLanguageLabel->setText(humanNameFromCode(active));
+    m_currentLanguageLabel->setText(humanNameFromCode(m_appliedLanguage));
 
     int index = m_languageCodes.indexOf(stored);
     if (index < 0) {
@@ -146,7 +153,7 @@ void LanguagePage::onLanguageActivated(int index)
 
 void LanguagePage::updatePendingStatus()
 {
-    const bool hasPending = !m_storedLanguage.isEmpty() && m_storedLanguage != m_activeLanguage;
+    const bool hasPending = !m_storedLanguage.isEmpty() && m_storedLanguage != m_appliedLanguage;
     if (hasPending) {
         m_pendingLabel->setText(tr("Pending: %1 (applies after restart)").arg(humanNameFromCode(m_storedLanguage)));
         m_pendingLabel->setVisible(true);
