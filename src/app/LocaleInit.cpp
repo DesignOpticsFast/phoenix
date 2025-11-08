@@ -90,7 +90,7 @@ QString localeForLanguage(const QString& shortLang)
     return (shortLang == QStringLiteral("de")) ? QStringLiteral("de_DE") : QStringLiteral("en_US");
 }
 
-Result setup(QApplication& app)
+Result setup(QApplication& app, QSettings& externalSettings)
 {
     Result result;
 
@@ -100,7 +100,7 @@ Result setup(QApplication& app)
     app.removeTranslator(&qtTranslator);
     app.removeTranslator(&appTranslator);
 
-    QSettings settings;
+    QSettings& settings = externalSettings;
     const QString storedLang = settings.value(PhxKeys::UI_LANGUAGE).toString();
     const bool hadStoredLang = !storedLang.isEmpty();
 
@@ -174,6 +174,12 @@ Result setup(QApplication& app)
                       << " stored=" << storedLang;
 
     return result;
+}
+
+Result setup(QApplication& app)
+{
+    QSettings settings;
+    return setup(app, settings);
 }
 
 } // namespace i18n

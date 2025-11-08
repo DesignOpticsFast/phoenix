@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QSettings>
 
 class QApplication;
 
@@ -13,5 +14,6 @@ struct Result {
 };
 
 Result setup(QApplication& app);
+Result setup(QApplication& app, QSettings& settings);
 QString localeForLanguage(const QString& shortLang);
 } // namespace i18n

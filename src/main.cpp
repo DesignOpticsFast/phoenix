@@ -16,6 +16,40 @@
 #include <QProcessEnvironment>
 #include <memory>
 #include "app/I18nSelfTest.hpp"
+#include <QSettings>
+
+namespace {
+
+void migrateLegacySettings()
+{
+    static const char* KEYS[] = {
+        "ui/language", "ui/locale",
+        "ui/applied_language", "ui/applied_locale",
+        "ui/theme",
+        "mainwindow/geometry", "mainwindow/state",
+        "session/open_files", "telemetry/graph_terms"
+    };
+
+    QSettings def; // default store (phoenix.dev.Phoenix.plist)
+    QSettings legacy(QSettings::NativeFormat, QSettings::UserScope,
+                     QStringLiteral("Phoenix"), QStringLiteral("Phoenix"));
+
+    bool migrated = false;
+    for (const char* key : KEYS) {
+        if (!def.contains(key) && legacy.contains(key)) {
+            def.setValue(key, legacy.value(key));
+            migrated = true;
+        }
+    }
+
+    if (migrated) {
+        def.sync();
+        legacy.sync();
+        qInfo() << "[i18n] migrated legacy settings store";
+    }
+}
+
+} // namespace
 
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
@@ -52,21 +86,29 @@ int main(int argc, char** argv) {
         return i18nselftest::run(app, optLang);
     }
 
-    auto i18nResult = i18n::setup(app);
+    qInfo() << "[i18n] settings store org=" << QCoreApplication::organizationName()
+            << "app=" << QCoreApplication::applicationName();
+
+    migrateLegacySettings();
+
+    auto settings = std::make_unique<QSettings>();
+    auto* settingsProvider = new SettingsProvider(&app, std::move(settings));
+
+    auto i18nResult = i18n::setup(app, settingsProvider->settings());
     Q_UNUSED(i18nResult);
-    
+
     // Set application icon for Dock on macOS
     app.setWindowIcon(QIcon(":/phoenix-icon.svg"));
-    
+
     // Start timing immediately
     QElapsedTimer timer;
     timer.start();
-    
+
     // Show splash screen immediately
     PhoenixSplashScreen splash;
     splash.show();
     app.processEvents(); // Process splash screen display
-    
+
     // Initialize Font Awesome icons (must be before any icon rendering)
     IconBootstrap::InitFonts();
     
@@ -81,10 +123,6 @@ int main(int argc, char** argv) {
     IconProvider::setupCacheClearing();
     
     // High DPI scaling is enabled by default in Qt 6
-    
-    // Create single QSettings instance and SettingsProvider
-    auto qsettings = std::make_unique<QSettings>("Phoenix", "Phoenix");
-    auto* settingsProvider = new SettingsProvider(&app, std::move(qsettings));
     
     // Wire ThemeManager singleton (must happen before ThemeManager::instance() use)
     ThemeManager::setSettingsProvider(settingsProvider);
