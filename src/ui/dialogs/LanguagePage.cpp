@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <QLocale>
 #include <QSignalBlocker>
+#include <QShowEvent>
 
 namespace {
 QString normalizedCode(const QString& value)
@@ -110,7 +111,7 @@ void LanguagePage::loadSettings()
     m_storedLanguage = stored;
     m_appliedLanguage = applied;
 
-    qInfo() << "[LanguagePage] loadSettings stored=" << m_storedLanguage << "applied=" << m_appliedLanguage;
+    qDebug() << "[LanguagePage] reload stored=" << m_storedLanguage << "applied=" << m_appliedLanguage;
 
     {
         QSignalBlocker blocker(m_languageCombo);
@@ -125,6 +126,12 @@ void LanguagePage::loadSettings()
     updatePendingStatus();
 
     m_initializing = false;
+}
+
+void LanguagePage::showEvent(QShowEvent* e)
+{
+    QWidget::showEvent(e);
+    loadSettings();
 }
 
 void LanguagePage::saveSettings()

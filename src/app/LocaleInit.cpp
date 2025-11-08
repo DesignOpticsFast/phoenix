@@ -160,7 +160,7 @@ Result setup(QApplication& app)
     ensureSettingsDefaults(result.lang, result.locale, hadStoredLang);
     settings.setValue(PhxKeys::UI_APPLIED_LANGUAGE, result.lang);
     settings.setValue(PhxKeys::UI_APPLIED_LOCALE, result.locale);
-    settings.sync();
+    settings.sync(); // ensure LanguagePage can read applied values immediately
 
     qInfo() << "[i18n] applied stored="
             << settings.value(PhxKeys::UI_LANGUAGE).toString()

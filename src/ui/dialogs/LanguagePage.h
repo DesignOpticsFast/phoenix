@@ -9,6 +9,10 @@
 #include <QSettings>
 #include <QStringList>
 
+namespace i18n {
+QString localeForLanguage(const QString& shortLang);
+}
+
 class LanguagePage : public QWidget
 {
     Q_OBJECT
@@ -22,6 +26,9 @@ public:
 
 private slots:
     void onLanguageActivated(int index);
+
+protected:
+    void showEvent(QShowEvent* e) override;
 
 private:
     void setupUi();
