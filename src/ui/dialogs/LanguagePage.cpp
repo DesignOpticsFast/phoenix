@@ -111,8 +111,6 @@ void LanguagePage::loadSettings()
     m_storedLanguage = stored;
     m_appliedLanguage = applied;
 
-    qDebug() << "[LanguagePage] reload stored=" << m_storedLanguage << "applied=" << m_appliedLanguage;
-
     {
         QSignalBlocker blocker(m_languageCombo);
         int index = m_languageCodes.indexOf(m_storedLanguage);

@@ -54,6 +54,7 @@ QStringList translationSearchPaths()
     paths << (QCoreApplication::applicationDirPath() + QStringLiteral("/translations"));
 
     paths.removeDuplicates();
+    qDebug().noquote() << "[i18n] translation search paths:" << paths.join(QStringLiteral("; "));
     return paths;
 }
 
@@ -124,7 +125,6 @@ Result setup(QApplication& app, QSettings& externalSettings)
     QLocale::setDefault(QLocale(result.locale));
 
     const QStringList searchPaths = translationSearchPaths();
-    qInfo().noquote() << "[i18n] translation search paths:" << searchPaths.join(QStringLiteral("; "));
 
     bool qtLoaded = loadTranslator(qtTranslator, QStringLiteral("qtbase"), lang, searchPaths, result.qtBasePath);
     bool appLoaded = loadTranslator(appTranslator, QStringLiteral("phoenix"), lang, searchPaths, result.appPath);
@@ -164,8 +164,8 @@ Result setup(QApplication& app, QSettings& externalSettings)
 
     qInfo() << "[i18n] applied stored="
             << settings.value(PhxKeys::UI_LANGUAGE).toString()
-            << "applied=" << settings.value(PhxKeys::UI_APPLIED_LANGUAGE).toString()
-            << "QLocale(default)=" << QLocale().name();
+            << " applied=" << settings.value(PhxKeys::UI_APPLIED_LANGUAGE).toString()
+            << " QLocale(default)=" << QLocale().name();
 
     qInfo().nospace() << "[i18n] lang=" << result.lang
                       << " locale=" << result.locale
