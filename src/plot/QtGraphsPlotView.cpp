@@ -1,15 +1,19 @@
 #include "QtGraphsPlotView.hpp"
 #include "app/PhxConstants.h"
+#include "graphs/FormatUtils.hpp"
 
 #include <QWidget>
 #include <QPainter>
 #include <QPaintEvent>
 #include <QPen>
 #include <QBrush>
+#include <QFont>
+#include <QFontMetrics>
 #include <QString>
 #include <QDebug>
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 QtGraphsPlotView::QtGraphsPlotView(QWidget *parent)
     : QWidget(parent)
@@ -184,6 +188,35 @@ void QtGraphsPlotView::paintEvent(QPaintEvent* event)
         int y = plotArea.top() + (plotArea.height() * i) / numGridLines;
         painter.drawLine(x, plotArea.top(), x, plotArea.bottom());
         painter.drawLine(plotArea.left(), y, plotArea.right(), y);
+    }
+
+    painter.setPen(Qt::black);
+    painter.setFont(QFont("Arial", 9));
+    QFontMetrics fm(painter.font());
+    const int tickCount = numGridLines;
+    const double xRange = xMax_ - xMin_;
+    const double yRange = yMax_ - yMin_;
+
+    if (tickCount > 0 && std::abs(xRange) > std::numeric_limits<double>::epsilon()) {
+        for (int i = 0; i <= tickCount; ++i) {
+            const double ratio = static_cast<double>(i) / tickCount;
+            const double value = xMin_ + ratio * xRange;
+            const QString label = fmt::toLocaleString(value);
+            const int x = plotArea.left() + static_cast<int>(ratio * plotArea.width());
+            const QRect rect(x - 40, plotArea.bottom() + 6, 80, fm.height());
+            painter.drawText(rect, Qt::AlignHCenter | Qt::AlignTop, label);
+        }
+    }
+
+    if (tickCount > 0 && std::abs(yRange) > std::numeric_limits<double>::epsilon()) {
+        for (int i = 0; i <= tickCount; ++i) {
+            const double ratio = static_cast<double>(i) / tickCount;
+            const double value = yMin_ + ratio * yRange;
+            const QString label = fmt::toLocaleString(value);
+            const int y = plotArea.bottom() - static_cast<int>(ratio * plotArea.height());
+            const QRect rect(plotArea.left() - 60, y - fm.height() / 2, 55, fm.height());
+            painter.drawText(rect, Qt::AlignRight | Qt::AlignVCenter, label);
+        }
     }
     
     // Draw data points

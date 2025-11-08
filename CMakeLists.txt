@@ -65,6 +65,15 @@ set(PHOENIX_SOURCES
   # sources
   src/main.cpp
 
+  # Graphs / Vega-Lite infrastructure
+  src/graphs/VegaLiteLocalizer.cpp
+  src/graphs/VegaLiteLocalizer.hpp
+  src/graphs/FormatUtils.hpp
+
+  # Plot views
+  src/plot/QtGraphsPlotView.cpp
+  src/plot/QtGraphsPlotView.hpp
+
   # New UI structure - MainWindow
   src/ui/main/MainWindow.cpp
 
@@ -212,6 +221,11 @@ function(wire_translations_for TARGET_NAME)
 endfunction()
 
 wire_translations_for(phoenix_app)
+
+include(CTest)
+if(BUILD_TESTING)
+  add_subdirectory(tests)
+endif()
 
 # Include paths for the app
 target_include_directories(phoenix_app PRIVATE
