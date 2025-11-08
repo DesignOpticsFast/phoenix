@@ -18,6 +18,8 @@ private:
     static void        localizeNested(QJsonObject& spec);
 
     static bool        isObjectWith(const QJsonObject& obj, const char* key);
+    static QString translateLabelPreservingUnits(const QString& src);
+    static QString translateWholeWords(const QString& s);
 };
 
 } // namespace vega

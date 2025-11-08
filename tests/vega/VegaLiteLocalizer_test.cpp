@@ -13,6 +13,8 @@ class VegaLocalizerTest : public QObject
 private slots:
     void injectsLocale_de();
     void preservesSchemaFields();
+    void translatesAxisTitles_preservesUnits_de();
+    void neverTranslatesIdentifiersOrLabelExpr();
 };
 
 void VegaLocalizerTest::injectsLocale_de()
@@ -71,6 +73,51 @@ void VegaLocalizerTest::preservesSchemaFields()
     QCOMPARE(encoding.value(QStringLiteral("x")).toObject().value(QStringLiteral("type")).toString(), QStringLiteral("quantitative"));
     QVERIFY(encoding.value(QStringLiteral("x")).toObject().value(QStringLiteral("axis")).isObject());
     QVERIFY(encoding.value(QStringLiteral("color")).toObject().value(QStringLiteral("legend")).isObject());
+
+    QLocale::setDefault(previous);
+}
+
+void VegaLocalizerTest::translatesAxisTitles_preservesUnits_de()
+{
+    const QLocale previous = QLocale();
+    QLocale::setDefault(QLocale(QStringLiteral("de_DE")));
+
+    QJsonObject input;
+    input.insert(QStringLiteral("encoding"), QJsonObject{
+        { QStringLiteral("x"), QJsonObject{{ QStringLiteral("axis"), QJsonObject{{ QStringLiteral("title"), QStringLiteral("Distance (mm)") }} }} },
+        { QStringLiteral("y"), QJsonObject{{ QStringLiteral("axis"), QJsonObject{{ QStringLiteral("title"), QStringLiteral("Stress (MPa)") }} }} }
+    });
+
+    const QJsonObject output = vega::VegaLiteLocalizer::localize(input);
+    const QJsonObject encoding = output.value(QStringLiteral("encoding")).toObject();
+    QCOMPARE(encoding.value(QStringLiteral("x")).toObject().value(QStringLiteral("axis")).toObject().value(QStringLiteral("title")).toString(), QStringLiteral("Abstand (mm)"));
+    QCOMPARE(encoding.value(QStringLiteral("y")).toObject().value(QStringLiteral("axis")).toObject().value(QStringLiteral("title")).toString(), QStringLiteral("Spannung (MPa)"));
+
+    QLocale::setDefault(previous);
+}
+
+void VegaLocalizerTest::neverTranslatesIdentifiersOrLabelExpr()
+{
+    const QLocale previous = QLocale();
+    QLocale::setDefault(QLocale(QStringLiteral("de_DE")));
+
+    QJsonObject input;
+    input.insert(QStringLiteral("encoding"), QJsonObject{
+        { QStringLiteral("color"), QJsonObject{{ QStringLiteral("legend"), QJsonObject{{ QStringLiteral("title"), QStringLiteral("N-BK7") }} }} },
+        { QStringLiteral("x"), QJsonObject{{ QStringLiteral("axis"), QJsonObject{
+            { QStringLiteral("title"), QStringLiteral("Distance") },
+            { QStringLiteral("labelExpr"), QStringLiteral("datum.label + ' mm'") }
+        } }} }
+    });
+
+    const QJsonObject output = vega::VegaLiteLocalizer::localize(input);
+    const QJsonObject encoding = output.value(QStringLiteral("encoding")).toObject();
+
+    QCOMPARE(encoding.value(QStringLiteral("color")).toObject().value(QStringLiteral("legend")).toObject().value(QStringLiteral("title")).toString(), QStringLiteral("N-BK7"));
+
+    const QJsonObject axis = encoding.value(QStringLiteral("x")).toObject().value(QStringLiteral("axis")).toObject();
+    QCOMPARE(axis.value(QStringLiteral("labelExpr")).toString(), QStringLiteral("datum.label + ' mm'"));
+    QCOMPARE(axis.value(QStringLiteral("title")).toString(), QStringLiteral("Abstand"));
 
     QLocale::setDefault(previous);
 }

@@ -4,11 +4,55 @@
 #include <QJsonDocument>
 #include <QJsonValue>
 #include <QLocale>
+#include <QRegularExpression>
+#include <QSet>
 #include <QStringList>
+#include <QObject>
 
 using namespace vega;
 
 namespace {
+
+const QPair<QRegularExpression, QString> TERM_MAP_DE[] = {
+    { QRegularExpression(QStringLiteral(R"(\bLanguage\b)")), QObject::tr("Sprache") },
+    { QRegularExpression(QStringLiteral(R"(\bPreferences\b)")), QObject::tr("Einstellungen") },
+    { QRegularExpression(QStringLiteral(R"(\bEnvironment\b)")), QObject::tr("Umgebung") },
+    { QRegularExpression(QStringLiteral(R"(\bCurrent Language\b)")), QObject::tr("Aktuelle Sprache") },
+    { QRegularExpression(QStringLiteral(R"(\bRestart Required\b)")), QObject::tr("Neustart erforderlich") },
+    { QRegularExpression(QStringLiteral(R"(\bDistance\b)")), QObject::tr("Abstand") },
+    { QRegularExpression(QStringLiteral(R"(\bStress\b)")), QObject::tr("Spannung") },
+    { QRegularExpression(QStringLiteral(R"(\bWavelength\b)")), QObject::tr("Wellenlänge") },
+    { QRegularExpression(QStringLiteral(R"(\bIntensity\b)")), QObject::tr("Intensität") },
+    { QRegularExpression(QStringLiteral(R"(\bField Angle\b)")), QObject::tr("Feldwinkel") },
+    { QRegularExpression(QStringLiteral(R"(\bSpot Radius\b)")), QObject::tr("Spot-Radius") },
+    { QRegularExpression(QStringLiteral(R"(\bRay Height\b)")), QObject::tr("Strahlenhöhe") },
+    { QRegularExpression(QStringLiteral(R"(\bSurface Sag\b)")), QObject::tr("Oberflächensenkung") },
+    { QRegularExpression(QStringLiteral(R"(\bZernike Coefficient\b)")), QObject::tr("Zernike-Koeffizient") },
+    { QRegularExpression(QStringLiteral(R"(\bField Curvature\b)")), QObject::tr("Feldkrümmung") },
+};
+
+bool isIdentifierLike(const QString& s)
+{
+    static const QRegularExpression material(QStringLiteral(R"(^[A-Z]{1,3}-[A-Z0-9]{2,8}$)"));
+    static const QRegularExpression hasExt(QStringLiteral(R"(\.[A-Za-z0-9]{1,6}$)"));
+    static const QRegularExpression path(QStringLiteral(R"([/\\])"));
+    static const QRegularExpression hex(QStringLiteral(R"(^[A-Fa-f0-9]{6,}$)"));
+
+    return material.match(s).hasMatch()
+        || hasExt.match(s).hasMatch()
+        || path.match(s).hasMatch()
+        || hex.match(s).hasMatch();
+}
+
+bool isUnitToken(const QString& u)
+{
+    static const QSet<QString> units = {
+        QStringLiteral("mm"), QStringLiteral("μm"), QStringLiteral("um"), QStringLiteral("nm"),
+        QStringLiteral("MPa"), QStringLiteral("deg"), QStringLiteral("°"), QStringLiteral("Hz"),
+        QStringLiteral("kHz"), QStringLiteral("MHz"), QStringLiteral("GHz")
+    };
+    return units.contains(u);
+}
 
 QJsonObject makeNumberFormatLocale(const QLocale& locale)
 {
@@ -64,6 +108,34 @@ QJsonObject makeTimeFormatLocale(const QLocale& locale)
 
 } // namespace
 
+QString VegaLiteLocalizer::translateWholeWords(const QString& s)
+{
+    QString out = s;
+    for (const auto& entry : TERM_MAP_DE) {
+        out.replace(entry.first, entry.second);
+    }
+    return out;
+}
+
+QString VegaLiteLocalizer::translateLabelPreservingUnits(const QString& src)
+{
+    if (src.isEmpty() || isIdentifierLike(src)) {
+        return src;
+    }
+
+    static const QRegularExpression unitPattern(QStringLiteral("^(.*?)(\\s*\\(([^\\)]+)\\))$"));
+    const QRegularExpressionMatch match = unitPattern.match(src);
+    if (match.hasMatch()) {
+        const QString stem = match.captured(1).trimmed();
+        const QString unit = match.captured(3).trimmed();
+        if (isUnitToken(unit)) {
+            return QStringLiteral("%1 (%2)").arg(translateWholeWords(stem), unit);
+        }
+    }
+
+    return translateWholeWords(src);
+}
+
 QJsonObject VegaLiteLocalizer::injectLocaleConfig(QJsonObject cfg)
 {
     const QLocale locale; // honours QLocale::setDefault
@@ -82,12 +154,34 @@ bool VegaLiteLocalizer::isObjectWith(const QJsonObject& obj, const char* key)
 
 void VegaLiteLocalizer::localizeAxis(QJsonObject& axisCfg)
 {
-    Q_UNUSED(axisCfg);
+    if (axisCfg.contains(QStringLiteral("title"))) {
+        const QJsonValue titleVal = axisCfg.value(QStringLiteral("title"));
+        if (titleVal.isString()) {
+            axisCfg.insert(QStringLiteral("title"), translateLabelPreservingUnits(titleVal.toString()));
+        } else if (titleVal.isObject()) {
+            QJsonObject titleObj = titleVal.toObject();
+            if (titleObj.contains(QStringLiteral("text")) && titleObj.value(QStringLiteral("text")).isString()) {
+                titleObj.insert(QStringLiteral("text"), translateLabelPreservingUnits(titleObj.value(QStringLiteral("text")).toString()));
+                axisCfg.insert(QStringLiteral("title"), titleObj);
+            }
+        }
+    }
 }
 
 void VegaLiteLocalizer::localizeLegend(QJsonObject& legendCfg)
 {
-    Q_UNUSED(legendCfg);
+    if (legendCfg.contains(QStringLiteral("title"))) {
+        const QJsonValue titleVal = legendCfg.value(QStringLiteral("title"));
+        if (titleVal.isString()) {
+            legendCfg.insert(QStringLiteral("title"), translateLabelPreservingUnits(titleVal.toString()));
+        } else if (titleVal.isObject()) {
+            QJsonObject titleObj = titleVal.toObject();
+            if (titleObj.contains(QStringLiteral("text")) && titleObj.value(QStringLiteral("text")).isString()) {
+                titleObj.insert(QStringLiteral("text"), translateLabelPreservingUnits(titleObj.value(QStringLiteral("text")).toString()));
+                legendCfg.insert(QStringLiteral("title"), titleObj);
+            }
+        }
+    }
 }
 
 void VegaLiteLocalizer::localizeEncoding(QJsonObject& spec)
@@ -138,7 +232,13 @@ void VegaLiteLocalizer::localizeHeaders(QJsonObject& spec)
                 QJsonObject header = facet.value(key).toObject();
                 if (header.contains(QStringLiteral("header")) && header.value(QStringLiteral("header")).isObject()) {
                     QJsonObject headerCfg = header.value(QStringLiteral("header")).toObject();
+                    if (headerCfg.contains(QStringLiteral("title")) && headerCfg.value(QStringLiteral("title")).isString()) {
+                        headerCfg.insert(QStringLiteral("title"), translateLabelPreservingUnits(headerCfg.value(QStringLiteral("title")).toString()));
+                    }
                     header.insert(QStringLiteral("header"), headerCfg);
+                }
+                if (header.contains(QStringLiteral("title")) && header.value(QStringLiteral("title")).isString()) {
+                    header.insert(QStringLiteral("title"), translateLabelPreservingUnits(header.value(QStringLiteral("title")).toString()));
                 }
                 facet.insert(key, header);
             }
@@ -214,6 +314,19 @@ void VegaLiteLocalizer::localizeSpec(QJsonObject& spec)
         : QJsonObject{};
 
     spec.insert(QStringLiteral("config"), injectLocaleConfig(cfg));
+
+    if (spec.contains(QStringLiteral("title"))) {
+        const QJsonValue titleVal = spec.value(QStringLiteral("title"));
+        if (titleVal.isString()) {
+            spec.insert(QStringLiteral("title"), translateLabelPreservingUnits(titleVal.toString()));
+        } else if (titleVal.isObject()) {
+            QJsonObject titleObj = titleVal.toObject();
+            if (titleObj.contains(QStringLiteral("text")) && titleObj.value(QStringLiteral("text")).isString()) {
+                titleObj.insert(QStringLiteral("text"), translateLabelPreservingUnits(titleObj.value(QStringLiteral("text")).toString()));
+                spec.insert(QStringLiteral("title"), titleObj);
+            }
+        }
+    }
 
     localizeEncoding(spec);
     localizeHeaders(spec);
