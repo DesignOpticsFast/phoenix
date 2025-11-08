@@ -18,39 +18,6 @@
 #include "app/I18nSelfTest.hpp"
 #include <QSettings>
 
-namespace {
-
-void migrateLegacySettings()
-{
-    static const char* KEYS[] = {
-        "ui/language", "ui/locale",
-        "ui/applied_language", "ui/applied_locale",
-        "ui/theme",
-        "mainwindow/geometry", "mainwindow/state",
-        "session/open_files", "telemetry/graph_terms"
-    };
-
-    QSettings def; // default store (phoenix.dev.Phoenix.plist)
-    QSettings legacy(QSettings::NativeFormat, QSettings::UserScope,
-                     QStringLiteral("Phoenix"), QStringLiteral("Phoenix"));
-
-    bool migrated = false;
-    for (const char* key : KEYS) {
-        if (!def.contains(key) && legacy.contains(key)) {
-            def.setValue(key, legacy.value(key));
-            migrated = true;
-        }
-    }
-
-    if (migrated) {
-        def.sync();
-        legacy.sync();
-        qInfo() << "[i18n] migrated legacy settings store";
-    }
-}
-
-} // namespace
-
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
     
@@ -88,8 +55,6 @@ int main(int argc, char** argv) {
 
     qInfo() << "[i18n] settings store org=" << QCoreApplication::organizationName()
             << "app=" << QCoreApplication::applicationName();
-
-    migrateLegacySettings();
 
     auto settings = std::make_unique<QSettings>();
     auto* settingsProvider = new SettingsProvider(&app, std::move(settings));

@@ -173,7 +173,6 @@ void LanguagePage::applyLanguageSelection(const QString& code)
 
     m_settings.setValue(PhxKeys::UI_LANGUAGE, normalized);
     m_settings.setValue(PhxKeys::UI_LOCALE, i18n::localeForLanguage(normalized));
-    m_settings.setValue(PhxKeys::I18N_LANGUAGE, normalized);
     m_settings.sync();
 
     m_storedLanguage = normalized;

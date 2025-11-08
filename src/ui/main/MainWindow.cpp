@@ -790,13 +790,7 @@ void MainWindow::setupTranslations()
     if (!m_settingsProvider) return;
 
     auto& s = m_settingsProvider->settings();
-    QString language = s.value(PhxKeys::UI_LANGUAGE).toString();
-    if (language.isEmpty()) {
-        language = s.value(PhxKeys::I18N_LANGUAGE, QStringLiteral("en")).toString();
-    }
-    if (language != QStringLiteral("de")) {
-        language = QStringLiteral("en");
-    }
+    QString language = s.value(PhxKeys::UI_LANGUAGE, QStringLiteral("en")).toString();
 
     m_currentLocale = QLocale(i18n::localeForLanguage(language));
 }
@@ -1083,7 +1077,6 @@ void MainWindow::setLanguage(const QString& language)
         auto& s = m_settingsProvider->settings();
         s.setValue(PhxKeys::UI_LANGUAGE, normalized);
         s.setValue(PhxKeys::UI_LOCALE, i18n::localeForLanguage(normalized));
-        s.setValue(PhxKeys::I18N_LANGUAGE, normalized); // legacy key for compatibility
         s.sync();
     }
 
