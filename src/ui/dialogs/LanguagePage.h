@@ -37,6 +37,6 @@ private:
     QStringList m_languageCodes;
     QStringList m_languageNames;
     bool m_initializing = false;
-    QString m_appliedLanguage;
     QString m_storedLanguage;
+    QString m_appliedLanguage;
 };

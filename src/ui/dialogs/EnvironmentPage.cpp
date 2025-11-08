@@ -196,6 +196,8 @@ void EnvironmentPage::onResetToDefaults()
     m_settings.remove(QStringLiteral("ui/theme"));
     m_settings.remove(QStringLiteral("i18n/language"));
     m_settings.remove(QStringLiteral("i18n/locale"));
+    m_settings.remove(QStringLiteral("ui/applied_language"));
+    m_settings.remove(QStringLiteral("ui/applied_locale"));
     m_settings.remove(QStringLiteral("mainwindow/geometry"));
     m_settings.remove(QStringLiteral("mainwindow/state"));
     m_settings.remove(QStringLiteral("session/open_files"));

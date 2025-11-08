@@ -97,10 +97,7 @@ void LanguagePage::loadSettings()
 {
     m_initializing = true;
 
-    QString stored = normalizedCode(m_settings.value(PhxKeys::UI_LANGUAGE).toString());
-    if (stored.isEmpty()) {
-        stored = normalizedCode(m_settings.value(PhxKeys::I18N_LANGUAGE).toString());
-    }
+    QString stored = normalizedCode(m_settings.value(PhxKeys::UI_LANGUAGE, QStringLiteral("en")).toString());
     if (stored.isEmpty()) {
         stored = QStringLiteral("en");
     }
@@ -110,22 +107,21 @@ void LanguagePage::loadSettings()
         applied = stored;
     }
 
-    m_appliedLanguage = applied;
     m_storedLanguage = stored;
+    m_appliedLanguage = applied;
 
     qInfo() << "[LanguagePage] loadSettings stored=" << m_storedLanguage << "applied=" << m_appliedLanguage;
 
-    m_currentLanguageLabel->setText(humanNameFromCode(m_appliedLanguage));
-
-    int index = m_languageCodes.indexOf(m_storedLanguage);
-    if (index < 0) {
-        index = 0;
-    }
-
     {
         QSignalBlocker blocker(m_languageCombo);
+        int index = m_languageCodes.indexOf(m_storedLanguage);
+        if (index < 0) {
+            index = 0;
+        }
         m_languageCombo->setCurrentIndex(index);
     }
+
+    m_currentLanguageLabel->setText(humanNameFromCode(m_appliedLanguage));
     updatePendingStatus();
 
     m_initializing = false;

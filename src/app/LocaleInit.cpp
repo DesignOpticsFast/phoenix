@@ -162,6 +162,11 @@ Result setup(QApplication& app)
     settings.setValue(PhxKeys::UI_APPLIED_LOCALE, result.locale);
     settings.sync();
 
+    qInfo() << "[i18n] applied stored="
+            << settings.value(PhxKeys::UI_LANGUAGE).toString()
+            << "applied=" << settings.value(PhxKeys::UI_APPLIED_LANGUAGE).toString()
+            << "QLocale(default)=" << QLocale().name();
+
     qInfo().nospace() << "[i18n] lang=" << result.lang
                       << " locale=" << result.locale
                       << " qtBasePath=" << (result.qtBasePath.isEmpty() ? QStringLiteral("<none>") : result.qtBasePath)
