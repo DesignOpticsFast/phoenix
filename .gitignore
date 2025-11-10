@@ -56,7 +56,7 @@ CMakeCache.txt
 *.ninja_deps
 *.ninja_log
 *.make
-Makefile
+build*/**/Makefile
 *.pro.user
 *.qmake.stash
 
@@ -114,3 +114,4 @@ ci-audit-package/
 
 # UnderLord runtime state (ephemeral)
 .underlord/state/
+scripts/build/

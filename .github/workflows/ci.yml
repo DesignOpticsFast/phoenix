@@ -11,8 +11,13 @@ on:
       pr:
         description: 'PR number (optional)'
         required: false
+      soak:
+        description: 'Run soak harness (empty, quick, 1h, 2h)'
+        required: false
+        default: ''
   schedule:
     - cron: "0 9 * * 1"       # every Monday 09:00 UTC - weekly self-audit
+    - cron: "0 3 * * *"       # nightly soak harness (03:00 UTC)
 
 permissions:
   contents: read
@@ -338,6 +343,65 @@ jobs:
           else
             echo "No new blocking calls found in src/palantir."
           fi
+
+  soak-nightly:
+    name: Soak (Linux 30m)
+    if: github.event_name == 'schedule' && github.event.schedule == '0 3 * * *'
+    runs-on: [self-hosted, Linux, X64, dev-01, qt6]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build soak binary
+        run: make soak-build
+      - name: Run soak (30 minutes)
+        run: make soak-quick
+      - name: Upload soak artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: soak-linux-30m-${{ github.run_id }}
+          path: |
+            /tmp/phoenix_soak_app.log
+            /tmp/phoenix_soak_memory.csv
+
+  soak-macos-weekly:
+    name: Soak (macOS weekly)
+    if: github.event_name == 'schedule' && github.event.schedule == '0 9 * * 1'
+    runs-on: [self-hosted, macOS, X64, qt6]
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build soak binary
+        run: make soak-build
+      - name: Run soak (60 minutes)
+        run: make soak-1h
+      - name: Upload soak artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: soak-macos-60m-${{ github.run_id }}
+          path: |
+            /tmp/phoenix_soak_app.log
+            /tmp/phoenix_soak_memory.csv
+
+  soak-release:
+    name: Soak (Linux 60m)
+    if: |
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.soak == '1h') ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/phoenix-sprint'))
+    runs-on: [self-hosted, Linux, X64, dev-01, qt6]
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build soak binary
+        run: make soak-build
+      - name: Run soak (60 minutes)
+        run: make soak-1h
+      - name: Upload soak artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: soak-linux-60m-${{ github.run_id }}
+          path: |
+            /tmp/phoenix_soak_app.log
+            /tmp/phoenix_soak_memory.csv
 
   gate:
     needs: [changes, docs, build, ci_checks, palantir-no-blocking-when-disabled, pre-build-checks]
