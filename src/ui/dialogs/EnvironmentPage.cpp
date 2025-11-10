@@ -191,16 +191,21 @@ void EnvironmentPage::onResetToDefaults()
         return;
     }
 
-    m_settings.remove(QStringLiteral("ui/language"));
-    m_settings.remove(QStringLiteral("ui/locale"));
-    m_settings.remove(QStringLiteral("ui/applied_language"));
-    m_settings.remove(QStringLiteral("ui/applied_locale"));
-    m_settings.remove(QStringLiteral("ui/theme"));
-    m_settings.remove(QStringLiteral("mainwindow/geometry"));
-    m_settings.remove(QStringLiteral("mainwindow/state"));
-    m_settings.remove(QStringLiteral("session/open_files"));
-    m_settings.remove(QStringLiteral("telemetry/graph_terms"));
+    const QString appliedLanguage = m_settings.value(QStringLiteral("ui/applied_language")).toString();
+    const QString appliedLocale = m_settings.value(QStringLiteral("ui/applied_locale")).toString();
+
     m_settings.clear();
+    m_settings.setValue(QStringLiteral("ui/language"), QStringLiteral("en"));
+    m_settings.setValue(QStringLiteral("ui/locale"), QStringLiteral("en_US"));
+    m_settings.setValue(QStringLiteral("ui/theme"), QStringLiteral("system"));
+
+    if (!appliedLanguage.isEmpty()) {
+        m_settings.setValue(QStringLiteral("ui/applied_language"), appliedLanguage);
+    }
+    if (!appliedLocale.isEmpty()) {
+        m_settings.setValue(QStringLiteral("ui/applied_locale"), appliedLocale);
+    }
+
     m_settings.sync();
 
     QMessageBox::information(
@@ -209,4 +214,5 @@ void EnvironmentPage::onResetToDefaults()
         tr("Settings were reset. Please restart Phoenix to apply all changes."));
 
     updateSystemInfo();
+    emit settingsReset();
 }

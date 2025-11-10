@@ -28,6 +28,7 @@ private slots:
     void onOK();
     void onCancel();
     void onApply();
+    void onSettingsReset();
 
 private:
     void setupUI();

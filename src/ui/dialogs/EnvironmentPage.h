@@ -22,6 +22,9 @@ public:
     void loadSettings();
     void saveSettings();
 
+signals:
+    void settingsReset();
+
 private slots:
     void onResetToDefaults();
 

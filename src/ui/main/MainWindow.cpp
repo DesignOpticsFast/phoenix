@@ -7,6 +7,7 @@
 #include "app/LocaleInit.hpp"
 #include "app/SettingsProvider.h"
 #include "app/SettingsKeys.h"
+#include "app/MemoryMonitor.hpp"
 #include "app/io/FileIO.h"
 #include "app/PhxConstants.h"
 #include "version.h"
@@ -25,9 +26,8 @@
 #include <QTimer>
 #include <QElapsedTimer>
 #include <QLocale>
-#include <QProcess>
 #include <QThread>
-#include <QDebug>
+#include <QDateTime>
 #include <QShowEvent>
 #include <QEvent>
 #include <QFileDialog>
@@ -36,6 +36,7 @@
 #include <QAction>
 #include <QMenu>
 #include <functional>
+#include <cmath>
 
 namespace {
     // Gather all menus from both menubar actions and MainWindow tree
@@ -164,6 +165,9 @@ bool MainWindow::event(QEvent* e)
                 dw->raise();
             }
         }
+    } else if (e->type() == QEvent::WindowDeactivate) {
+        // Don't raise floating windows when Phoenix loses focus
+        return QMainWindow::event(e);
     } else if (e->type() == QEvent::PaletteChange || e->type() == QEvent::ApplicationPaletteChange) {
         // Delay icon refresh until after palette propagation
         QTimer::singleShot(0, this, [this] {
@@ -719,46 +723,32 @@ void MainWindow::setupDockWidgets()
 
 void MainWindow::setupFloatingToolbarsAndDocks()
 {
-    // Lambda to setup floating behavior for both QToolBar and QDockWidget
-    auto setupFloatingBehavior = [this](QWidget *w) {
-        // Connect to topLevelChanged signal (available on both QToolBar and QDockWidget)
-        if (auto *tb = qobject_cast<QToolBar*>(w)) {
-            connect(tb, &QToolBar::topLevelChanged, this, [this, w](bool floating) {
+    auto setupFloatingBehavior = [this](QWidget* w) {
+        if (!w) {
+            return;
+        }
+
+        if (auto* tb = qobject_cast<QToolBar*>(w)) {
+            connect(tb, &QToolBar::topLevelChanged, this, [w](bool floating) {
                 if (floating) {
-                    w->setWindowFlag(Qt::Tool, true);
-                    w->setWindowFlag(Qt::WindowStaysOnTopHint, true);
-                    w->show();    // re-apply flags
-                    w->raise();
-                    w->activateWindow();
-                } else {
-                    w->setWindowFlag(Qt::WindowStaysOnTopHint, false);
-                    w->setWindowFlag(Qt::Tool, false);
-                    // No show() required here, docked windows are managed by QMainWindow
-                }
-            });
-        } else if (auto *dw = qobject_cast<QDockWidget*>(w)) {
-            connect(dw, &QDockWidget::topLevelChanged, this, [this, w](bool floating) {
-                if (floating) {
-                    w->setWindowFlag(Qt::Tool, true);
-                    w->setWindowFlag(Qt::WindowStaysOnTopHint, true);
                     w->show();
                     w->raise();
-                    w->activateWindow();
-                } else {
-                    w->setWindowFlag(Qt::WindowStaysOnTopHint, false);
-                    w->setWindowFlag(Qt::Tool, false);
-                    // No show() required here, docked windows are managed by QMainWindow
+                }
+            });
+        } else if (auto* dw = qobject_cast<QDockWidget*>(w)) {
+            connect(dw, &QDockWidget::topLevelChanged, this, [w](bool floating) {
+                if (floating) {
+                    w->show();
+                    w->raise();
                 }
             });
         }
     };
-    
-    // Apply to all toolbars
+
     setupFloatingBehavior(m_mainToolBar);
     setupFloatingBehavior(m_topRibbon);
     setupFloatingBehavior(m_rightRibbon);
-    
-    // Apply to all dock widgets
+
     setupFloatingBehavior(m_toolboxDock);
     setupFloatingBehavior(m_propertiesDock);
 }
@@ -869,19 +859,37 @@ void MainWindow::showEvent(QShowEvent* ev)
 
 void MainWindow::updateDebugInfo()
 {
-    if (!m_debugLabel) return;
-    
-    // Get memory usage (simplified)
-    QProcess process;
-    process.start("ps", QStringList() << "-o" << "rss=" << "-p" << QString::number(QApplication::applicationPid()));
-    process.waitForFinished();
-    QString memoryStr = process.readAllStandardOutput().trimmed();
-    int memoryMB = memoryStr.toInt() / 1024; // Convert KB to MB
-    
-    // Get thread count
-    int threadCount = QThread::idealThreadCount();
-    
-    // Get current theme
+    if (!m_debugLabel) {
+        return;
+    }
+
+    const bool needsSample = !m_memorySampleTimer.isValid() || m_memorySampleTimer.elapsed() >= 5000;
+    if (needsSample) {
+        const double sampleMb = phx::MemoryMonitor::getResidentMemoryMB();
+        if (sampleMb >= 0.0) {
+            m_lastResidentMemoryMB = sampleMb;
+            m_hasResidentSample = true;
+        }
+
+        if (m_memorySampleTimer.isValid()) {
+            m_memorySampleTimer.restart();
+        } else {
+            m_memorySampleTimer.start();
+        }
+    }
+
+    const QLocale locale;
+    QString memoryDisplay;
+    if (m_hasResidentSample) {
+        const auto rounded = static_cast<qlonglong>(std::llround(m_lastResidentMemoryMB));
+        memoryDisplay = tr("%1 MB").arg(locale.toString(rounded));
+    } else {
+        memoryDisplay = tr("N/A");
+    }
+
+    const int cpuCount = QThread::idealThreadCount();
+    const QString cpuDisplay = locale.toString(cpuCount > 0 ? cpuCount : 1);
+
     QString themeStr;
     if (m_themeManager) {
         switch (m_themeManager->currentTheme()) {
@@ -898,35 +906,30 @@ void MainWindow::updateDebugInfo()
     } else {
         themeStr = tr("Unknown");
     }
-    
-    // Get current language
-    QString langStr = m_currentLocale.name().left(2);
-    
-    // Show startup time if available (constant, not updating)
+
+    const QString langStr = m_currentLocale.name().left(2);
+
     QString startupInfo;
     if (m_startupTime > 0) {
-        // Use static variable to store calculated startup time
         static qint64 startupDuration = 0;
         static bool startupCalculated = false;
-        
+
         if (!startupCalculated) {
-            // Calculate startup duration once when first called
-            qint64 mainWindowReadyTime = QDateTime::currentMSecsSinceEpoch();
+            const qint64 mainWindowReadyTime = QDateTime::currentMSecsSinceEpoch();
             startupDuration = mainWindowReadyTime - m_startupTime;
             startupCalculated = true;
         }
-        
+
         startupInfo = tr(" | Startup: %1ms").arg(startupDuration);
     }
-    
-    // Update debug label
-    QString debugText = tr("Memory: %1MB | Threads: %2 | Theme: %3 | Lang: %4%5")
-                       .arg(memoryMB)
-                       .arg(threadCount)
-                       .arg(themeStr)
-                       .arg(langStr)
-                       .arg(startupInfo);
-    
+
+    const QString debugText = tr("Memory: %1 | CPUs: %2 | Theme: %3 | Lang: %4%5")
+                              .arg(memoryDisplay)
+                              .arg(cpuDisplay)
+                              .arg(themeStr)
+                              .arg(langStr)
+                              .arg(startupInfo);
+
     m_debugLabel->setText(debugText);
 }
 

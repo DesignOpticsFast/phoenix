@@ -70,6 +70,8 @@ void PreferencesDialog::setupUI()
     // Create pages (pass QSettings& reference)
     m_environmentPage = new EnvironmentPage(m_settings, this);
     m_contentStack->addWidget(m_environmentPage);
+
+    connect(m_environmentPage, &EnvironmentPage::settingsReset, this, &PreferencesDialog::onSettingsReset);
     
     m_languagePage = new LanguagePage(m_settings, this);
     m_contentStack->addWidget(m_languagePage);
@@ -128,6 +130,13 @@ void PreferencesDialog::onCancel()
 void PreferencesDialog::onApply()
 {
     saveSettings();
+}
+
+void PreferencesDialog::onSettingsReset()
+{
+    if (m_languagePage) {
+        m_languagePage->loadSettings();
+    }
 }
 
 void PreferencesDialog::loadSettings()

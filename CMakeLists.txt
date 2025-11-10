@@ -103,6 +103,8 @@ set(PHOENIX_SOURCES
   src/app/LocaleInit.hpp
   src/app/I18nSelfTest.cpp
   src/app/I18nSelfTest.hpp
+  src/app/MemoryMonitor.cpp
+  src/app/MemoryMonitor.hpp
 
   # New UI structure - MainWindow
   src/ui/main/MainWindow.h
@@ -241,6 +243,10 @@ target_link_libraries(phoenix_app
     Qt6::Core
     Qt6::Graphs
 )
+
+if(WIN32)
+  target_link_libraries(phoenix_app PRIVATE Psapi)
+endif()
 
 # Ensure QML debugging is disabled for the app target as well
 target_compile_options(phoenix_app PRIVATE -UQT_QML_DEBUG)

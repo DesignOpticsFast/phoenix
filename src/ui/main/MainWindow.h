@@ -162,7 +162,12 @@ private:
     
     // Debug info timer
     QTimer* m_debugTimer;
-    
+
+    // Memory monitor cache
+    double m_lastResidentMemoryMB = -1.0;
+    bool m_hasResidentSample = false;
+    QElapsedTimer m_memorySampleTimer;
+
     // Startup timing
     qint64 m_startupTime;
     qint64 m_startupMs = -1;
