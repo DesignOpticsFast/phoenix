@@ -404,8 +404,6 @@ QMenu* MainWindow::createViewMenu()
     languageMenu->addAction(germanAction);
     
     viewMenu->addMenu(languageMenu);
-
-    refreshThemeActionIcons();
     
     return viewMenu;
 }
@@ -1285,9 +1283,9 @@ void MainWindow::refreshThemeActionIcons(const QSize& sizeHint)
     }
     PHX_BOOT_TRACE("refreshThemeActionIcons:actions-ok");
 
-    auto effectiveSize = sizeHint;
-    if (!effectiveSize.isValid() || effectiveSize.isEmpty()) {
-        effectiveSize = QSize(16, 16);
+    QSize effectiveSize = sizeHint;
+    if (!effectiveSize.isValid() || effectiveSize.width() <= 0 || effectiveSize.height() <= 0) {
+        effectiveSize = safeIconSizeHint();
     }
 
     auto refreshForMenu = [&](QAction* action, QWidget* host) {
@@ -1319,42 +1317,24 @@ void MainWindow::refreshThemeActionIcons(const QSize& sizeHint)
         refreshForMenu(m_systemThemeAction, nullptr);
     }
 
-    if (m_rightRibbon) {
-        QSize ribbonSize = m_rightRibbon->iconSize();
-        if (!ribbonSize.isValid() || ribbonSize.isEmpty()) {
-            ribbonSize = effectiveSize;
+    for (QAction* action : {m_lightThemeAction, m_darkThemeAction, m_systemThemeAction}) {
+        if (!action) {
+            continue;
+        }
+        const QString key = action->property("phx_icon_key").toString();
+        if (key.isEmpty()) {
+            continue;
         }
 
-        for (QAction* action : {m_lightThemeAction, m_darkThemeAction, m_systemThemeAction}) {
-            if (!action) {
-                continue;
-            }
-            const QString key = action->property("phx_icon_key").toString();
-            if (key.isEmpty()) {
-                continue;
-            }
+        action->setIcon(IconProvider::icon(key, effectiveSize, nullptr));
 
-            // Update the QAction icon so any future hosts have the correct pixmap
-            action->setIcon(IconProvider::icon(key, ribbonSize, m_rightRibbon));
-
+        if (m_rightRibbon) {
             if (QWidget* widget = m_rightRibbon->widgetForAction(action)) {
                 if (auto* button = qobject_cast<QToolButton*>(widget)) {
-                    button->setIcon(IconProvider::icon(key, ribbonSize, button));
-                    button->setIconSize(ribbonSize);
+                    button->setIcon(IconProvider::icon(key, effectiveSize, button));
+                    button->setIconSize(effectiveSize);
                 }
             }
-        }
-    } else {
-        // No ribbon yet—ensure QAction icons are still refreshed
-        for (QAction* action : {m_lightThemeAction, m_darkThemeAction, m_systemThemeAction}) {
-            if (!action) {
-                continue;
-            }
-            const QString key = action->property("phx_icon_key").toString();
-            if (key.isEmpty()) {
-                continue;
-            }
-            action->setIcon(IconProvider::icon(key, effectiveSize, nullptr));
         }
     }
 }
@@ -1444,4 +1424,5 @@ void MainWindow::logRibbonAction(const QString& action)
         logUIAction(QString("ribbon_%1").arg(action), elapsed);
     });
 }
+
 
