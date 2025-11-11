@@ -13,6 +13,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QTextStream>
+#include <QTimer>
 
 ThemeManager* ThemeManager::s_instance = nullptr;
 QPointer<SettingsProvider> ThemeManager::provider_ = nullptr;
@@ -35,7 +36,7 @@ ThemeManager::ThemeManager(QObject* parent)
     , m_currentTheme(Theme::System)
     , m_activeTheme(Theme::System)
 {
-    loadSettings();
+    loadSettings(false);
 
     if (auto* hints = QGuiApplication::styleHints()) {
         connect(hints,
@@ -44,6 +45,7 @@ ThemeManager::ThemeManager(QObject* parent)
                 [this](Qt::ColorScheme) {
                     if (m_currentTheme == Theme::System) {
                         applySystemTheme();
+                        emitThemeSignals();
                     }
                 });
     }
@@ -51,6 +53,15 @@ ThemeManager::ThemeManager(QObject* parent)
     if (auto* app = QCoreApplication::instance()) {
         app->installEventFilter(this);
     }
+
+    QTimer::singleShot(0, this, [this]() {
+        if (m_currentTheme == Theme::System) {
+            applySystemTheme();
+        } else {
+            applyTheme(m_currentTheme);
+            emitThemeSignals();
+        }
+    });
 }
 
 void ThemeManager::setTheme(Theme theme)
@@ -107,13 +118,15 @@ void ThemeManager::themeChanged()
     emitThemeSignals();
 }
 
-void ThemeManager::loadSettings()
+void ThemeManager::loadSettings(bool applyImmediately)
 {
     auto* sp = provider_.data();
     if (!sp) {
         // Fall back to System theme if provider not set
         m_currentTheme = Theme::System;
-        applyTheme(m_currentTheme);
+        if (applyImmediately) {
+            applyTheme(m_currentTheme);
+        }
         return;
     }
     
@@ -127,7 +140,9 @@ void ThemeManager::loadSettings()
         m_currentTheme = Theme::System;
     }
     
-    applyTheme(m_currentTheme);
+    if (applyImmediately) {
+        applyTheme(m_currentTheme);
+    }
 }
 
 void ThemeManager::saveSettings()
@@ -286,6 +301,7 @@ bool ThemeManager::eventFilter(QObject* watched, QEvent* event)
         if (event->type() == QEvent::ThemeChange ||
             event->type() == QEvent::ApplicationPaletteChange) {
             applySystemTheme();
+            emitThemeSignals();
         }
     }
     return QObject::eventFilter(watched, event);

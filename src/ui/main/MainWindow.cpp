@@ -81,6 +81,7 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     , m_mainToolBar(nullptr)
     , m_statusBar(nullptr)
     , m_themeMenu(nullptr)
+    , m_uiInitialized(false)
     , m_toolboxDock(nullptr)
     , m_propertiesDock(nullptr)
     , m_statusLabel(nullptr)
@@ -132,6 +133,12 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     
     // Setup translations after UI is ready
     setupTranslations();
+    
+    m_uiInitialized = true;
+    const QSize initialIconSize = (m_rightRibbon && m_rightRibbon->iconSize().isValid())
+                                      ? m_rightRibbon->iconSize()
+                                      : QSize(16, 16);
+    refreshThemeActionIcons(initialIconSize);
     
     // Start debug info updates
     m_debugTimer->setInterval(phx::ui::kTelemetryIntervalMs); // Update every second
@@ -1148,11 +1155,21 @@ void MainWindow::setLanguage(const QString& language)
 
 void MainWindow::onThemeChanged()
 {
+    if (!m_uiInitialized) {
+        return;
+    }
+
     // Delay icon refresh until after palette propagation (QApplication::setPalette() is synchronous,
     // but we want to ensure all widgets have received the palette change event)
     QTimer::singleShot(0, this, [this] {
+        if (!m_uiInitialized) {
+            return;
+        }
         refreshAllIconsForTheme();
-        refreshThemeActionIcons();
+        const QSize sizeHint = (m_rightRibbon && m_rightRibbon->iconSize().isValid())
+                                   ? m_rightRibbon->iconSize()
+                                   : QSize(16, 16);
+        refreshThemeActionIcons(sizeHint);
     });
     // Handle theme changes
     updateDebugInfo();
@@ -1251,31 +1268,52 @@ void MainWindow::refreshAllIconsForTheme()
     }
 }
 
-void MainWindow::refreshThemeActionIcons()
+void MainWindow::refreshThemeActionIcons(const QSize& sizeHint)
 {
+    if (!m_lightThemeAction || !m_darkThemeAction || !m_systemThemeAction) {
+        return;
+    }
+
+    auto effectiveSize = sizeHint;
+    if (!effectiveSize.isValid() || effectiveSize.isEmpty()) {
+        effectiveSize = QSize(16, 16);
+    }
+
     auto refreshForMenu = [&](QAction* action, QWidget* host) {
-        if (!action || !host) {
+        if (!action) {
             return;
         }
         const QString key = action->property("phx_icon_key").toString();
         if (key.isEmpty()) {
             return;
         }
-        const int px = host->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, host);
-        const QSize size(px, px);
-        action->setIcon(IconProvider::icon(key, size, host));
+
+        if (host) {
+            const int px = host->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, host);
+            const QSize size(px, px);
+            action->setIcon(IconProvider::icon(key, size, host));
+        } else {
+            action->setIcon(IconProvider::icon(key, effectiveSize, nullptr));
+        }
     };
 
     if (m_themeMenu) {
         refreshForMenu(m_lightThemeAction, m_themeMenu);
         refreshForMenu(m_darkThemeAction, m_themeMenu);
         refreshForMenu(m_systemThemeAction, m_themeMenu);
+    } else {
+        // Ensure actions always have icons even if menu isn't ready yet
+        refreshForMenu(m_lightThemeAction, nullptr);
+        refreshForMenu(m_darkThemeAction, nullptr);
+        refreshForMenu(m_systemThemeAction, nullptr);
     }
 
     if (m_rightRibbon) {
-        const QSize ribbonSize = m_rightRibbon->iconSize().isValid()
-                                     ? m_rightRibbon->iconSize()
-                                     : QSize(phx::ui::kToolbarIconPx, phx::ui::kToolbarIconPx);
+        QSize ribbonSize = m_rightRibbon->iconSize();
+        if (!ribbonSize.isValid() || ribbonSize.isEmpty()) {
+            ribbonSize = effectiveSize;
+        }
+
         for (QAction* action : {m_lightThemeAction, m_darkThemeAction, m_systemThemeAction}) {
             if (!action) {
                 continue;
@@ -1284,11 +1322,28 @@ void MainWindow::refreshThemeActionIcons()
             if (key.isEmpty()) {
                 continue;
             }
+
+            // Update the QAction icon so any future hosts have the correct pixmap
+            action->setIcon(IconProvider::icon(key, ribbonSize, m_rightRibbon));
+
             if (QWidget* widget = m_rightRibbon->widgetForAction(action)) {
                 if (auto* button = qobject_cast<QToolButton*>(widget)) {
                     button->setIcon(IconProvider::icon(key, ribbonSize, button));
+                    button->setIconSize(ribbonSize);
                 }
             }
+        }
+    } else {
+        // No ribbon yet—ensure QAction icons are still refreshed
+        for (QAction* action : {m_lightThemeAction, m_darkThemeAction, m_systemThemeAction}) {
+            if (!action) {
+                continue;
+            }
+            const QString key = action->property("phx_icon_key").toString();
+            if (key.isEmpty()) {
+                continue;
+            }
+            action->setIcon(IconProvider::icon(key, effectiveSize, nullptr));
         }
     }
 }
@@ -1367,3 +1422,4 @@ void MainWindow::logRibbonAction(const QString& action)
         logUIAction(QString("ribbon_%1").arg(action), elapsed);
     });
 }
+

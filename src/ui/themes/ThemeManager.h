@@ -36,7 +36,7 @@ public:
     void themeChanged();
     
     // Settings
-    void loadSettings();
+    void loadSettings(bool applyImmediately = true);
     void saveSettings();
 
 signals:

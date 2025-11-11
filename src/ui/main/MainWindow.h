@@ -119,7 +119,7 @@ private:
     
     // Theme refresh helper
     void refreshAllIconsForTheme();
-    void refreshThemeActionIcons();
+    void refreshThemeActionIcons(const QSize& sizeHint = QSize());
     
     // UI Components
     QMenuBar* m_menuBar;
@@ -128,6 +128,7 @@ private:
     QToolBar* m_rightRibbon;
     QStatusBar* m_statusBar;
     QMenu* m_themeMenu;
+    bool m_uiInitialized = false;
     
     // Dock widgets
     QDockWidget* m_toolboxDock;
