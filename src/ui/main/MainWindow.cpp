@@ -601,8 +601,18 @@ QToolBar* MainWindow::createRightRibbon()
             action->setProperty("phx_icon_key", iconKey);
         }
 
+        if (action->property("phx_log_key").toString() != logKey) {
+            action->setProperty("phx_log_key", logKey);
+        }
+
         action->setIcon(IconProvider::icon(iconKey, ribbon->iconSize(), ribbon));
         ribbon->addAction(action);
+
+        QObject::connect(action,
+                         &QAction::triggered,
+                         this,
+                         &MainWindow::onThemeRibbonActionTriggered,
+                         Qt::UniqueConnection);
 
         if (QWidget* widget = ribbon->widgetForAction(action)) {
             if (auto* button = qobject_cast<QToolButton*>(widget)) {
@@ -612,15 +622,6 @@ QToolBar* MainWindow::createRightRibbon()
                 button->setCheckable(true);
                 button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
                 button->setStyleSheet(QStringLiteral("QToolButton { text-align: left; padding: 0 8px; }"));
-
-                QObject::connect(
-                    button,
-                    &QToolButton::clicked,
-                    this,
-                    [this, logKey]() {
-                        logRibbonAction(logKey);
-                    },
-                    Qt::UniqueConnection);
             }
         }
     };
@@ -1101,6 +1102,21 @@ void MainWindow::setSystemTheme()
 {
     if (m_themeManager) m_themeManager->setTheme(ThemeManager::Theme::System);
     // ThemeManager now saves theme via SettingsProvider
+}
+
+void MainWindow::onThemeRibbonActionTriggered(bool checked)
+{
+    Q_UNUSED(checked);
+
+    auto* action = qobject_cast<QAction*>(sender());
+    if (!action) {
+        return;
+    }
+
+    const QString logKey = action->property("phx_log_key").toString();
+    if (!logKey.isEmpty()) {
+        logRibbonAction(logKey);
+    }
 }
 
 void MainWindow::setLanguage(const QString& language)

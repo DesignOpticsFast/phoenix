@@ -68,6 +68,7 @@ private slots:
     void setDarkTheme();
     void setSystemTheme();
     void setLanguage(const QString& language);
+    void onThemeRibbonActionTriggered(bool checked);
     
     // Status bar updates
     void updateStatusBar();

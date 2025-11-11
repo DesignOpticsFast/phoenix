@@ -28,6 +28,7 @@
 #include <QFontInfo>
 #include <QFontMetricsF>
 #include <QProcessEnvironment>
+#include <QStyle>
 #include <cmath>
 
 QHash<IconKey, QIcon> IconProvider::s_cache;
@@ -590,7 +591,16 @@ QIcon IconProvider::fallback(int size, const QPalette& pal, qreal dpr, const QWi
     const int rh = qCeil(size * dpr);
     
     if (!QFile::exists(kFallback)) {
-        qCCritical(phxIcons) << "Fallback icon missing:" << kFallback;
+#ifndef QT_NO_DEBUG_OUTPUT
+        qCDebug(phxIcons) << "Fallback icon missing:" << kFallback << "- using standard style icon";
+#endif
+        if (QStyle* style = widget ? widget->style() : QApplication::style()) {
+            QIcon styled = style->standardIcon(QStyle::SP_FileIcon, nullptr, widget);
+            if (!styled.isNull()) {
+                return styled;
+            }
+        }
+
         // Return a minimal themed icon as last resort (at device-pixel size)
         QPixmap normalPm(rw, rh);
         normalPm.setDevicePixelRatio(dpr);
