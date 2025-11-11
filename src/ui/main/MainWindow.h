@@ -14,6 +14,7 @@
 QT_BEGIN_NAMESPACE
 class QDockWidget;
 class QLabel;
+class QMenu;
 class QWidget;
 QT_END_NAMESPACE
 
@@ -118,6 +119,7 @@ private:
     
     // Theme refresh helper
     void refreshAllIconsForTheme();
+    void refreshThemeActionIcons();
     
     // UI Components
     QMenuBar* m_menuBar;
@@ -125,6 +127,7 @@ private:
     QToolBar* m_topRibbon;
     QToolBar* m_rightRibbon;
     QStatusBar* m_statusBar;
+    QMenu* m_themeMenu;
     
     // Dock widgets
     QDockWidget* m_toolboxDock;

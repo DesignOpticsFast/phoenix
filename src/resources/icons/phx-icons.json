@@ -65,6 +65,11 @@
       "codepoint": "f186",
       "aliases": ["dark", "dark-theme"]
     },
+    "system": {
+      "style": "solid",
+      "codepoint": "f042",
+      "aliases": ["circle-half-stroke", "auto"]
+    },
     "document-new": {
       "style": "solid",
       "codepoint": "f067"

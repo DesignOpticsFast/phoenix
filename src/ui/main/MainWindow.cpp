@@ -35,6 +35,7 @@
 #include <QSet>
 #include <QAction>
 #include <QMenu>
+#include <QStyle>
 #include <functional>
 #include <cmath>
 
@@ -79,6 +80,7 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     , m_menuBar(nullptr)
     , m_mainToolBar(nullptr)
     , m_statusBar(nullptr)
+    , m_themeMenu(nullptr)
     , m_toolboxDock(nullptr)
     , m_propertiesDock(nullptr)
     , m_statusLabel(nullptr)
@@ -347,16 +349,14 @@ QMenu* MainWindow::createViewMenu()
     
     // Theme submenu
     QMenu* themeMenu = new QMenu(tr("&Theme"), this);
+    m_themeMenu = themeMenu;
     m_themeGroup = new QActionGroup(this);
     m_themeGroup->setExclusive(true);
 
-    const int themePx = themeMenu->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, themeMenu);
-    
     m_lightThemeAction = new QAction(tr("&Light"), this);
     m_lightThemeAction->setCheckable(true);
     m_lightThemeAction->setActionGroup(m_themeGroup);
     m_lightThemeAction->setProperty("phx_icon_key", "light");
-    m_lightThemeAction->setIcon(IconProvider::icon("light", QSize(themePx, themePx), themeMenu));
     m_lightThemeAction->setStatusTip(tr("Switch to light theme"));
     m_lightThemeAction->setToolTip(tr("Switch to light theme"));
     connect(m_lightThemeAction, &QAction::triggered, this, &MainWindow::setLightTheme);
@@ -366,7 +366,6 @@ QMenu* MainWindow::createViewMenu()
     m_darkThemeAction->setCheckable(true);
     m_darkThemeAction->setActionGroup(m_themeGroup);
     m_darkThemeAction->setProperty("phx_icon_key", "dark");
-    m_darkThemeAction->setIcon(IconProvider::icon("dark", QSize(themePx, themePx), themeMenu));
     m_darkThemeAction->setStatusTip(tr("Switch to dark theme"));
     m_darkThemeAction->setToolTip(tr("Switch to dark theme"));
     connect(m_darkThemeAction, &QAction::triggered, this, &MainWindow::setDarkTheme);
@@ -376,7 +375,6 @@ QMenu* MainWindow::createViewMenu()
     m_systemThemeAction->setCheckable(true);
     m_systemThemeAction->setActionGroup(m_themeGroup);
     m_systemThemeAction->setProperty("phx_icon_key", "system");
-    m_systemThemeAction->setIcon(IconProvider::icon("system", QSize(themePx, themePx), themeMenu));
     m_systemThemeAction->setStatusTip(tr("Follow the operating system theme"));
     m_systemThemeAction->setToolTip(tr("Follow the operating system theme"));
     connect(m_systemThemeAction, &QAction::triggered, this, &MainWindow::setSystemTheme);
@@ -396,6 +394,8 @@ QMenu* MainWindow::createViewMenu()
     languageMenu->addAction(germanAction);
     
     viewMenu->addMenu(languageMenu);
+
+    refreshThemeActionIcons();
     
     return viewMenu;
 }
@@ -464,6 +464,8 @@ void MainWindow::setupRibbons()
     // Right ribbon (vertical)
     m_rightRibbon = createRightRibbon();
     addToolBar(Qt::RightToolBarArea, m_rightRibbon);
+
+    refreshThemeActionIcons();
 }
 
 QToolBar* MainWindow::createTopRibbon()
@@ -557,13 +559,14 @@ QToolBar* MainWindow::createTopRibbon()
 QToolBar* MainWindow::createRightRibbon()
 {
     QToolBar* ribbon = new QToolBar(tr("Right Ribbon"), this);
-    ribbon->setObjectName("rightRibbon");
+    ribbon->setObjectName("sideRibbon");
     ribbon->setMovable(true);
     ribbon->setFloatable(true);
     ribbon->setAllowedAreas(Qt::AllToolBarAreas);
     ribbon->setOrientation(Qt::Vertical);
     ribbon->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     ribbon->setIconSize(QSize(phx::ui::kToolbarIconPx, phx::ui::kToolbarIconPx));
+    ribbon->setStyleSheet(QStringLiteral("QToolBar#sideRibbon QToolButton { text-align: left; padding: 0 8px; }"));
     
     // Editors actions
     QAction* lensInspectorAction = new QAction(tr("Lens Inspector"), this);
@@ -605,7 +608,6 @@ QToolBar* MainWindow::createRightRibbon()
             action->setProperty("phx_log_key", logKey);
         }
 
-        action->setIcon(IconProvider::icon(iconKey, ribbon->iconSize(), ribbon));
         ribbon->addAction(action);
 
         QObject::connect(action,
@@ -621,7 +623,7 @@ QToolBar* MainWindow::createRightRibbon()
                 button->setAutoRaise(false);
                 button->setCheckable(true);
                 button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-                button->setStyleSheet(QStringLiteral("QToolButton { text-align: left; padding: 0 8px; }"));
+                button->setMinimumWidth(140);
             }
         }
     };
@@ -1150,6 +1152,7 @@ void MainWindow::onThemeChanged()
     // but we want to ensure all widgets have received the palette change event)
     QTimer::singleShot(0, this, [this] {
         refreshAllIconsForTheme();
+        refreshThemeActionIcons();
     });
     // Handle theme changes
     updateDebugInfo();
@@ -1245,6 +1248,48 @@ void MainWindow::refreshAllIconsForTheme()
             rebuildAction(a, tb);
         }
         tb->update();  // repaint toolbar shell
+    }
+}
+
+void MainWindow::refreshThemeActionIcons()
+{
+    auto refreshForMenu = [&](QAction* action, QWidget* host) {
+        if (!action || !host) {
+            return;
+        }
+        const QString key = action->property("phx_icon_key").toString();
+        if (key.isEmpty()) {
+            return;
+        }
+        const int px = host->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, host);
+        const QSize size(px, px);
+        action->setIcon(IconProvider::icon(key, size, host));
+    };
+
+    if (m_themeMenu) {
+        refreshForMenu(m_lightThemeAction, m_themeMenu);
+        refreshForMenu(m_darkThemeAction, m_themeMenu);
+        refreshForMenu(m_systemThemeAction, m_themeMenu);
+    }
+
+    if (m_rightRibbon) {
+        const QSize ribbonSize = m_rightRibbon->iconSize().isValid()
+                                     ? m_rightRibbon->iconSize()
+                                     : QSize(phx::ui::kToolbarIconPx, phx::ui::kToolbarIconPx);
+        for (QAction* action : {m_lightThemeAction, m_darkThemeAction, m_systemThemeAction}) {
+            if (!action) {
+                continue;
+            }
+            const QString key = action->property("phx_icon_key").toString();
+            if (key.isEmpty()) {
+                continue;
+            }
+            if (QWidget* widget = m_rightRibbon->widgetForAction(action)) {
+                if (auto* button = qobject_cast<QToolButton*>(widget)) {
+                    button->setIcon(IconProvider::icon(key, ribbonSize, button));
+                }
+            }
+        }
     }
 }
 
