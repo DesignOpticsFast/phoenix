@@ -120,6 +120,7 @@ private:
     // Theme refresh helper
     void refreshAllIconsForTheme();
     void refreshThemeActionIcons(const QSize& sizeHint = QSize());
+    QSize safeIconSizeHint() const;
     
     // UI Components
     QMenuBar* m_menuBar;

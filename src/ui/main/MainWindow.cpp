@@ -4,6 +4,7 @@
 #include "../icons/IconProvider.h"
 #include "../icons/PhxLogging.h"
 #include "../UILogging.h"
+#include "app/Trace.hpp"
 #include "app/LocaleInit.hpp"
 #include "app/SettingsProvider.h"
 #include "app/SettingsKeys.h"
@@ -105,6 +106,7 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     , m_debugTimer(new QTimer(this))
     , m_startupTime(0)
 {
+    PHX_BOOT_TRACE("MainWindow:ctor:begin");
     setWindowTitle(QStringLiteral("Phoenix %1 - Optical Design Studio")
                    .arg(QStringLiteral(PHOENIX_VERSION)));
     setMinimumSize(phx::ui::kMainMinSize);
@@ -121,11 +123,14 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     m_themeManager = ThemeManager::instance();
     
     // Initialize components (defer translations until after UI is ready)
+    PHX_BOOT_TRACE("MainWindow:setupMenuBar");
     setupMenuBar();  // This creates all the actions
     setupToolBar();  // This uses the actions created above
+    PHX_BOOT_TRACE("MainWindow:setupRibbons");
     setupRibbons();  // This creates dockable ribbons
     setupDockWidgets();
     setupFloatingToolbarsAndDocks();  // Setup floating behavior for toolbars and docks
+    PHX_BOOT_TRACE("MainWindow:setupStatusBar");
     setupStatusBar();
     setupConnections();
     setupTheme();
@@ -135,10 +140,7 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     setupTranslations();
     
     m_uiInitialized = true;
-    const QSize initialIconSize = (m_rightRibbon && m_rightRibbon->iconSize().isValid())
-                                      ? m_rightRibbon->iconSize()
-                                      : QSize(16, 16);
-    refreshThemeActionIcons(initialIconSize);
+    refreshThemeActionIcons(safeIconSizeHint());
     
     // Start debug info updates
     m_debugTimer->setInterval(phx::ui::kTelemetryIntervalMs); // Update every second
@@ -147,6 +149,7 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     
     // Initial status update
     updateStatusBar();
+    PHX_BOOT_TRACE("MainWindow:ctor:end");
 }
 
 MainWindow::~MainWindow()
@@ -615,6 +618,7 @@ QToolBar* MainWindow::createRightRibbon()
             action->setProperty("phx_log_key", logKey);
         }
 
+        PHX_BOOT_TRACE(QStringLiteral("wireThemeAction:%1").arg(logKey));
         ribbon->addAction(action);
 
         QObject::connect(action,
@@ -623,7 +627,9 @@ QToolBar* MainWindow::createRightRibbon()
                          &MainWindow::onThemeRibbonActionTriggered,
                          Qt::UniqueConnection);
 
+        PHX_BOOT_TRACE("widgetForAction:query");
         if (QWidget* widget = ribbon->widgetForAction(action)) {
+            PHX_BOOT_TRACE(QStringLiteral("widgetForAction:ok:%1").arg(widget->metaObject()->className()));
             if (auto* button = qobject_cast<QToolButton*>(widget)) {
                 button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
                 button->setIconSize(ribbon->iconSize());
@@ -632,6 +638,8 @@ QToolBar* MainWindow::createRightRibbon()
                 button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
                 button->setMinimumWidth(140);
             }
+        } else {
+            PHX_BOOT_TRACE("widgetForAction:null");
         }
     };
 
@@ -1156,6 +1164,7 @@ void MainWindow::setLanguage(const QString& language)
 void MainWindow::onThemeChanged()
 {
     if (!m_uiInitialized) {
+        PHX_BOOT_TRACE("onThemeChanged:ui-not-ready");
         return;
     }
 
@@ -1163,13 +1172,12 @@ void MainWindow::onThemeChanged()
     // but we want to ensure all widgets have received the palette change event)
     QTimer::singleShot(0, this, [this] {
         if (!m_uiInitialized) {
+            PHX_BOOT_TRACE("onThemeChanged:deferred-ui-not-ready");
             return;
         }
+        IconProvider::clearCache();
         refreshAllIconsForTheme();
-        const QSize sizeHint = (m_rightRibbon && m_rightRibbon->iconSize().isValid())
-                                   ? m_rightRibbon->iconSize()
-                                   : QSize(16, 16);
-        refreshThemeActionIcons(sizeHint);
+        refreshThemeActionIcons(safeIconSizeHint());
     });
     // Handle theme changes
     updateDebugInfo();
@@ -1270,9 +1278,12 @@ void MainWindow::refreshAllIconsForTheme()
 
 void MainWindow::refreshThemeActionIcons(const QSize& sizeHint)
 {
+    PHX_BOOT_TRACE("refreshThemeActionIcons:enter");
     if (!m_lightThemeAction || !m_darkThemeAction || !m_systemThemeAction) {
+        PHX_BOOT_TRACE("refreshThemeActionIcons:actions-null");
         return;
     }
+    PHX_BOOT_TRACE("refreshThemeActionIcons:actions-ok");
 
     auto effectiveSize = sizeHint;
     if (!effectiveSize.isValid() || effectiveSize.isEmpty()) {
@@ -1346,6 +1357,17 @@ void MainWindow::refreshThemeActionIcons(const QSize& sizeHint)
             action->setIcon(IconProvider::icon(key, effectiveSize, nullptr));
         }
     }
+}
+
+QSize MainWindow::safeIconSizeHint() const
+{
+    if (const QStyle* st = QApplication::style()) {
+        const int px = st->pixelMetric(QStyle::PM_SmallIconSize);
+        if (px > 0) {
+            return QSize(px, px);
+        }
+    }
+    return QSize(16, 16);
 }
 
 void MainWindow::initializeUI()
