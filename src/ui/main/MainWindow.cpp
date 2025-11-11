@@ -4,7 +4,6 @@
 #include "../icons/IconProvider.h"
 #include "../icons/PhxLogging.h"
 #include "../UILogging.h"
-#include "app/Trace.hpp"
 #include "app/LocaleInit.hpp"
 #include "app/SettingsProvider.h"
 #include "app/SettingsKeys.h"
@@ -106,7 +105,6 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     , m_debugTimer(new QTimer(this))
     , m_startupTime(0)
 {
-    PHX_BOOT_TRACE("MainWindow:ctor:begin");
     setWindowTitle(QStringLiteral("Phoenix %1 - Optical Design Studio")
                    .arg(QStringLiteral(PHOENIX_VERSION)));
     setMinimumSize(phx::ui::kMainMinSize);
@@ -123,14 +121,11 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     m_themeManager = ThemeManager::instance();
     
     // Initialize components (defer translations until after UI is ready)
-    PHX_BOOT_TRACE("MainWindow:setupMenuBar");
     setupMenuBar();  // This creates all the actions
     setupToolBar();  // This uses the actions created above
-    PHX_BOOT_TRACE("MainWindow:setupRibbons");
     setupRibbons();  // This creates dockable ribbons
     setupDockWidgets();
     setupFloatingToolbarsAndDocks();  // Setup floating behavior for toolbars and docks
-    PHX_BOOT_TRACE("MainWindow:setupStatusBar");
     setupStatusBar();
     setupConnections();
     setupTheme();
@@ -140,7 +135,34 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     setupTranslations();
     
     m_uiInitialized = true;
-    refreshThemeActionIcons(safeIconSizeHint());
+    const QSize startupIconSize = safeIconSizeHint();
+    refreshThemeActionIcons(startupIconSize);
+    if (m_themeManager) {
+        const auto startupTheme = m_themeManager->currentTheme();
+        if (m_lightThemeAction) {
+            m_lightThemeAction->setChecked(startupTheme == ThemeManager::Theme::Light);
+        }
+        if (m_darkThemeAction) {
+            m_darkThemeAction->setChecked(startupTheme == ThemeManager::Theme::Dark);
+        }
+        if (m_systemThemeAction) {
+            m_systemThemeAction->setChecked(startupTheme == ThemeManager::Theme::System);
+        }
+    }
+
+    if (m_lightThemeAction)  m_lightThemeAction->setChecked(m_themeManager && m_themeManager->currentTheme() == ThemeManager::Theme::Light);
+    if (m_darkThemeAction)   m_darkThemeAction->setChecked(m_themeManager && m_themeManager->currentTheme() == ThemeManager::Theme::Dark);
+    if (m_systemThemeAction) m_systemThemeAction->setChecked(m_themeManager && m_themeManager->currentTheme() == ThemeManager::Theme::System);
+
+    if (m_rightRibbon) {
+        m_rightRibbon->setPalette(QApplication::palette());
+        m_rightRibbon->update();
+
+        if (auto* dock = qobject_cast<QDockWidget*>(m_rightRibbon->parentWidget())) {
+            dock->setPalette(QApplication::palette());
+            dock->update();
+        }
+    }
     
     // Start debug info updates
     m_debugTimer->setInterval(phx::ui::kTelemetryIntervalMs); // Update every second
@@ -149,7 +171,6 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     
     // Initial status update
     updateStatusBar();
-    PHX_BOOT_TRACE("MainWindow:ctor:end");
 }
 
 MainWindow::~MainWindow()
@@ -183,7 +204,20 @@ bool MainWindow::event(QEvent* e)
     } else if (e->type() == QEvent::PaletteChange || e->type() == QEvent::ApplicationPaletteChange) {
         // Delay icon refresh until after palette propagation
         QTimer::singleShot(0, this, [this] {
+            IconProvider::clearCache();
             refreshAllIconsForTheme();
+            if (m_uiInitialized) {
+                const QSize iconSize = safeIconSizeHint();
+                refreshThemeActionIcons(iconSize);
+                if (m_rightRibbon) {
+                    m_rightRibbon->setPalette(QApplication::palette());
+                    m_rightRibbon->update();
+                    if (auto* dock = qobject_cast<QDockWidget*>(m_rightRibbon->parentWidget())) {
+                        dock->setPalette(QApplication::palette());
+                        dock->update();
+                    }
+                }
+            }
         });
     }
     return QMainWindow::event(e);
@@ -616,7 +650,6 @@ QToolBar* MainWindow::createRightRibbon()
             action->setProperty("phx_log_key", logKey);
         }
 
-        PHX_BOOT_TRACE(QStringLiteral("wireThemeAction:%1").arg(logKey));
         ribbon->addAction(action);
 
         QObject::connect(action,
@@ -625,9 +658,7 @@ QToolBar* MainWindow::createRightRibbon()
                          &MainWindow::onThemeRibbonActionTriggered,
                          Qt::UniqueConnection);
 
-        PHX_BOOT_TRACE("widgetForAction:query");
         if (QWidget* widget = ribbon->widgetForAction(action)) {
-            PHX_BOOT_TRACE(QStringLiteral("widgetForAction:ok:%1").arg(widget->metaObject()->className()));
             if (auto* button = qobject_cast<QToolButton*>(widget)) {
                 button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
                 button->setIconSize(ribbon->iconSize());
@@ -636,8 +667,6 @@ QToolBar* MainWindow::createRightRibbon()
                 button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
                 button->setMinimumWidth(140);
             }
-        } else {
-            PHX_BOOT_TRACE("widgetForAction:null");
         }
     };
 
@@ -1162,7 +1191,6 @@ void MainWindow::setLanguage(const QString& language)
 void MainWindow::onThemeChanged()
 {
     if (!m_uiInitialized) {
-        PHX_BOOT_TRACE("onThemeChanged:ui-not-ready");
         return;
     }
 
@@ -1170,12 +1198,34 @@ void MainWindow::onThemeChanged()
     // but we want to ensure all widgets have received the palette change event)
     QTimer::singleShot(0, this, [this] {
         if (!m_uiInitialized) {
-            PHX_BOOT_TRACE("onThemeChanged:deferred-ui-not-ready");
             return;
         }
         IconProvider::clearCache();
         refreshAllIconsForTheme();
-        refreshThemeActionIcons(safeIconSizeHint());
+        const QSize iconSize = safeIconSizeHint();
+        refreshThemeActionIcons(iconSize);
+
+        if (m_themeManager) {
+            const auto theme = m_themeManager->currentTheme();
+            if (m_lightThemeAction) {
+                m_lightThemeAction->setChecked(theme == ThemeManager::Theme::Light);
+            }
+            if (m_darkThemeAction) {
+                m_darkThemeAction->setChecked(theme == ThemeManager::Theme::Dark);
+            }
+            if (m_systemThemeAction) {
+                m_systemThemeAction->setChecked(theme == ThemeManager::Theme::System);
+            }
+        }
+
+        if (m_rightRibbon) {
+            m_rightRibbon->setPalette(QApplication::palette());
+            m_rightRibbon->update();
+            if (auto* dock = qobject_cast<QDockWidget*>(m_rightRibbon->parentWidget())) {
+                dock->setPalette(QApplication::palette());
+                dock->update();
+            }
+        }
     });
     // Handle theme changes
     updateDebugInfo();
@@ -1184,15 +1234,13 @@ void MainWindow::onThemeChanged()
 void MainWindow::applyIcons()
 {
     // This method is kept for backward compatibility but now delegates to refreshAllIconsForTheme()
+    IconProvider::clearCache();
     refreshAllIconsForTheme();
 }
 
 void MainWindow::refreshAllIconsForTheme()
 {
     qCDebug(phxIcons) << "GLOBAL ICON REFRESH (menus+toolbars) after theme/palette change";
-    
-    IconProvider::clearCache();
-    
     // Unified rebuildAction lambda: always clear→set to drop cached pixmaps
     auto rebuildAction = [](QAction* a, QWidget* w) {
         if (!a) return;
@@ -1276,12 +1324,9 @@ void MainWindow::refreshAllIconsForTheme()
 
 void MainWindow::refreshThemeActionIcons(const QSize& sizeHint)
 {
-    PHX_BOOT_TRACE("refreshThemeActionIcons:enter");
     if (!m_lightThemeAction || !m_darkThemeAction || !m_systemThemeAction) {
-        PHX_BOOT_TRACE("refreshThemeActionIcons:actions-null");
         return;
     }
-    PHX_BOOT_TRACE("refreshThemeActionIcons:actions-ok");
 
     QSize effectiveSize = sizeHint;
     if (!effectiveSize.isValid() || effectiveSize.width() <= 0 || effectiveSize.height() <= 0) {

@@ -14,7 +14,6 @@
 #include <QFile>
 #include <QTextStream>
 #include <QTimer>
-#include "app/Trace.hpp"
 #include <QTimer>
 
 ThemeManager* ThemeManager::s_instance = nullptr;
@@ -38,7 +37,6 @@ ThemeManager::ThemeManager(QObject* parent)
     , m_currentTheme(Theme::System)
     , m_activeTheme(Theme::System)
 {
-    PHX_BOOT_TRACE("ThemeManager:ctor:begin");
     loadSettings(false);
 
     if (auto* hints = QGuiApplication::styleHints()) {
@@ -64,7 +62,6 @@ ThemeManager::ThemeManager(QObject* parent)
             applyTheme(m_currentTheme);
             emitThemeSignals();
         }
-        PHX_BOOT_TRACE("ThemeManager:ctor:end");
     });
 }
 
