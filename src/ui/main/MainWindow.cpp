@@ -348,22 +348,37 @@ QMenu* MainWindow::createViewMenu()
     // Theme submenu
     QMenu* themeMenu = new QMenu(tr("&Theme"), this);
     m_themeGroup = new QActionGroup(this);
+    m_themeGroup->setExclusive(true);
+
+    const int themePx = themeMenu->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, themeMenu);
     
     m_lightThemeAction = new QAction(tr("&Light"), this);
     m_lightThemeAction->setCheckable(true);
     m_lightThemeAction->setActionGroup(m_themeGroup);
+    m_lightThemeAction->setProperty("phx_icon_key", "light");
+    m_lightThemeAction->setIcon(IconProvider::icon("light", QSize(themePx, themePx), themeMenu));
+    m_lightThemeAction->setStatusTip(tr("Switch to light theme"));
+    m_lightThemeAction->setToolTip(tr("Switch to light theme"));
     connect(m_lightThemeAction, &QAction::triggered, this, &MainWindow::setLightTheme);
     themeMenu->addAction(m_lightThemeAction);
     
     m_darkThemeAction = new QAction(tr("&Dark"), this);
     m_darkThemeAction->setCheckable(true);
     m_darkThemeAction->setActionGroup(m_themeGroup);
+    m_darkThemeAction->setProperty("phx_icon_key", "dark");
+    m_darkThemeAction->setIcon(IconProvider::icon("dark", QSize(themePx, themePx), themeMenu));
+    m_darkThemeAction->setStatusTip(tr("Switch to dark theme"));
+    m_darkThemeAction->setToolTip(tr("Switch to dark theme"));
     connect(m_darkThemeAction, &QAction::triggered, this, &MainWindow::setDarkTheme);
     themeMenu->addAction(m_darkThemeAction);
     
     m_systemThemeAction = new QAction(tr("&System"), this);
     m_systemThemeAction->setCheckable(true);
     m_systemThemeAction->setActionGroup(m_themeGroup);
+    m_systemThemeAction->setProperty("phx_icon_key", "system");
+    m_systemThemeAction->setIcon(IconProvider::icon("system", QSize(themePx, themePx), themeMenu));
+    m_systemThemeAction->setStatusTip(tr("Follow the operating system theme"));
+    m_systemThemeAction->setToolTip(tr("Follow the operating system theme"));
     connect(m_systemThemeAction, &QAction::triggered, this, &MainWindow::setSystemTheme);
     themeMenu->addAction(m_systemThemeAction);
     
@@ -575,30 +590,44 @@ QToolBar* MainWindow::createRightRibbon()
     
     ribbon->addSeparator();
     
-    // View actions
-    QAction* lightThemeAction = new QAction(tr("Light Theme"), this);
-    lightThemeAction->setProperty("phx_icon_key", "light");
-    lightThemeAction->setIcon(IconProvider::icon("light", ribbon->iconSize(), ribbon));
-    lightThemeAction->setToolTip(tr("Switch to light theme"));
-    lightThemeAction->setCheckable(true);
-    connect(lightThemeAction, &QAction::triggered, this, [this]() { 
-        m_actionTimer.start(); 
-        setLightTheme(); 
-        logRibbonAction("light_theme");
-    });
-    ribbon->addAction(lightThemeAction);
-    
-    QAction* darkThemeAction = new QAction(tr("Dark Theme"), this);
-    darkThemeAction->setProperty("phx_icon_key", "dark");
-    darkThemeAction->setIcon(IconProvider::icon("dark", ribbon->iconSize(), ribbon));
-    darkThemeAction->setToolTip(tr("Switch to dark theme"));
-    darkThemeAction->setCheckable(true);
-    connect(darkThemeAction, &QAction::triggered, this, [this]() { 
-        m_actionTimer.start(); 
-        setDarkTheme(); 
-        logRibbonAction("dark_theme");
-    });
-    ribbon->addAction(darkThemeAction);
+    // View actions (reuse shared theme QAction instances for exclusivity across UI)
+    auto wireThemeAction = [this, ribbon](QAction* action, const QString& iconKey, const QString& logKey) {
+        if (!action) {
+            return;
+        }
+
+        // Ensure the icon key is set (menu creation already does this)
+        if (action->property("phx_icon_key").toString().isEmpty()) {
+            action->setProperty("phx_icon_key", iconKey);
+        }
+
+        action->setIcon(IconProvider::icon(iconKey, ribbon->iconSize(), ribbon));
+        ribbon->addAction(action);
+
+        if (QWidget* widget = ribbon->widgetForAction(action)) {
+            if (auto* button = qobject_cast<QToolButton*>(widget)) {
+                button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+                button->setIconSize(ribbon->iconSize());
+                button->setAutoRaise(false);
+                button->setCheckable(true);
+                button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+                button->setStyleSheet(QStringLiteral("QToolButton { text-align: left; padding: 0 8px; }"));
+
+                QObject::connect(
+                    button,
+                    &QToolButton::clicked,
+                    this,
+                    [this, logKey]() {
+                        logRibbonAction(logKey);
+                    },
+                    Qt::UniqueConnection);
+            }
+        }
+    };
+
+    wireThemeAction(m_lightThemeAction, QStringLiteral("light"), QStringLiteral("light_theme"));
+    wireThemeAction(m_darkThemeAction, QStringLiteral("dark"), QStringLiteral("dark_theme"));
+    wireThemeAction(m_systemThemeAction, QStringLiteral("system"), QStringLiteral("system_theme"));
     
     // Expanding spacer to push Help/About to bottom while preserving left alignment
     QWidget* spacer = new QWidget(ribbon);
@@ -756,13 +785,19 @@ void MainWindow::setupFloatingToolbarsAndDocks()
 void MainWindow::setupStatusBar()
 {
     m_statusBar = statusBar();
+    if (m_statusBar) {
+        m_statusBar->setContentsMargins(8, 0, 8, 0);
+        m_statusBar->setStyleSheet(QStringLiteral("QStatusBar { padding: 0 8px; }"));
+    }
     
     // Left side - status message
     m_statusLabel = new QLabel(tr("Ready"));
+    m_statusLabel->setContentsMargins(6, 0, 6, 0);
     m_statusBar->addWidget(m_statusLabel);
     
     // Right side - debug information
     m_debugLabel = new QLabel();
+    m_debugLabel->setContentsMargins(6, 0, 6, 0);
     m_statusBar->addPermanentWidget(m_debugLabel);
     
     updateStatusBar();

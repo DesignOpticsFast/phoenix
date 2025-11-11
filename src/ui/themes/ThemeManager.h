@@ -3,10 +3,8 @@
 #include <QObject>
 #include <QApplication>
 #include <QSettings>
-#include <QStyle>
-#include <QPalette>
-#include <QString>
 #include <QPointer>
+#include <QString>
 
 class SettingsProvider;
 
@@ -32,6 +30,7 @@ public:
     
     // System theme detection
     bool systemPrefersDark() const;
+    void applySystemTheme();
     
     // Theme change signals
     void themeChanged();
@@ -50,10 +49,17 @@ private:
     static QPointer<SettingsProvider> provider_;
     
     Theme m_currentTheme;
+    Theme m_activeTheme;
+    bool m_paletteInitialized = false;
     
     void applyTheme(Theme theme);
     void applyLightTheme();
     void applyDarkTheme();
-    void applySystemTheme();
+    Theme resolveSystemTheme() const;
+    bool applyResolvedTheme(Theme resolvedTheme);
+    void emitThemeSignals();
     QString loadStyleSheet(const QString& filename);
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
 };

@@ -2,6 +2,12 @@
 #include "app/SettingsProvider.h"
 #include "app/SettingsKeys.h"
 #include <QApplication>
+#include <QCoreApplication>
+#include <QEvent>
+#include <QGuiApplication>
+#include <QStyleHints>
+#include <QColor>
+#include <QPalette>
 #include <QStyleFactory>
 #include <QDir>
 #include <QDebug>
@@ -27,20 +33,40 @@ void ThemeManager::setSettingsProvider(SettingsProvider* sp)
 ThemeManager::ThemeManager(QObject* parent)
     : QObject(parent)
     , m_currentTheme(Theme::System)
+    , m_activeTheme(Theme::System)
 {
     loadSettings();
+
+    if (auto* hints = QGuiApplication::styleHints()) {
+        connect(hints,
+                &QStyleHints::colorSchemeChanged,
+                this,
+                [this](Qt::ColorScheme) {
+                    if (m_currentTheme == Theme::System) {
+                        applySystemTheme();
+                    }
+                });
+    }
+
+    if (auto* app = QCoreApplication::instance()) {
+        app->installEventFilter(this);
+    }
 }
 
 void ThemeManager::setTheme(Theme theme)
 {
-    if (m_currentTheme == theme) return;
-    
+    if (m_currentTheme == theme) {
+        if (theme == Theme::System) {
+            applySystemTheme();
+        }
+        return;
+    }
+
     m_currentTheme = theme;
     applyTheme(theme);
     saveSettings();
-    
-    emit themeChanged(theme);
-    emit darkModeChanged(isDarkMode());
+
+    emitThemeSignals();
 }
 
 void ThemeManager::setDarkMode(bool dark)
@@ -69,17 +95,16 @@ bool ThemeManager::isDarkMode() const
 
 bool ThemeManager::systemPrefersDark() const
 {
-    // Check system theme preference
-    // This is a simplified implementation - in practice you'd check
-    // platform-specific APIs for system theme detection
-    QPalette systemPalette = QApplication::style()->standardPalette();
-    return systemPalette.color(QPalette::Window).lightness() < 128;
+    auto* hints = QGuiApplication::styleHints();
+    if (!hints) {
+        return false;
+    }
+    return hints->colorScheme() == Qt::ColorScheme::Dark;
 }
 
 void ThemeManager::themeChanged()
 {
-    emit themeChanged(m_currentTheme);
-    emit darkModeChanged(isDarkMode());
+    emitThemeSignals();
 }
 
 void ThemeManager::loadSettings()
@@ -130,16 +155,13 @@ void ThemeManager::saveSettings()
 
 void ThemeManager::applyTheme(Theme theme)
 {
-    switch (theme) {
-        case Theme::Light:
-            applyLightTheme();
-            break;
-        case Theme::Dark:
-            applyDarkTheme();
-            break;
-        case Theme::System:
-            applySystemTheme();
-            break;
+    if (theme == Theme::System) {
+        applySystemTheme();
+        return;
+    }
+
+    if (applyResolvedTheme(theme)) {
+        // emit handled by caller
     }
 }
 
@@ -179,10 +201,18 @@ void ThemeManager::applyDarkTheme()
 
 void ThemeManager::applySystemTheme()
 {
-    if (systemPrefersDark()) {
-        applyDarkTheme();
-    } else {
-        applyLightTheme();
+    if (m_currentTheme != Theme::System) {
+        return;
+    }
+
+    const Theme resolved = resolveSystemTheme();
+    const bool changed = applyResolvedTheme(resolved);
+    if (changed) {
+        const QString label = (resolved == Theme::Dark)
+                                  ? QStringLiteral("dark")
+                                  : QStringLiteral("light");
+        qInfo() << "[theme] system color scheme changed →" << label;
+        emitThemeSignals();
     }
 }
 
@@ -207,4 +237,56 @@ QString ThemeManager::loadStyleSheet(const QString& filename)
     }
     
     return content;
+}
+
+ThemeManager::Theme ThemeManager::resolveSystemTheme() const
+{
+    return systemPrefersDark() ? Theme::Dark : Theme::Light;
+}
+
+bool ThemeManager::applyResolvedTheme(Theme resolvedTheme)
+{
+    if (resolvedTheme == Theme::System) {
+        return false;
+    }
+
+    const bool changed = !m_paletteInitialized || m_activeTheme != resolvedTheme;
+    if (!changed) {
+        return false;
+    }
+
+    m_paletteInitialized = true;
+
+    switch (resolvedTheme) {
+        case Theme::Light:
+            applyLightTheme();
+            break;
+        case Theme::Dark:
+            applyDarkTheme();
+            break;
+        case Theme::System:
+            break;
+    }
+
+    m_activeTheme = resolvedTheme;
+    return true;
+}
+
+void ThemeManager::emitThemeSignals()
+{
+    emit themeChanged(m_currentTheme);
+    emit darkModeChanged(isDarkMode());
+}
+
+bool ThemeManager::eventFilter(QObject* watched, QEvent* event)
+{
+    Q_UNUSED(watched);
+
+    if (m_currentTheme == Theme::System) {
+        if (event->type() == QEvent::ThemeChange ||
+            event->type() == QEvent::ApplicationPaletteChange) {
+            applySystemTheme();
+        }
+    }
+    return QObject::eventFilter(watched, event);
 }
