@@ -149,6 +149,9 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
             m_systemThemeAction->setChecked(startupTheme == ThemeManager::Theme::System);
         }
     }
+    if (m_rightRibbon) {
+        applyRibbonPalette();
+    }
 
     if (m_lightThemeAction)  m_lightThemeAction->setChecked(m_themeManager && m_themeManager->currentTheme() == ThemeManager::Theme::Light);
     if (m_darkThemeAction)   m_darkThemeAction->setChecked(m_themeManager && m_themeManager->currentTheme() == ThemeManager::Theme::Dark);
@@ -204,20 +207,13 @@ bool MainWindow::event(QEvent* e)
     } else if (e->type() == QEvent::PaletteChange || e->type() == QEvent::ApplicationPaletteChange) {
         // Delay icon refresh until after palette propagation
         QTimer::singleShot(0, this, [this] {
-            IconProvider::clearCache();
-            refreshAllIconsForTheme();
-            if (m_uiInitialized) {
-                const QSize iconSize = safeIconSizeHint();
-                refreshThemeActionIcons(iconSize);
-                if (m_rightRibbon) {
-                    m_rightRibbon->setPalette(QApplication::palette());
-                    m_rightRibbon->update();
-                    if (auto* dock = qobject_cast<QDockWidget*>(m_rightRibbon->parentWidget())) {
-                        dock->setPalette(QApplication::palette());
-                        dock->update();
-                    }
-                }
-            }
+        IconProvider::clearCache();
+        refreshAllIconsForTheme();
+        if (m_uiInitialized) {
+            const QSize iconSize = safeIconSizeHint();
+            refreshThemeActionIcons(iconSize);
+            applyRibbonPalette();
+        }
         });
     }
     return QMainWindow::event(e);
@@ -505,7 +501,7 @@ void MainWindow::setupRibbons()
     
     // Right ribbon (vertical)
     m_rightRibbon = createRightRibbon();
-    addToolBar(Qt::RightToolBarArea, m_rightRibbon);
+    addToolBar(Qt::LeftToolBarArea, m_rightRibbon);
 
     refreshThemeActionIcons();
 }
@@ -608,7 +604,7 @@ QToolBar* MainWindow::createRightRibbon()
     ribbon->setOrientation(Qt::Vertical);
     ribbon->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     ribbon->setIconSize(QSize(phx::ui::kToolbarIconPx, phx::ui::kToolbarIconPx));
-    ribbon->setStyleSheet(QStringLiteral("QToolBar#sideRibbon QToolButton { text-align: left; padding: 0 8px; }"));
+    applyRibbonPalette();
     
     // Editors actions
     QAction* lensInspectorAction = new QAction(tr("Lens Inspector"), this);
@@ -1218,14 +1214,7 @@ void MainWindow::onThemeChanged()
             }
         }
 
-        if (m_rightRibbon) {
-            m_rightRibbon->setPalette(QApplication::palette());
-            m_rightRibbon->update();
-            if (auto* dock = qobject_cast<QDockWidget*>(m_rightRibbon->parentWidget())) {
-                dock->setPalette(QApplication::palette());
-                dock->update();
-            }
-        }
+        applyRibbonPalette();
     });
     // Handle theme changes
     updateDebugInfo();
@@ -1393,6 +1382,35 @@ QSize MainWindow::safeIconSizeHint() const
         }
     }
     return QSize(16, 16);
+}
+
+void MainWindow::applyRibbonPalette()
+{
+    if (!m_rightRibbon) {
+        return;
+    }
+
+    m_rightRibbon->setAutoFillBackground(true);
+    m_rightRibbon->setPalette(QApplication::palette());
+    m_rightRibbon->setStyleSheet(
+        "QToolBar#sideRibbon {"
+        "  background: palette(window);"
+        "  border: none;"
+        "}"
+        "QToolBar#sideRibbon QToolButton {"
+        "  text-align: left; padding: 0 8px;"
+        "  background: palette(window);"
+        "  color: palette(windowText);"
+        "}"
+        "QToolBar#sideRibbon QToolButton:checked {"
+        "  background: palette(highlight);"
+        "  color: palette(highlightedText);"
+        "}"
+        "QToolBar#sideRibbon QToolButton:hover {"
+        "  background: palette(alternateBase);"
+        "}"
+    );
+    m_rightRibbon->update();
 }
 
 void MainWindow::initializeUI()
