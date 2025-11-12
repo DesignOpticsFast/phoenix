@@ -138,35 +138,46 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     setupTranslations();
     
     m_uiInitialized = true;
-    const QSize startupIconSize = safeIconSizeHint();
-    refreshThemeActionIcons(startupIconSize);
-    if (m_themeManager) {
-        const auto startupTheme = m_themeManager->currentTheme();
-        if (m_lightThemeAction) {
-            m_lightThemeAction->setChecked(startupTheme == ThemeManager::Theme::Light);
-        }
-        if (m_darkThemeAction) {
-            m_darkThemeAction->setChecked(startupTheme == ThemeManager::Theme::Dark);
-        }
-        if (m_systemThemeAction) {
-            m_systemThemeAction->setChecked(startupTheme == ThemeManager::Theme::System);
-        }
-    }
-    if (m_rightRibbon) {
-        applyRibbonPalette(m_rightRibbon);
-    }
-
-    if (m_lightThemeAction)  m_lightThemeAction->setChecked(m_themeManager && m_themeManager->currentTheme() == ThemeManager::Theme::Light);
-    if (m_darkThemeAction)   m_darkThemeAction->setChecked(m_themeManager && m_themeManager->currentTheme() == ThemeManager::Theme::Dark);
-    if (m_systemThemeAction) m_systemThemeAction->setChecked(m_themeManager && m_themeManager->currentTheme() == ThemeManager::Theme::System);
     
-    // Start debug info updates
+    // Keep timer setup in constructor (setup only, no start)
     m_debugTimer->setInterval(phx::ui::kTelemetryIntervalMs); // Update every second
     connect(m_debugTimer, &QTimer::timeout, this, &MainWindow::updateDebugInfo);
-    m_debugTimer->start();
     
-    // Initial status update
-    updateStatusBar();
+    // Defer dynamic UI work until the event loop is running
+    QTimer::singleShot(0, this, [this]() {
+        // 1) Compute safe icon size now that style is ready
+        const QSize startupIconSize = safeIconSizeHint();
+        
+        // 2) Refresh theme-dependent icons
+        refreshThemeActionIcons(startupIconSize);
+        
+        // 3) Apply ribbon palette/QSS
+        if (m_rightRibbon) {
+            applyRibbonPalette(m_rightRibbon);
+        }
+        
+        // 4) Sync initial theme checked state (Light/Dark/System)
+        if (m_themeManager) {
+            const auto startupTheme = m_themeManager->currentTheme();
+            if (m_lightThemeAction) {
+                m_lightThemeAction->setChecked(startupTheme == ThemeManager::Theme::Light);
+            }
+            if (m_darkThemeAction) {
+                m_darkThemeAction->setChecked(startupTheme == ThemeManager::Theme::Dark);
+            }
+            if (m_systemThemeAction) {
+                m_systemThemeAction->setChecked(startupTheme == ThemeManager::Theme::System);
+            }
+        }
+        
+        // 5) Initial status/debug update
+        updateStatusBar();
+        
+        // 6) Start debug timer
+        if (m_debugTimer) {
+            m_debugTimer->start();
+        }
+    });
 }
 
 MainWindow::~MainWindow()
@@ -980,7 +991,8 @@ void MainWindow::showEvent(QShowEvent* ev)
 
 void MainWindow::updateDebugInfo()
 {
-    if (!m_debugLabel) {
+    // Bail out if status bar or labels are not yet initialized
+    if (!m_statusBar || !m_statusLabel || !m_startupLabel || !m_debugLabel) {
         return;
     }
 
