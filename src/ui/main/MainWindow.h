@@ -32,6 +32,9 @@ public:
     // Startup timing
     void setStartupTime(qint64 startTime);
     void setStartupTimeMs(qint64 ms);
+    
+    // Layout management
+    void applyCanonicalLayout();
 
 signals:
     void firstShown();
@@ -68,6 +71,7 @@ private slots:
     void setLightTheme();
     void setDarkTheme();
     void setSystemTheme();
+    void resetLayout();
     void setLanguage(const QString& language);
     void onThemeRibbonActionTriggered(bool checked);
     

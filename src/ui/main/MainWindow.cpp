@@ -425,6 +425,13 @@ QMenu* MainWindow::createViewMenu()
     
     viewMenu->addMenu(languageMenu);
     
+    viewMenu->addSeparator();
+    
+    QAction* resetLayoutAction = new QAction(tr("Reset &Layout"), this);
+    resetLayoutAction->setStatusTip(tr("Reset window layout to defaults"));
+    connect(resetLayoutAction, &QAction::triggered, this, &MainWindow::resetLayout);
+    viewMenu->addAction(resetLayoutAction);
+    
     return viewMenu;
 }
 
@@ -647,7 +654,7 @@ QToolBar* MainWindow::createRightRibbon()
             if (auto* button = qobject_cast<QToolButton*>(widget)) {
                 button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
                 button->setIconSize(ribbon->iconSize());
-                button->setAutoRaise(false);
+                button->setAutoRaise(true);
                 button->setCheckable(true);
                 button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
                 button->setMinimumWidth(140);
@@ -871,10 +878,20 @@ void MainWindow::setupTheme()
 void MainWindow::loadSettings()
 {
     if (!m_settingsProvider) return;
-    // Load window geometry
     auto& s = m_settingsProvider->settings();
-    restoreGeometry(s.value(PhxKeys::UI_GEOMETRY).toByteArray());
-    restoreState(s.value(PhxKeys::UI_WINDOW_STATE).toByteArray());
+    
+    const bool firstRun = !s.contains(PhxKeys::UI_FIRST_RUN_COMPLETE);
+    if (firstRun) {
+        applyCanonicalLayout();
+        s.setValue(PhxKeys::UI_FIRST_RUN_COMPLETE, true);
+        s.sync();
+    } else {
+        const bool okG = restoreGeometry(s.value(PhxKeys::UI_GEOMETRY).toByteArray());
+        const bool okS = restoreState(s.value(PhxKeys::UI_WINDOW_STATE).toByteArray());
+        if (!okG || !okS) {
+            applyCanonicalLayout();
+        }
+    }
 }
 
 void MainWindow::saveSettings()
@@ -1133,6 +1150,24 @@ void MainWindow::setSystemTheme()
     // ThemeManager now saves theme via SettingsProvider
 }
 
+void MainWindow::resetLayout()
+{
+    if (!m_settingsProvider) return;
+    
+    auto& s = m_settingsProvider->settings();
+    s.remove(PhxKeys::UI_GEOMETRY);
+    s.remove(PhxKeys::UI_WINDOW_STATE);
+    // Remove any panel-specific settings if they exist
+    s.remove(QStringLiteral("ui/panels"));
+    s.sync();
+    
+    applyCanonicalLayout();
+    
+    if (m_statusBar) {
+        m_statusBar->showMessage(tr("Layout reset to defaults"), 3000);
+    }
+}
+
 void MainWindow::onThemeRibbonActionTriggered(bool checked)
 {
     Q_UNUSED(checked);
@@ -1389,12 +1424,18 @@ void MainWindow::applyRibbonPalette(QToolBar* ribbon /*= nullptr*/)
 
     static const char* kSideRibbonQss = R"(
        QToolBar#sideRibbon { background: palette(window); border: none; }
-       QToolBar#sideRibbon QToolButton { text-align: left; padding: 0 8px;
-                                         background: palette(window);
-                                         color: palette(windowText); }
+       QToolBar#sideRibbon QToolButton {
+         background: transparent; border: none; padding: 0 8px;
+         color: palette(windowText); text-align: left;
+       }
+       QToolBar#sideRibbon QToolButton:hover {
+         background: palette(alternateBase);
+       }
        QToolBar#sideRibbon QToolButton:checked {
-            background: palette(highlight); color: palette(highlightedText); }
-       QToolBar#sideRibbon QToolButton:hover  { background: palette(alternateBase); }
+         background: palette(highlight);
+         color: palette(highlightedText);
+       }
+       QToolBar#sideRibbon QToolButton:focus { outline: 0; border: none; }
     )";
 
     target->setStyleSheet(QString::fromLatin1(kSideRibbonQss));
@@ -1407,6 +1448,48 @@ void MainWindow::applyRibbonPalette(QToolBar* ribbon /*= nullptr*/)
     if (auto* p = target->parentWidget()) {
         p->setPalette(QApplication::palette());
         p->update();
+    }
+}
+
+void MainWindow::applyCanonicalLayout()
+{
+    // Toolbars
+    if (m_mainToolBar) {
+        removeToolBar(m_mainToolBar);
+        addToolBar(Qt::TopToolBarArea, m_mainToolBar);
+        m_mainToolBar->show();
+    }
+    
+    if (m_topRibbon) {
+        removeToolBar(m_topRibbon);
+        addToolBar(Qt::TopToolBarArea, m_topRibbon);
+        m_topRibbon->show();
+    }
+    
+    if (m_rightRibbon) {
+        removeToolBar(m_rightRibbon);
+        addToolBar(Qt::LeftToolBarArea, m_rightRibbon);
+        m_rightRibbon->show();
+    }
+    
+    // Docks
+    if (m_toolboxDock) {
+        removeDockWidget(m_toolboxDock);
+        addDockWidget(Qt::LeftDockWidgetArea, m_toolboxDock);
+        m_toolboxDock->show();
+    }
+    
+    if (m_propertiesDock) {
+        removeDockWidget(m_propertiesDock);
+        addDockWidget(Qt::RightDockWidgetArea, m_propertiesDock);
+        m_propertiesDock->show();
+    }
+    
+    // Reapply ribbon theme so visuals match
+    if (m_rightRibbon) {
+        applyRibbonPalette(m_rightRibbon);
+        IconProvider::clearCache();
+        refreshThemeActionIcons(safeIconSizeHint());
     }
 }
 

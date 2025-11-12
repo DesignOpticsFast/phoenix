@@ -1,6 +1,7 @@
 #include "PreferencesDialog.h"
 #include "EnvironmentPage.h"
 #include "LanguagePage.h"
+#include "../main/MainWindow.h"
 #include "app/SettingsKeys.h"
 #include "app/PhxConstants.h"
 #include <QDialog>
@@ -136,6 +137,11 @@ void PreferencesDialog::onSettingsReset()
 {
     if (m_languagePage) {
         m_languagePage->loadSettings();
+    }
+    
+    // Reset toolbar/dock layout immediately
+    if (auto* mainWindow = qobject_cast<MainWindow*>(parent())) {
+        mainWindow->applyCanonicalLayout();
     }
 }
 
