@@ -23,6 +23,8 @@
 #include <QDockWidget>
 #include <QLabel>
 #include <QMessageBox>
+#include <QProcess>
+#include <QPushButton>
 #include <QTimer>
 #include <QElapsedTimer>
 #include <QLocale>
@@ -1168,6 +1170,24 @@ void MainWindow::resetLayout()
     }
 }
 
+void MainWindow::promptRestart()
+{
+    QMessageBox msg(this);
+    msg.setWindowTitle(tr("Phoenix Restart Required"));
+    msg.setText(tr("Phoenix must restart to apply these changes."));
+    msg.setIcon(QMessageBox::Information);
+    
+    QPushButton* restartNow = msg.addButton(tr("Restart Now"), QMessageBox::AcceptRole);
+    QPushButton* later = msg.addButton(tr("Restart Later"), QMessageBox::RejectRole);
+    
+    msg.exec();
+    
+    if (msg.clickedButton() == restartNow) {
+        QProcess::startDetached(QCoreApplication::applicationFilePath(), {});
+        qApp->quit();
+    }
+}
+
 void MainWindow::onThemeRibbonActionTriggered(bool checked)
 {
     Q_UNUSED(checked);
@@ -1201,11 +1221,7 @@ void MainWindow::setLanguage(const QString& language)
     m_currentLocale = QLocale(i18n::localeForLanguage(normalized));
     updateDebugInfo();
 
-    QMessageBox::information(
-        this,
-        tr("Restart Required"),
-        tr("Language will apply after restart.")
-    );
+    promptRestart();
 }
 
 void MainWindow::onThemeChanged()
@@ -1432,8 +1448,9 @@ void MainWindow::applyRibbonPalette(QToolBar* ribbon /*= nullptr*/)
          background: palette(alternateBase);
        }
        QToolBar#sideRibbon QToolButton:checked {
-         background: palette(highlight);
-         color: palette(highlightedText);
+         background: palette(alternateBase);
+         color: palette(windowText);
+         border: none;
        }
        QToolBar#sideRibbon QToolButton:focus { outline: 0; border: none; }
     )";

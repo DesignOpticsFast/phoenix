@@ -1,4 +1,5 @@
 #include "LanguagePage.h"
+#include "../main/MainWindow.h"
 #include "app/LocaleInit.hpp"
 #include "app/SettingsKeys.h"
 #include <QMessageBox>
@@ -178,8 +179,7 @@ void LanguagePage::applyLanguageSelection(const QString& code)
     m_storedLanguage = normalized;
     updatePendingStatus();
 
-    QMessageBox::information(
-        this,
-        tr("Restart Required"),
-        tr("Language changes will take effect after restarting the application."));
+    if (auto* mainWindow = qobject_cast<MainWindow*>(window())) {
+        mainWindow->promptRestart();
+    }
 }

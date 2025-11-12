@@ -35,6 +35,7 @@ public:
     
     // Layout management
     void applyCanonicalLayout();
+    void promptRestart();
 
 signals:
     void firstShown();

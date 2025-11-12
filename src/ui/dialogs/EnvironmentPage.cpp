@@ -1,4 +1,5 @@
 #include "EnvironmentPage.h"
+#include "../main/MainWindow.h"
 #include "../icons/IconBootstrap.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -208,11 +209,10 @@ void EnvironmentPage::onResetToDefaults()
 
     m_settings.sync();
 
-    QMessageBox::information(
-        this,
-        tr("Defaults Restored"),
-        tr("Settings were reset. Please restart Phoenix to apply all changes."));
-
     updateSystemInfo();
     emit settingsReset();
+
+    if (auto* mainWindow = qobject_cast<MainWindow*>(window())) {
+        mainWindow->promptRestart();
+    }
 }
