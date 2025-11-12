@@ -145,6 +145,11 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     
     // Defer dynamic UI work until the event loop is running
     QTimer::singleShot(0, this, [this]() {
+        // Capture "ready" time if not already set
+        if (m_startupTime == 0) {
+            m_startupTime = QDateTime::currentMSecsSinceEpoch();
+        }
+        
         // 1) Compute safe icon size now that style is ready
         const QSize startupIconSize = safeIconSizeHint();
         
@@ -170,7 +175,7 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
             }
         }
         
-        // 5) Initial status/debug update
+        // 5) Initial status/debug update (will compute duration and flip to Ready)
         updateStatusBar();
         
         // 6) Start debug timer
@@ -973,11 +978,6 @@ void MainWindow::setStartupTime(qint64 startTime)
     m_startupTime = startTime;
 }
 
-void MainWindow::setStartupTimeMs(qint64 ms)
-{
-    m_startupMs = ms;
-    // Startup timing will be displayed via m_startupLabel when calculated
-}
 
 void MainWindow::showEvent(QShowEvent* ev)
 {
@@ -1043,26 +1043,19 @@ void MainWindow::updateDebugInfo()
     const QString langStr = m_currentLocale.name().left(2);
 
     // Handle startup timing separately in dedicated label
-    if (m_startupTime > 0) {
-        // Static locals: compute once per run
-        static qint64 startupDuration = 0;       // computed once per run
-        static bool startupCalculated = false;   // guard to ensure single computation
+    if (m_startupDuration < 0 && m_startupTime > 0) {
+        const qint64 readyTime = QDateTime::currentMSecsSinceEpoch();
+        m_startupDuration = readyTime - m_startupTime;
 
-        if (!startupCalculated) {
-            const qint64 mainWindowReadyTime = QDateTime::currentMSecsSinceEpoch();
-            startupDuration = mainWindowReadyTime - m_startupTime;
-            startupCalculated = true;
-
-            // Startup complete - set startup label and show "Ready"
-            if (m_startupLabel) {
-                m_startupLabel->setText(tr("Startup: %1 ms").arg(startupDuration));
-            }
-            if (m_statusLabel) {
-                m_statusLabel->setText(tr("Ready"));
-            }
+        // Startup complete - set startup label and show "Ready"
+        if (m_startupLabel) {
+            m_startupLabel->setText(tr("Startup: %1 ms").arg(m_startupDuration));
         }
-        // NOTE: no else branch. We only need to set these once.
+        if (m_statusLabel) {
+            m_statusLabel->setText(tr("Ready"));
+        }
     }
+    // After this point, only update m_debugLabel - never touch m_startupLabel or m_statusLabel
 
     const QString debugText = tr("Memory: %1 | CPUs: %2 | Theme: %3 | Lang: %4")
                               .arg(memoryDisplay)
@@ -1241,7 +1234,8 @@ void MainWindow::promptRestart()
     msg.exec();
     
     if (msg.clickedButton() == restartNow) {
-        QProcess::startDetached(QCoreApplication::applicationFilePath(), {});
+        QProcess::startDetached(QCoreApplication::applicationFilePath(),
+                                QCoreApplication::arguments());
         qApp->quit();
     }
 }

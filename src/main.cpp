@@ -97,8 +97,6 @@ int main(int argc, char** argv) {
     
     // Connect splash finish to firstShown signal
     QObject::connect(&mainWindow, &MainWindow::firstShown, [&]() {
-        const qint64 elapsed = timer.elapsed();
-        mainWindow.setStartupTimeMs(elapsed);
         splash.finish(&mainWindow);
     });
     

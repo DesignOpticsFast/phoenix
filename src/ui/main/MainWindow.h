@@ -31,7 +31,6 @@ public:
     
     // Startup timing
     void setStartupTime(qint64 startTime);
-    void setStartupTimeMs(qint64 ms);
     
     // Layout management
     void applyCanonicalLayout();
@@ -183,8 +182,8 @@ private:
     QElapsedTimer m_memorySampleTimer;
 
     // Startup timing
-    qint64 m_startupTime;
-    qint64 m_startupMs = -1;
+    qint64 m_startupTime = 0;
+    qint64 m_startupDuration = -1;  // -1 = not yet computed
     bool m_firstShowEmitted = false;
     
     // Performance tracking
