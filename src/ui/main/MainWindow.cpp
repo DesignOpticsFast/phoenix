@@ -877,7 +877,8 @@ void MainWindow::setupStatusBar()
     m_debugLabel->setContentsMargins(6, 0, 6, 0);
     m_statusBar->addPermanentWidget(m_debugLabel);
     
-    updateStatusBar();
+    // Do not call updateStatusBar() here; the constructor will call it
+    // after all UI setup is complete to avoid early updateDebugInfo() on macOS.
 }
 
 void MainWindow::setupConnections()
