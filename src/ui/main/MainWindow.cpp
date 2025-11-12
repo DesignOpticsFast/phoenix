@@ -18,6 +18,7 @@
 #include <QWidget>
 #include <QWidgetAction>
 #include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QLayout>
 #include <QStatusBar>
 #include <QDockWidget>
@@ -205,6 +206,21 @@ bool MainWindow::event(QEvent* e)
             const QSize iconSize = safeIconSizeHint();
             refreshThemeActionIcons(iconSize);
             applyRibbonPalette(m_rightRibbon);
+        }
+        
+        if (m_statusBar) {
+            m_statusBar->setPalette(QApplication::palette());
+            m_statusBar->setStyleSheet(
+                QStringLiteral("QStatusBar { background: palette(window); color: palette(windowText); padding: 0 8px; }")
+            );
+            m_statusBar->update();
+        }
+        
+        if (m_toolboxDock && m_toolboxDock->widget()) {
+            m_toolboxDock->widget()->update();
+        }
+        if (m_propertiesDock && m_propertiesDock->widget()) {
+            m_propertiesDock->widget()->update();
         }
         });
     }
@@ -766,9 +782,14 @@ void MainWindow::setupDockWidgets()
     m_toolboxDock->setMinimumWidth(phx::ui::kDockMinWidth);
     m_toolboxDock->setMaximumWidth(phx::ui::kDockWideWidth);
     
-    QWidget* toolboxWidget = new QWidget();
-    toolboxWidget->setMinimumSize(phx::ui::kDockMinWidth, phx::ui::kPanelMinHeight);
-    m_toolboxDock->setWidget(toolboxWidget);
+    QWidget* toolboxContent = new QWidget(m_toolboxDock);
+    auto* tLayout = new QVBoxLayout(toolboxContent);
+    tLayout->setContentsMargins(8, 8, 8, 8);
+    auto* tLabel = new QLabel(tr("Toolbox (empty)\nTools will appear here."), toolboxContent);
+    tLabel->setAlignment(Qt::AlignCenter);
+    tLabel->setStyleSheet(QStringLiteral("color: palette(mid); font-size: 11px;"));
+    tLayout->addWidget(tLabel);
+    m_toolboxDock->setWidget(toolboxContent);
     addDockWidget(Qt::LeftDockWidgetArea, m_toolboxDock);
     
     // Properties dock (right)
@@ -778,9 +799,14 @@ void MainWindow::setupDockWidgets()
     m_propertiesDock->setMinimumWidth(phx::ui::kDockMinWidth);
     m_propertiesDock->setMaximumWidth(phx::ui::kDockWideWidth);
     
-    QWidget* propertiesWidget = new QWidget();
-    propertiesWidget->setMinimumSize(phx::ui::kDockMinWidth, phx::ui::kPanelMinHeight);
-    m_propertiesDock->setWidget(propertiesWidget);
+    QWidget* propsContent = new QWidget(m_propertiesDock);
+    auto* pLayout = new QVBoxLayout(propsContent);
+    pLayout->setContentsMargins(8, 8, 8, 8);
+    auto* pLabel = new QLabel(tr("No selection\nProperties will appear here."), propsContent);
+    pLabel->setAlignment(Qt::AlignCenter);
+    pLabel->setStyleSheet(QStringLiteral("color: palette(mid); font-size: 11px;"));
+    pLayout->addWidget(pLabel);
+    m_propertiesDock->setWidget(propsContent);
     addDockWidget(Qt::RightDockWidgetArea, m_propertiesDock);
     
     // Central widget placeholder
@@ -826,7 +852,11 @@ void MainWindow::setupStatusBar()
     m_statusBar = statusBar();
     if (m_statusBar) {
         m_statusBar->setContentsMargins(8, 0, 8, 0);
-        m_statusBar->setStyleSheet(QStringLiteral("QStatusBar { padding: 0 8px; }"));
+        m_statusBar->setAutoFillBackground(true);
+        m_statusBar->setPalette(QApplication::palette());
+        m_statusBar->setStyleSheet(
+            QStringLiteral("QStatusBar { background: palette(window); color: palette(windowText); padding: 0 8px; }")
+        );
     }
     
     // Left side - status message
@@ -1176,9 +1206,11 @@ void MainWindow::promptRestart()
     msg.setWindowTitle(tr("Phoenix Restart Required"));
     msg.setText(tr("Phoenix must restart to apply these changes."));
     msg.setIcon(QMessageBox::Information);
+    msg.setModal(true);
     
     QPushButton* restartNow = msg.addButton(tr("Restart Now"), QMessageBox::AcceptRole);
     QPushButton* later = msg.addButton(tr("Restart Later"), QMessageBox::RejectRole);
+    msg.setDefaultButton(later);
     
     msg.exec();
     
@@ -1258,6 +1290,21 @@ void MainWindow::onThemeChanged()
             return;
         }
         applyRibbonPalette(m_rightRibbon);
+        
+        if (m_statusBar) {
+            m_statusBar->setPalette(QApplication::palette());
+            m_statusBar->setStyleSheet(
+                QStringLiteral("QStatusBar { background: palette(window); color: palette(windowText); padding: 0 8px; }")
+            );
+            m_statusBar->update();
+        }
+        
+        if (m_toolboxDock && m_toolboxDock->widget()) {
+            m_toolboxDock->widget()->update();
+        }
+        if (m_propertiesDock && m_propertiesDock->widget()) {
+            m_propertiesDock->widget()->update();
+        }
     });
     // Handle theme changes
     updateDebugInfo();
@@ -1448,8 +1495,9 @@ void MainWindow::applyRibbonPalette(QToolBar* ribbon /*= nullptr*/)
          background: palette(alternateBase);
        }
        QToolBar#sideRibbon QToolButton:checked {
-         background: palette(alternateBase);
+         background: palette(mid);
          color: palette(windowText);
+         font-weight: 500;
          border: none;
        }
        QToolBar#sideRibbon QToolButton:focus { outline: 0; border: none; }
