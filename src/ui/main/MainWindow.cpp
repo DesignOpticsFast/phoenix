@@ -935,18 +935,31 @@ void MainWindow::loadSettings()
     if (!m_settingsProvider) return;
     auto& s = m_settingsProvider->settings();
     
+    // Detect language change
+    const QString currentLang = s.value(PhxKeys::UI_LANGUAGE, QStringLiteral("en")).toString();
+    const QString lastLang = s.value(PhxKeys::UI_LAST_LANGUAGE, currentLang).toString();
+    const bool languageChanged = (currentLang != lastLang);
+    
     const bool firstRun = !s.contains(PhxKeys::UI_FIRST_RUN_COMPLETE);
     if (firstRun) {
         applyCanonicalLayout();
         s.setValue(PhxKeys::UI_FIRST_RUN_COMPLETE, true);
         s.sync();
+    } else if (languageChanged) {
+        // Language changed - reset to canonical layout
+        applyCanonicalLayout();
     } else {
+        // Normal restore
         const bool okG = restoreGeometry(s.value(PhxKeys::UI_GEOMETRY).toByteArray());
         const bool okS = restoreState(s.value(PhxKeys::UI_WINDOW_STATE).toByteArray());
         if (!okG || !okS) {
             applyCanonicalLayout();
         }
     }
+    
+    // Store current language for next launch
+    s.setValue(PhxKeys::UI_LAST_LANGUAGE, currentLang);
+    s.sync();
 }
 
 void MainWindow::saveSettings()

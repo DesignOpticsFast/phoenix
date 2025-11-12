@@ -365,7 +365,7 @@ Continue?</source>
     </message>
     <message>
         <location filename="../src/ui/main/MainWindow.cpp" line="571"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1105"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1118"/>
         <source>Save</source>
         <translation type="unfinished"></translation>
     </message>
@@ -376,13 +376,13 @@ Continue?</source>
     </message>
     <message>
         <location filename="../src/ui/main/MainWindow.cpp" line="585"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1181"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1194"/>
         <source>XY Plot</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/ui/main/MainWindow.cpp" line="596"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1186"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1199"/>
         <source>2D Plot</source>
         <translation type="unfinished"></translation>
     </message>
@@ -403,43 +403,43 @@ Continue?</source>
     </message>
     <message>
         <location filename="../src/ui/main/MainWindow.cpp" line="641"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1170"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1183"/>
         <source>Lens Inspector</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/ui/main/MainWindow.cpp" line="657"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1175"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1188"/>
         <source>System Viewer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1065"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1078"/>
         <source>Memory: %1 | CPUs: %2 | Theme: %3 | Lang: %4</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1222"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1235"/>
         <source>Layout reset to defaults</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1229"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1242"/>
         <source>Phoenix Restart Required</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1230"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1243"/>
         <source>Phoenix must restart to apply these changes.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1234"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1247"/>
         <source>Restart Now</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1235"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1248"/>
         <source>Restart Later</source>
         <translation type="unfinished"></translation>
     </message>
@@ -457,7 +457,7 @@ Continue?</source>
     </message>
     <message>
         <location filename="../src/ui/main/MainWindow.cpp" line="767"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1703"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1716"/>
         <source>Help</source>
         <translation type="unfinished"></translation>
     </message>
@@ -494,93 +494,93 @@ Properties will appear here.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1023"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1036"/>
         <source>%1 MB</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1025"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1038"/>
         <source>N/A</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1057"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1070"/>
         <source>Startup: %1 ms</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1060"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1677"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1073"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1690"/>
         <source>Ready</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1035"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1048"/>
         <source>Light</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1038"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1051"/>
         <source>Dark</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1041"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1054"/>
         <source>System</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1045"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1058"/>
         <source>Unknown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1084"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1097"/>
         <source>New File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1084"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1089"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1170"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1175"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1181"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1186"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1703"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1097"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1102"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1183"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1188"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1194"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1199"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1716"/>
         <source>This feature is not yet implemented.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1089"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1102"/>
         <source>Open File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1105"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1146"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1118"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1159"/>
         <source>Not implemented in this sprint.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1122"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1130"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1139"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1146"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1135"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1143"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1152"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1159"/>
         <source>Save As</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1122"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1135"/>
         <source>All Files (*)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1130"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1143"/>
         <source>Invalid file path.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1140"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1153"/>
         <source>Failed to create directory:
 %1
 
@@ -588,22 +588,65 @@ Properties will appear here.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1671"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1684"/>
         <source>Phoenix %1 - Optical Design Studio</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1687"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1700"/>
         <source>About Phoenix</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1688"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1701"/>
         <source>Phoenix
 Version %1
 
 Built with Qt %2
 Running on %3</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>PhoenixSplashScreen</name>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="26"/>
+        <source>Initializing Phoenix...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="27"/>
+        <source>Loading Font Awesome icons...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="28"/>
+        <source>Setting up theme system...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="29"/>
+        <source>Preparing user interface...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="30"/>
+        <source>Loading preferences...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="31"/>
+        <source>Almost ready...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="83"/>
+        <source>Initializing...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="123"/>
+        <source>Ready!</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -23,12 +23,12 @@ PhoenixSplashScreen::PhoenixSplashScreen(QWidget *parent)
     createProgressWidget();
     
     // Set up loading messages
-    m_loadingMessages << "Initializing Phoenix..."
-                     << "Loading Font Awesome icons..."
-                     << "Setting up theme system..."
-                     << "Preparing user interface..."
-                     << "Loading preferences..."
-                     << "Almost ready...";
+    m_loadingMessages << tr("Initializing Phoenix...")
+                     << tr("Loading Font Awesome icons...")
+                     << tr("Setting up theme system...")
+                     << tr("Preparing user interface...")
+                     << tr("Loading preferences...")
+                     << tr("Almost ready...");
     
     // Start progress animation
     m_progressTimer = new QTimer(this);
@@ -80,7 +80,7 @@ void PhoenixSplashScreen::createProgressWidget()
     m_progressBar->setFixedHeight(8);
     
     // Status label
-    m_statusLabel = new QLabel("Initializing...", m_progressWidget);
+    m_statusLabel = new QLabel(tr("Initializing..."), m_progressWidget);
     m_statusLabel->setAlignment(Qt::AlignCenter);
     m_statusLabel->setStyleSheet("color: #666666; font-size: 11px;");
     
@@ -120,7 +120,7 @@ void PhoenixSplashScreen::updateProgress()
     } else {
         // Progress complete
         m_progressTimer->stop();
-        setMessage("Ready!");
+        setMessage(tr("Ready!"));
     }
 }
 
@@ -159,7 +159,7 @@ void PhoenixSplashScreen::drawContents(QPainter *painter)
     painter->setPen(QColor(100, 100, 100));
     
     QFontMetrics subtitleMetrics(subtitleFont);
-    QString subtitle = "Optical Design Studio";
+    QString subtitle = tr("Optical Design Studio");
     QRect subtitleRect = subtitleMetrics.boundingRect(subtitle);
     int subtitleX = (width() - subtitleRect.width()) / 2;
     int subtitleY = titleY + 35;

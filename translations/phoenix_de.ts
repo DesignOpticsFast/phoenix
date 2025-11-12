@@ -310,12 +310,12 @@ Fortfahren?</translation>
     <message>
         <location filename="../src/ui/main/MainWindow.cpp" line="461"/>
         <source>Reset &amp;Layout</source>
-        <translation type="unfinished"></translation>
+        <translation>Layout &amp;zurücksetzen</translation>
     </message>
     <message>
         <location filename="../src/ui/main/MainWindow.cpp" line="462"/>
         <source>Reset window layout to defaults</source>
-        <translation type="unfinished"></translation>
+        <translation>Fensterlayout auf Standardwerte zurücksetzen</translation>
     </message>
     <message>
         <location filename="../src/ui/main/MainWindow.cpp" line="471"/>
