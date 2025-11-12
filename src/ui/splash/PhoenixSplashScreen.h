@@ -15,6 +15,7 @@ public:
     explicit PhoenixSplashScreen(QWidget *parent = nullptr);
     ~PhoenixSplashScreen() override;
 
+    void initializeMessages();
     void setProgress(int value);
     void setMessage(const QString& message);
     qint64 getStartTime() const { return m_startTime; }

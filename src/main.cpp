@@ -62,6 +62,9 @@ int main(int argc, char** argv) {
 
     auto i18nResult = i18n::setup(app, settingsProvider->settings());
     Q_UNUSED(i18nResult);
+    
+    // Ensure translators are active before creating splash screen
+    app.processEvents();
 
     // Set application icon for Dock on macOS
     app.setWindowIcon(QIcon(":/phoenix-icon.svg"));
@@ -69,8 +72,9 @@ int main(int argc, char** argv) {
     // Capture startup start time when splash is shown
     const qint64 startupStartMs = QDateTime::currentMSecsSinceEpoch();
 
-    // Show splash screen immediately
+    // Create and initialize splash screen (messages initialized after translators are active)
     PhoenixSplashScreen splash;
+    splash.initializeMessages();
     splash.show();
     app.processEvents(); // Process splash screen display
 

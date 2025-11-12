@@ -22,7 +22,24 @@ PhoenixSplashScreen::PhoenixSplashScreen(QWidget *parent)
     setupUI();
     createProgressWidget();
     
-    // Set up loading messages
+    // Start progress animation
+    m_progressTimer = new QTimer(this);
+    connect(m_progressTimer, &QTimer::timeout, this, &PhoenixSplashScreen::updateProgress);
+    m_progressTimer->start(200); // Update every 200ms
+    
+    // Note: m_loadingMessages will be populated by initializeMessages() after translators are installed
+}
+
+PhoenixSplashScreen::~PhoenixSplashScreen()
+{
+    if (m_progressTimer) {
+        m_progressTimer->stop();
+    }
+}
+
+void PhoenixSplashScreen::initializeMessages()
+{
+    m_loadingMessages.clear();
     m_loadingMessages << tr("Initializing Phoenix...")
                      << tr("Loading Font Awesome icons...")
                      << tr("Setting up theme system...")
@@ -30,19 +47,9 @@ PhoenixSplashScreen::PhoenixSplashScreen(QWidget *parent)
                      << tr("Loading preferences...")
                      << tr("Almost ready...");
     
-    // Start progress animation
-    m_progressTimer = new QTimer(this);
-    connect(m_progressTimer, &QTimer::timeout, this, &PhoenixSplashScreen::updateProgress);
-    m_progressTimer->start(200); // Update every 200ms
-    
-    // Set initial message
-    setMessage(m_loadingMessages.first());
-}
-
-PhoenixSplashScreen::~PhoenixSplashScreen()
-{
-    if (m_progressTimer) {
-        m_progressTimer->stop();
+    // Set initial message if we have messages
+    if (!m_loadingMessages.isEmpty()) {
+        setMessage(m_loadingMessages.first());
     }
 }
 
@@ -112,10 +119,12 @@ void PhoenixSplashScreen::updateProgress()
         m_currentProgress += 2;
         setProgress(m_currentProgress);
         
-        // Update message based on progress
-        int messageIndex = (m_currentProgress * m_loadingMessages.size()) / 100;
-        if (messageIndex < m_loadingMessages.size()) {
-            setMessage(m_loadingMessages[messageIndex]);
+        // Update message based on progress (only if messages are initialized)
+        if (!m_loadingMessages.isEmpty()) {
+            int messageIndex = (m_currentProgress * m_loadingMessages.size()) / 100;
+            if (messageIndex < m_loadingMessages.size()) {
+                setMessage(m_loadingMessages[messageIndex]);
+            }
         }
     } else {
         // Progress complete

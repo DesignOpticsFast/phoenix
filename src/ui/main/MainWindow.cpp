@@ -1285,9 +1285,9 @@ bool MainWindow::restartPhoenixOnMac()
     
     const QString appBundlePath = dir.absolutePath(); // ".../Phoenix.app"
     
-    // Use 'open' to launch the app bundle
+    // Use 'open -n' to launch a new instance of the app bundle
     QStringList args;
-    args << appBundlePath;
+    args << QStringLiteral("-n") << appBundlePath;
     
     const bool ok = QProcess::startDetached(QStringLiteral("/usr/bin/open"), args);
     if (!ok) {
