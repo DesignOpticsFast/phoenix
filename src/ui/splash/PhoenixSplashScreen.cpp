@@ -86,8 +86,8 @@ void PhoenixSplashScreen::createProgressWidget()
     m_progressBar->setTextVisible(false);
     m_progressBar->setFixedHeight(8);
     
-    // Status label
-    m_statusLabel = new QLabel(tr("Initializing..."), m_progressWidget);
+    // Status label (text will be set in initializeMessages() after translators are active)
+    m_statusLabel = new QLabel(QString(), m_progressWidget);
     m_statusLabel->setAlignment(Qt::AlignCenter);
     m_statusLabel->setStyleSheet("color: #666666; font-size: 11px;");
     
