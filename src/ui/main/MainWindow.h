@@ -144,6 +144,7 @@ private:
     
     // Status bar widgets
     QLabel* m_statusLabel;
+    QLabel* m_startupLabel = nullptr;
     QLabel* m_debugLabel;
     
     // Actions

@@ -863,13 +863,17 @@ void MainWindow::setupStatusBar()
         );
     }
     
-    // Left side - status message
-    m_statusLabel = new QLabel(tr("Ready"));
+    // Left side - transient status (initially "Starting...", will change to "Ready" when startup completes)
+    m_statusLabel = new QLabel(tr("Starting..."), this);
     m_statusLabel->setContentsMargins(6, 0, 6, 0);
     m_statusBar->addWidget(m_statusLabel);
     
-    // Right side - debug information
-    m_debugLabel = new QLabel();
+    // Right side - permanent widgets (startup timing + debug info)
+    m_startupLabel = new QLabel(this);
+    m_startupLabel->setContentsMargins(6, 0, 6, 0);
+    m_statusBar->addPermanentWidget(m_startupLabel);
+    
+    m_debugLabel = new QLabel(this);
     m_debugLabel->setContentsMargins(6, 0, 6, 0);
     m_statusBar->addPermanentWidget(m_debugLabel);
     
@@ -941,7 +945,7 @@ void MainWindow::saveSettings()
 
 void MainWindow::updateStatusBar()
 {
-    updateStatusMessage(tr("Ready"));
+    // Only ensure debug info is updated; "Ready" is controlled by updateDebugInfo()
     updateDebugInfo();
 }
 
@@ -960,8 +964,7 @@ void MainWindow::setStartupTime(qint64 startTime)
 void MainWindow::setStartupTimeMs(qint64 ms)
 {
     m_startupMs = ms;
-    if (m_firstShowEmitted && statusBar())
-        statusBar()->showMessage(QString("Startup: %1 ms").arg(m_startupMs), 5000);
+    // Startup timing will be displayed via m_startupLabel when calculated
 }
 
 void MainWindow::showEvent(QShowEvent* ev)
@@ -970,8 +973,7 @@ void MainWindow::showEvent(QShowEvent* ev)
     if (!m_firstShowEmitted && isVisible()) {
         m_firstShowEmitted = true;
         emit firstShown();
-        if (m_startupMs >= 0 && statusBar())
-            statusBar()->showMessage(QString("Startup: %1 ms").arg(m_startupMs), 5000);
+        // Startup timing will be displayed via m_startupLabel when calculated
     }
 }
 
@@ -1027,26 +1029,34 @@ void MainWindow::updateDebugInfo()
 
     const QString langStr = m_currentLocale.name().left(2);
 
-    QString startupInfo;
+    // Handle startup timing separately in dedicated label
     if (m_startupTime > 0) {
-        static qint64 startupDuration = 0;
-        static bool startupCalculated = false;
+        static qint64 startupDuration = 0;       // computed once per run
+        static bool startupCalculated = false;   // guard to ensure single computation
 
         if (!startupCalculated) {
             const qint64 mainWindowReadyTime = QDateTime::currentMSecsSinceEpoch();
             startupDuration = mainWindowReadyTime - m_startupTime;
             startupCalculated = true;
+            
+            // Startup complete - set startup label and show "Ready"
+            if (m_startupLabel) {
+                m_startupLabel->setText(tr("Startup: %1 ms").arg(startupDuration));
+            }
+            if (m_statusLabel) {
+                m_statusLabel->setText(tr("Ready"));
+            }
+        } else if (m_startupLabel && m_startupLabel->text().isEmpty()) {
+            // Startup already calculated, but label not set (shouldn't happen, but safety)
+            m_startupLabel->setText(tr("Startup: %1 ms").arg(startupDuration));
         }
-
-        startupInfo = tr(" | Startup: %1ms").arg(startupDuration);
     }
 
-    const QString debugText = tr("Memory: %1 | CPUs: %2 | Theme: %3 | Lang: %4%5")
+    const QString debugText = tr("Memory: %1 | CPUs: %2 | Theme: %3 | Lang: %4")
                               .arg(memoryDisplay)
                               .arg(cpuDisplay)
                               .arg(themeStr)
-                              .arg(langStr)
-                              .arg(startupInfo);
+                              .arg(langStr);
 
     m_debugLabel->setText(debugText);
 }
