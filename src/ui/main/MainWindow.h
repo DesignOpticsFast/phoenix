@@ -121,7 +121,7 @@ private:
     void refreshAllIconsForTheme();
     void refreshThemeActionIcons(const QSize& sizeHint = QSize());
     QSize safeIconSizeHint() const;
-    void applyRibbonPalette();
+    void applyRibbonPalette(QToolBar* ribbon = nullptr);
     
     // UI Components
     QMenuBar* m_menuBar;

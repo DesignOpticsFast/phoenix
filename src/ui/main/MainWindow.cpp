@@ -150,22 +150,12 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
         }
     }
     if (m_rightRibbon) {
-        applyRibbonPalette();
+        applyRibbonPalette(m_rightRibbon);
     }
 
     if (m_lightThemeAction)  m_lightThemeAction->setChecked(m_themeManager && m_themeManager->currentTheme() == ThemeManager::Theme::Light);
     if (m_darkThemeAction)   m_darkThemeAction->setChecked(m_themeManager && m_themeManager->currentTheme() == ThemeManager::Theme::Dark);
     if (m_systemThemeAction) m_systemThemeAction->setChecked(m_themeManager && m_themeManager->currentTheme() == ThemeManager::Theme::System);
-
-    if (m_rightRibbon) {
-        m_rightRibbon->setPalette(QApplication::palette());
-        m_rightRibbon->update();
-
-        if (auto* dock = qobject_cast<QDockWidget*>(m_rightRibbon->parentWidget())) {
-            dock->setPalette(QApplication::palette());
-            dock->update();
-        }
-    }
     
     // Start debug info updates
     m_debugTimer->setInterval(phx::ui::kTelemetryIntervalMs); // Update every second
@@ -209,10 +199,10 @@ bool MainWindow::event(QEvent* e)
         QTimer::singleShot(0, this, [this] {
         IconProvider::clearCache();
         refreshAllIconsForTheme();
-        if (m_uiInitialized) {
+        if (m_uiInitialized && m_rightRibbon) {
             const QSize iconSize = safeIconSizeHint();
             refreshThemeActionIcons(iconSize);
-            applyRibbonPalette();
+            applyRibbonPalette(m_rightRibbon);
         }
         });
     }
@@ -604,7 +594,6 @@ QToolBar* MainWindow::createRightRibbon()
     ribbon->setOrientation(Qt::Vertical);
     ribbon->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     ribbon->setIconSize(QSize(phx::ui::kToolbarIconPx, phx::ui::kToolbarIconPx));
-    applyRibbonPalette();
     
     // Editors actions
     QAction* lensInspectorAction = new QAction(tr("Lens Inspector"), this);
@@ -1214,7 +1203,10 @@ void MainWindow::onThemeChanged()
             }
         }
 
-        applyRibbonPalette();
+        if (!m_rightRibbon) {
+            return;
+        }
+        applyRibbonPalette(m_rightRibbon);
     });
     // Handle theme changes
     updateDebugInfo();
@@ -1384,33 +1376,38 @@ QSize MainWindow::safeIconSizeHint() const
     return QSize(16, 16);
 }
 
-void MainWindow::applyRibbonPalette()
+void MainWindow::applyRibbonPalette(QToolBar* ribbon /*= nullptr*/)
 {
-    if (!m_rightRibbon) {
+    QToolBar* target = ribbon ? ribbon : m_rightRibbon;
+    if (!target) {
         return;
     }
 
-    m_rightRibbon->setAutoFillBackground(true);
-    m_rightRibbon->setPalette(QApplication::palette());
-    m_rightRibbon->setStyleSheet(
-        "QToolBar#sideRibbon {"
-        "  background: palette(window);"
-        "  border: none;"
-        "}"
-        "QToolBar#sideRibbon QToolButton {"
-        "  text-align: left; padding: 0 8px;"
-        "  background: palette(window);"
-        "  color: palette(windowText);"
-        "}"
-        "QToolBar#sideRibbon QToolButton:checked {"
-        "  background: palette(highlight);"
-        "  color: palette(highlightedText);"
-        "}"
-        "QToolBar#sideRibbon QToolButton:hover {"
-        "  background: palette(alternateBase);"
-        "}"
-    );
-    m_rightRibbon->update();
+    target->setAutoFillBackground(true);
+    target->setAttribute(Qt::WA_StyledBackground, true);
+    target->setPalette(QApplication::palette());
+
+    static const char* kSideRibbonQss = R"(
+       QToolBar#sideRibbon { background: palette(window); border: none; }
+       QToolBar#sideRibbon QToolButton { text-align: left; padding: 0 8px;
+                                         background: palette(window);
+                                         color: palette(windowText); }
+       QToolBar#sideRibbon QToolButton:checked {
+            background: palette(highlight); color: palette(highlightedText); }
+       QToolBar#sideRibbon QToolButton:hover  { background: palette(alternateBase); }
+    )";
+
+    target->setStyleSheet(QString::fromLatin1(kSideRibbonQss));
+    if (auto* st = target->style()) {
+        st->unpolish(target);
+        st->polish(target);
+    }
+    target->update();
+
+    if (auto* p = target->parentWidget()) {
+        p->setPalette(QApplication::palette());
+        p->update();
+    }
 }
 
 void MainWindow::initializeUI()
