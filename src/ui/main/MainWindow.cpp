@@ -28,6 +28,7 @@
 #include <QPushButton>
 #include <QTimer>
 #include <QElapsedTimer>
+#include <QDir>
 #include <QLocale>
 #include <QThread>
 #include <QDateTime>
@@ -1237,11 +1238,51 @@ void MainWindow::promptRestart()
     msg.exec();
     
     if (msg.clickedButton() == restartNow) {
-        QProcess::startDetached(QCoreApplication::applicationFilePath(),
-                                QCoreApplication::arguments());
-        qApp->quit();
+        bool ok = false;
+#ifdef Q_OS_MACOS
+        ok = restartPhoenixOnMac();
+#else
+        ok = QProcess::startDetached(QCoreApplication::applicationFilePath(),
+                                     QCoreApplication::arguments());
+#endif
+        if (ok) {
+            qApp->quit();
+        } else {
+            qWarning() << "promptRestart: failed to relaunch Phoenix";
+        }
     }
 }
+
+#ifdef Q_OS_MACOS
+bool MainWindow::restartPhoenixOnMac()
+{
+    // applicationDirPath() → ".../Phoenix.app/Contents/MacOS"
+    QString macOSDir = QCoreApplication::applicationDirPath();
+    QDir dir(macOSDir);
+    if (!dir.cdUp()) {
+        // ".." → Contents
+        qWarning() << "restartPhoenixOnMac: failed to cdUp to Contents";
+        return false;
+    }
+    if (!dir.cdUp()) {
+        // ".." → Phoenix.app
+        qWarning() << "restartPhoenixOnMac: failed to cdUp to .app bundle";
+        return false;
+    }
+    
+    const QString appBundlePath = dir.absolutePath(); // ".../Phoenix.app"
+    
+    // Use 'open' to launch the app bundle
+    QStringList args;
+    args << appBundlePath;
+    
+    const bool ok = QProcess::startDetached(QStringLiteral("/usr/bin/open"), args);
+    if (!ok) {
+        qWarning() << "restartPhoenixOnMac: QProcess::startDetached failed for" << appBundlePath;
+    }
+    return ok;
+}
+#endif
 
 void MainWindow::onThemeRibbonActionTriggered(bool checked)
 {

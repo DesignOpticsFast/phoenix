@@ -425,7 +425,7 @@ Fortfahren?</translation>
     <message>
         <location filename="../src/ui/main/MainWindow.cpp" line="1064"/>
         <source>Memory: %1 | CPUs: %2 | Theme: %3 | Lang: %4</source>
-        <translation>Speicher: %1 MB | CPUs: %2 | Thema: %3 | Sprache: %4</translation>
+        <translation>Speicher: %1 | CPUs: %2 | Thema: %3 | Sprache: %4</translation>
     </message>
     <message>
         <location filename="../src/ui/main/MainWindow.cpp" line="1221"/>

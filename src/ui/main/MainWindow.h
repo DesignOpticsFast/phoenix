@@ -41,6 +41,11 @@ public:
     // Settings access
     SettingsProvider* settingsProvider() const { return m_settingsProvider; }
 
+#ifdef Q_OS_MACOS
+private:
+    bool restartPhoenixOnMac();
+#endif
+
 signals:
     void firstShown();
 
