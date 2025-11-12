@@ -10,6 +10,7 @@
 #include <QElapsedTimer>
 #include <QLocale>
 #include <QPointer>
+#include "app/SettingsProvider.h"
 
 QT_BEGIN_NAMESPACE
 class QDockWidget;
@@ -26,15 +27,19 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(class SettingsProvider* sp, QWidget *parent = nullptr);
+    explicit MainWindow(SettingsProvider* sp, QWidget *parent = nullptr);
     ~MainWindow() override;
     
     // Startup timing
     void setStartupTime(qint64 startTime);
+    void setStartupStartTime(qint64 ms);
     
     // Layout management
     void applyCanonicalLayout();
     void promptRestart();
+    
+    // Settings access
+    SettingsProvider* settingsProvider() const { return m_settingsProvider; }
 
 signals:
     void firstShown();
@@ -182,8 +187,8 @@ private:
     QElapsedTimer m_memorySampleTimer;
 
     // Startup timing
-    qint64 m_startupTime = 0;
-    qint64 m_startupDuration = -1;  // -1 = not yet computed
+    qint64 m_startupStartTime = -1;  // when splash was shown (start of startup)
+    qint64 m_startupDuration = -1;  // computed once: readyTime - startTime
     bool m_firstShowEmitted = false;
     
     // Performance tracking

@@ -11,14 +11,17 @@
 
 class EnvironmentPage;
 class LanguagePage;
+class MainWindow;
 
 class PreferencesDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit PreferencesDialog(QSettings& s, QWidget *parent = nullptr);
+    explicit PreferencesDialog(MainWindow* mainWindow, QWidget *parent = nullptr);
     ~PreferencesDialog() override;
+    
+    MainWindow* mainWindow() const { return m_mainWindow; }
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -47,6 +50,9 @@ private:
     EnvironmentPage* m_environmentPage;
     LanguagePage* m_languagePage;
     
-    // Settings (reference to injected QSettings)
+    // MainWindow reference (for accessing settings and restart dialog)
+    MainWindow* m_mainWindow = nullptr;
+    
+    // Settings (reference obtained from MainWindow)
     QSettings& m_settings;
 };

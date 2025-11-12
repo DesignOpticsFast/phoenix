@@ -2,6 +2,7 @@
 #include "EnvironmentPage.h"
 #include "LanguagePage.h"
 #include "../main/MainWindow.h"
+#include "app/SettingsProvider.h"
 #include "app/SettingsKeys.h"
 #include "app/PhxConstants.h"
 #include <QDialog>
@@ -14,7 +15,7 @@
 #include <QSettings>
 #include <QDebug>
 
-PreferencesDialog::PreferencesDialog(QSettings& s, QWidget *parent)
+PreferencesDialog::PreferencesDialog(MainWindow* mainWindow, QWidget *parent)
     : QDialog(parent)
     , m_splitter(nullptr)
     , m_categoryList(nullptr)
@@ -24,7 +25,8 @@ PreferencesDialog::PreferencesDialog(QSettings& s, QWidget *parent)
     , m_applyButton(nullptr)
     , m_environmentPage(nullptr)
     , m_languagePage(nullptr)
-    , m_settings(s)
+    , m_mainWindow(mainWindow)
+    , m_settings(mainWindow->settingsProvider()->settings())
 {
     setWindowTitle(tr("Preferences"));
     setModal(true);

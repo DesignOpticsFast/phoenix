@@ -106,7 +106,6 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     , m_settingsProvider(sp)
     , m_themeManager(nullptr)  // Defer initialization to avoid circular dependency
     , m_debugTimer(new QTimer(this))
-    , m_startupTime(0)
 {
     setWindowTitle(QStringLiteral("Phoenix %1 - Optical Design Studio")
                    .arg(QStringLiteral(PHOENIX_VERSION)));
@@ -145,10 +144,8 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     
     // Defer dynamic UI work until the event loop is running
     QTimer::singleShot(0, this, [this]() {
-        // Capture "ready" time if not already set
-        if (m_startupTime == 0) {
-            m_startupTime = QDateTime::currentMSecsSinceEpoch();
-        }
+        // m_startupStartTime is set from main.cpp when splash is shown
+        // We'll compute duration in updateDebugInfo() when UI is ready
         
         // 1) Compute safe icon size now that style is ready
         const QSize startupIconSize = safeIconSizeHint();
@@ -975,7 +972,14 @@ void MainWindow::updateStatusMessage(const QString& message)
 
 void MainWindow::setStartupTime(qint64 startTime)
 {
-    m_startupTime = startTime;
+    // Legacy method - kept for compatibility if needed
+    // New code should use setStartupStartTime()
+    Q_UNUSED(startTime);
+}
+
+void MainWindow::setStartupStartTime(qint64 ms)
+{
+    m_startupStartTime = ms;
 }
 
 
@@ -1043,9 +1047,9 @@ void MainWindow::updateDebugInfo()
     const QString langStr = m_currentLocale.name().left(2);
 
     // Handle startup timing separately in dedicated label
-    if (m_startupDuration < 0 && m_startupTime > 0) {
+    if (m_startupDuration < 0 && m_startupStartTime > 0) {
         const qint64 readyTime = QDateTime::currentMSecsSinceEpoch();
-        m_startupDuration = readyTime - m_startupTime;
+        m_startupDuration = readyTime - m_startupStartTime;
 
         // Startup complete - set startup label and show "Ready"
         if (m_startupLabel) {
@@ -1145,8 +1149,7 @@ void MainWindow::showPreferences()
 {
     if (!m_preferencesDialog) {
         if (!m_settingsProvider) return;
-        // Pass QSettings& reference to PreferencesDialog
-        m_preferencesDialog = new PreferencesDialog(m_settingsProvider->settings(), this);
+        m_preferencesDialog = new PreferencesDialog(this, this);
         m_preferencesDialog->setAttribute(Qt::WA_DeleteOnClose, true);  // auto-delete on close
     } else {
         m_preferencesDialog->raise();

@@ -1,4 +1,5 @@
 #include "EnvironmentPage.h"
+#include "PreferencesDialog.h"
 #include "../main/MainWindow.h"
 #include "../icons/IconBootstrap.h"
 #include <QVBoxLayout>
@@ -212,15 +213,10 @@ void EnvironmentPage::onResetToDefaults()
     updateSystemInfo();
     emit settingsReset();
 
-    // Find MainWindow via window() or parent walk
-    QWidget* top = window();
-    if (!top) {
-        top = this;
-        while (top->parentWidget()) {
-            top = top->parentWidget();
+    // Find MainWindow via PreferencesDialog
+    if (auto* prefs = qobject_cast<PreferencesDialog*>(window())) {
+        if (auto* mw = prefs->mainWindow()) {
+            mw->promptRestart();
         }
-    }
-    if (auto* mainWindow = qobject_cast<MainWindow*>(top)) {
-        mainWindow->promptRestart();
     }
 }

@@ -12,6 +12,7 @@
 #include <QIcon>
 #include <QSplashScreen>
 #include <QElapsedTimer>
+#include <QDateTime>
 #include <QLoggingCategory>
 #include <QProcessEnvironment>
 #include <memory>
@@ -65,9 +66,8 @@ int main(int argc, char** argv) {
     // Set application icon for Dock on macOS
     app.setWindowIcon(QIcon(":/phoenix-icon.svg"));
 
-    // Start timing immediately
-    QElapsedTimer timer;
-    timer.start();
+    // Capture startup start time when splash is shown
+    const qint64 startupStartMs = QDateTime::currentMSecsSinceEpoch();
 
     // Show splash screen immediately
     PhoenixSplashScreen splash;
@@ -94,6 +94,7 @@ int main(int argc, char** argv) {
     
     // Create main window (but don't show it yet)
     MainWindow mainWindow(settingsProvider);
+    mainWindow.setStartupStartTime(startupStartMs);
     
     // Connect splash finish to firstShown signal
     QObject::connect(&mainWindow, &MainWindow::firstShown, [&]() {
