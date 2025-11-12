@@ -646,7 +646,7 @@ QToolBar* MainWindow::createRightRibbon()
     }
     lensInspectorAction->setIcon(IconProvider::icon("search", ribbon->iconSize(), ribbon));
     lensInspectorAction->setToolTip(tr("Open lens inspector"));
-    wireSideRibbonAction(lensInspectorAction, "search");
+    wireSideRibbonAction(lensInspectorAction, "search", ribbon);
     
     // System Viewer action (reuse menu action if exists)
     QAction* systemViewerAction = m_systemViewerAction;
@@ -662,7 +662,7 @@ QToolBar* MainWindow::createRightRibbon()
     }
     systemViewerAction->setIcon(IconProvider::icon("view", ribbon->iconSize(), ribbon));
     systemViewerAction->setToolTip(tr("Open system viewer"));
-    wireSideRibbonAction(systemViewerAction, "view");
+    wireSideRibbonAction(systemViewerAction, "view", ribbon);
     
     ribbon->addSeparator();
     
@@ -678,7 +678,7 @@ QToolBar* MainWindow::createRightRibbon()
         }
 
         // Use shared styling helper for consistent appearance
-        wireSideRibbonAction(action, iconKey);
+        wireSideRibbonAction(action, iconKey, ribbon);
 
         // Connect theme-specific handler
         QObject::connect(action,
@@ -1596,9 +1596,10 @@ void MainWindow::applyCanonicalLayout()
     }
 }
 
-void MainWindow::wireSideRibbonAction(QAction* action, const QString& iconKey)
+void MainWindow::wireSideRibbonAction(QAction* action, const QString& iconKey, QToolBar* ribbon /*= nullptr*/)
 {
-    if (!m_rightRibbon || !action) {
+    QToolBar* target = ribbon ? ribbon : m_rightRibbon;
+    if (!target || !action) {
         return;
     }
     
@@ -1606,15 +1607,15 @@ void MainWindow::wireSideRibbonAction(QAction* action, const QString& iconKey)
         action->setProperty("phx_icon_key", iconKey);
     }
     
-    m_rightRibbon->addAction(action);
+    target->addAction(action);
     
-    if (QWidget* widget = m_rightRibbon->widgetForAction(action)) {
+    if (QWidget* widget = target->widgetForAction(action)) {
         if (auto* button = qobject_cast<QToolButton*>(widget)) {
             button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
             button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
             button->setAutoRaise(true);
             button->setMinimumWidth(140);
-            button->setIconSize(m_rightRibbon->iconSize());
+            button->setIconSize(target->iconSize());
         }
     }
 }
