@@ -179,7 +179,15 @@ void LanguagePage::applyLanguageSelection(const QString& code)
     m_storedLanguage = normalized;
     updatePendingStatus();
 
-    if (auto* mainWindow = qobject_cast<MainWindow*>(window())) {
+    // Find MainWindow via window() or parent walk
+    QWidget* top = window();
+    if (!top) {
+        top = this;
+        while (top->parentWidget()) {
+            top = top->parentWidget();
+        }
+    }
+    if (auto* mainWindow = qobject_cast<MainWindow*>(top)) {
         mainWindow->promptRestart();
     }
 }

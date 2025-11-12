@@ -621,27 +621,37 @@ QToolBar* MainWindow::createRightRibbon()
     ribbon->setIconSize(QSize(phx::ui::kToolbarIconPx, phx::ui::kToolbarIconPx));
     
     // Editors actions
-    QAction* lensInspectorAction = new QAction(tr("Lens Inspector"), this);
-    lensInspectorAction->setProperty("phx_icon_key", "search");
+    // Lens Inspector action (reuse menu action if exists)
+    QAction* lensInspectorAction = m_lensInspectorAction;
+    if (!lensInspectorAction) {
+        lensInspectorAction = new QAction(tr("Lens Inspector"), this);
+        lensInspectorAction->setProperty("phx_icon_key", "search");
+        connect(lensInspectorAction, &QAction::triggered, this, [this]() { 
+            m_actionTimer.start(); 
+            showLensInspector(); 
+            logRibbonAction("lens_inspector");
+        });
+        m_lensInspectorAction = lensInspectorAction;
+    }
     lensInspectorAction->setIcon(IconProvider::icon("search", ribbon->iconSize(), ribbon));
     lensInspectorAction->setToolTip(tr("Open lens inspector"));
-    connect(lensInspectorAction, &QAction::triggered, this, [this]() { 
-        m_actionTimer.start(); 
-        showLensInspector(); 
-        logRibbonAction("lens_inspector");
-    });
-    ribbon->addAction(lensInspectorAction);
+    wireSideRibbonAction(lensInspectorAction, "search");
     
-    QAction* systemViewerAction = new QAction(tr("System Viewer"), this);
-    systemViewerAction->setProperty("phx_icon_key", "view");
+    // System Viewer action (reuse menu action if exists)
+    QAction* systemViewerAction = m_systemViewerAction;
+    if (!systemViewerAction) {
+        systemViewerAction = new QAction(tr("System Viewer"), this);
+        systemViewerAction->setProperty("phx_icon_key", "view");
+        connect(systemViewerAction, &QAction::triggered, this, [this]() { 
+            m_actionTimer.start(); 
+            showSystemViewer(); 
+            logRibbonAction("system_viewer");
+        });
+        m_systemViewerAction = systemViewerAction;
+    }
     systemViewerAction->setIcon(IconProvider::icon("view", ribbon->iconSize(), ribbon));
     systemViewerAction->setToolTip(tr("Open system viewer"));
-    connect(systemViewerAction, &QAction::triggered, this, [this]() { 
-        m_actionTimer.start(); 
-        showSystemViewer(); 
-        logRibbonAction("system_viewer");
-    });
-    ribbon->addAction(systemViewerAction);
+    wireSideRibbonAction(systemViewerAction, "view");
     
     ribbon->addSeparator();
     
@@ -651,31 +661,25 @@ QToolBar* MainWindow::createRightRibbon()
             return;
         }
 
-        // Ensure the icon key is set (menu creation already does this)
-        if (action->property("phx_icon_key").toString().isEmpty()) {
-            action->setProperty("phx_icon_key", iconKey);
-        }
-
+        // Set log key property for theme actions
         if (action->property("phx_log_key").toString() != logKey) {
             action->setProperty("phx_log_key", logKey);
         }
 
-        ribbon->addAction(action);
+        // Use shared styling helper for consistent appearance
+        wireSideRibbonAction(action, iconKey);
 
+        // Connect theme-specific handler
         QObject::connect(action,
                          &QAction::triggered,
                          this,
                          &MainWindow::onThemeRibbonActionTriggered,
                          Qt::UniqueConnection);
 
+        // Theme actions are checkable (for radio behavior)
         if (QWidget* widget = ribbon->widgetForAction(action)) {
             if (auto* button = qobject_cast<QToolButton*>(widget)) {
-                button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-                button->setIconSize(ribbon->iconSize());
-                button->setAutoRaise(true);
                 button->setCheckable(true);
-                button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-                button->setMinimumWidth(140);
             }
         }
     };
@@ -1550,11 +1554,46 @@ void MainWindow::applyCanonicalLayout()
         m_propertiesDock->show();
     }
     
+    // Ensure docks have reasonable default sizes when docked
+    const int minH = phx::ui::kPanelMinHeight;
+    if (m_toolboxDock) {
+        m_toolboxDock->setMinimumHeight(minH);
+        m_toolboxDock->setMinimumWidth(phx::ui::kDockMinWidth);
+    }
+    
+    if (m_propertiesDock) {
+        m_propertiesDock->setMinimumHeight(minH);
+        m_propertiesDock->setMinimumWidth(phx::ui::kDockMinWidth);
+    }
+    
     // Reapply ribbon theme so visuals match
     if (m_rightRibbon) {
         applyRibbonPalette(m_rightRibbon);
         IconProvider::clearCache();
         refreshThemeActionIcons(safeIconSizeHint());
+    }
+}
+
+void MainWindow::wireSideRibbonAction(QAction* action, const QString& iconKey)
+{
+    if (!m_rightRibbon || !action) {
+        return;
+    }
+    
+    if (action->property("phx_icon_key").toString().isEmpty()) {
+        action->setProperty("phx_icon_key", iconKey);
+    }
+    
+    m_rightRibbon->addAction(action);
+    
+    if (QWidget* widget = m_rightRibbon->widgetForAction(action)) {
+        if (auto* button = qobject_cast<QToolButton*>(widget)) {
+            button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+            button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+            button->setAutoRaise(true);
+            button->setMinimumWidth(140);
+            button->setIconSize(m_rightRibbon->iconSize());
+        }
     }
 }
 
