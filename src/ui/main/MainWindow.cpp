@@ -1031,6 +1031,7 @@ void MainWindow::updateDebugInfo()
 
     // Handle startup timing separately in dedicated label
     if (m_startupTime > 0) {
+        // Static locals: compute once per run
         static qint64 startupDuration = 0;       // computed once per run
         static bool startupCalculated = false;   // guard to ensure single computation
 
@@ -1038,7 +1039,7 @@ void MainWindow::updateDebugInfo()
             const qint64 mainWindowReadyTime = QDateTime::currentMSecsSinceEpoch();
             startupDuration = mainWindowReadyTime - m_startupTime;
             startupCalculated = true;
-            
+
             // Startup complete - set startup label and show "Ready"
             if (m_startupLabel) {
                 m_startupLabel->setText(tr("Startup: %1 ms").arg(startupDuration));
@@ -1046,10 +1047,8 @@ void MainWindow::updateDebugInfo()
             if (m_statusLabel) {
                 m_statusLabel->setText(tr("Ready"));
             }
-        } else if (m_startupLabel && m_startupLabel->text().isEmpty()) {
-            // Startup already calculated, but label not set (shouldn't happen, but safety)
-            m_startupLabel->setText(tr("Startup: %1 ms").arg(startupDuration));
         }
+        // NOTE: no else branch. We only need to set these once.
     }
 
     const QString debugText = tr("Memory: %1 | CPUs: %2 | Theme: %3 | Lang: %4")
