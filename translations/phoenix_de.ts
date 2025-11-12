@@ -133,465 +133,465 @@ Fortfahren?</translation>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="282"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="283"/>
         <source>&amp;New</source>
         <translation>&amp;Neu</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="288"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="289"/>
         <source>Create a new file</source>
         <translation>Neue Datei erstellen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="292"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="293"/>
         <source>&amp;Open</source>
         <translation>&amp;Öffnen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="297"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="298"/>
         <source>Open an existing file</source>
         <translation>Vorhandene Datei öffnen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="303"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="304"/>
         <source>&amp;Save</source>
         <translation>&amp;Speichern</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="308"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="309"/>
         <source>Save the current file</source>
         <translation>Aktuelle Datei speichern</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="312"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="313"/>
         <source>Save &amp;As</source>
         <translation>Speichern &amp;unter</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="317"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="318"/>
         <source>Save the current file with a new name</source>
         <translation>Aktuelle Datei unter neuem Namen speichern</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="323"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="324"/>
         <source>&amp;Preferences...</source>
         <translation>&amp;Einstellungen …</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="328"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="329"/>
         <source>Open preferences dialog</source>
         <translation>Einstellungsdialog öffnen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="334"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="335"/>
         <source>E&amp;xit</source>
         <translation>&amp;Beenden</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="339"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="340"/>
         <source>Exit the application</source>
         <translation>Anwendung beenden</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="348"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="349"/>
         <source>&amp;Editors</source>
         <translation>&amp;Editoren</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="350"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="351"/>
         <source>&amp;Lens Inspector</source>
         <translation>&amp;Linseninspektor</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="355"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="650"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="356"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="651"/>
         <source>Open lens inspector</source>
         <translation>Linseninspektor öffnen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="359"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="360"/>
         <source>&amp;System Viewer</source>
         <translation>&amp;Systemanzeige</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="363"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="666"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="364"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="667"/>
         <source>Open system viewer</source>
         <translation>Systemanzeige öffnen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="372"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="373"/>
         <source>&amp;Analysis</source>
         <translation>&amp;Analyse</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="374"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="375"/>
         <source>&amp;XY Plot</source>
         <translation>&amp;XY-Diagramm</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="379"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="587"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="380"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="588"/>
         <source>Open XY plot analysis</source>
         <translation>XY-Diagrammanalyse öffnen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="383"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="384"/>
         <source>&amp;2D Plot</source>
         <translation>&amp;2D-Diagramm</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="387"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="598"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="388"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="599"/>
         <source>Open 2D plot analysis</source>
         <translation>2D-Diagrammanalyse öffnen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="396"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="397"/>
         <source>&amp;Tools</source>
         <translation>&amp;Werkzeuge</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="399"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="400"/>
         <source>&amp;Settings</source>
         <translation>&amp;Einstellungen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="400"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="401"/>
         <source>Open application settings</source>
         <translation>Anwendungseinstellungen öffnen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="409"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="410"/>
         <source>&amp;View</source>
         <translation>&amp;Ansicht</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="412"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="413"/>
         <source>&amp;Theme</source>
         <translation>&amp;Design</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="417"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="418"/>
         <source>&amp;Light</source>
         <translation>&amp;Hell</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="426"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="427"/>
         <source>&amp;Dark</source>
         <translation>&amp;Dunkel</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="435"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="436"/>
         <source>&amp;System</source>
         <translation>&amp;System</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="439"/>
         <location filename="../src/ui/main/MainWindow.cpp" line="440"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="441"/>
         <source>Follow the operating system theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="447"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="448"/>
         <source>&amp;Language</source>
         <translation>&amp;Sprache</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="449"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="450"/>
         <source>&amp;English</source>
         <translation>&amp;Englisch</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="453"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="454"/>
         <source>&amp;Deutsch</source>
         <translation>&amp;Deutsch</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="461"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="462"/>
         <source>Reset &amp;Layout</source>
         <translation>Layout &amp;zurücksetzen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="462"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="463"/>
         <source>Reset window layout to defaults</source>
         <translation>Fensterlayout auf Standardwerte zurücksetzen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="471"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="472"/>
         <source>&amp;Help</source>
         <translation>&amp;Hilfe</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="473"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="474"/>
         <source>&amp;About Phoenix</source>
         <translation>&amp;Über Phoenix</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="478"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="479"/>
         <source>Show about dialog</source>
         <translation>Über-Dialog anzeigen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="484"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="485"/>
         <source>&amp;Help Contents</source>
         <translation>&amp;Hilfsinhalte</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="485"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="486"/>
         <source>Open help documentation</source>
         <translation>Hilfedokumentation öffnen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="500"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="501"/>
         <source>Main Toolbar</source>
         <translation>Hauptsymbolleiste</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="539"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="540"/>
         <source>Top Ribbon</source>
         <translation>Oberes Ribbon</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="548"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="549"/>
         <source>New</source>
         <translation>Neu</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="551"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="552"/>
         <source>Create new file</source>
         <translation>Neue Datei erstellen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="559"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="560"/>
         <source>Open</source>
         <translation>Öffnen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="562"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="563"/>
         <source>Open existing file</source>
         <translation>Vorhandene Datei öffnen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="570"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1104"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="571"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1118"/>
         <source>Save</source>
         <translation>Speichern</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="573"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="574"/>
         <source>Save current file</source>
         <translation>Aktuelle Datei speichern</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="584"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1180"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="585"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1194"/>
         <source>XY Plot</source>
         <translation>XY-Diagramm</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="595"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1185"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="596"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1199"/>
         <source>2D Plot</source>
         <translation>2D-Diagramm</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="609"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="610"/>
         <source>Preferences</source>
         <translation>Einstellungen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="612"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="613"/>
         <source>Open preferences</source>
         <translation>Einstellungen öffnen</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="627"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="628"/>
         <source>Right Ribbon</source>
         <translation>Rechtes Ribbon</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="640"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1169"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="641"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1183"/>
         <source>Lens Inspector</source>
         <translation>Linseninspektor</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="656"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1174"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="657"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1188"/>
         <source>System Viewer</source>
         <translation>Systemanzeige</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1064"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1078"/>
         <source>Memory: %1 | CPUs: %2 | Theme: %3 | Lang: %4</source>
         <translation>Speicher: %1 | CPUs: %2 | Thema: %3 | Sprache: %4</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1221"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1235"/>
         <source>Layout reset to defaults</source>
         <translation>Layout auf Standardwerte zurückgesetzt</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1228"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1242"/>
         <source>Phoenix Restart Required</source>
         <translation>Phoenix muss neu gestartet werden</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1229"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1243"/>
         <source>Phoenix must restart to apply these changes.</source>
         <translation>Phoenix muss neu gestartet werden, um diese Änderungen zu übernehmen.</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1233"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1247"/>
         <source>Restart Now</source>
         <translation>Jetzt neu starten</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1234"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1248"/>
         <source>Restart Later</source>
         <translation>Später neu starten</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="421"/>
         <location filename="../src/ui/main/MainWindow.cpp" line="422"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="423"/>
         <source>Switch to light theme</source>
         <translation>Zum hellen Design wechseln</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="430"/>
         <location filename="../src/ui/main/MainWindow.cpp" line="431"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="432"/>
         <source>Switch to dark theme</source>
         <translation>Zum dunklen Design wechseln</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="766"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1662"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="767"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1716"/>
         <source>Help</source>
         <translation>Hilfe</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="773"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="774"/>
         <source>About</source>
         <translation>Über</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="796"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="797"/>
         <source>Toolbox</source>
         <translation>Werkzeugkasten</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="805"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="806"/>
         <source>Toolbox (empty)
 Tools will appear here.</source>
         <translation>Werkzeugkasten (leer)
 Werkzeuge werden hier angezeigt.</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="813"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="814"/>
         <source>Properties</source>
         <translation>Eigenschaften</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="822"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="823"/>
         <source>No selection
 Properties will appear here.</source>
         <translation>Keine Auswahl
 Eigenschaften werden hier angezeigt.</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="880"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="881"/>
         <source>Starting...</source>
         <translation>Startet …</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1022"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1036"/>
         <source>%1 MB</source>
         <translation>%1 MB</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1024"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1038"/>
         <source>N/A</source>
         <translation>N/V</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1056"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1070"/>
         <source>Startup: %1 ms</source>
         <translation>Startdauer: %1 ms</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1059"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1636"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1073"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1690"/>
         <source>Ready</source>
         <translation>Bereit</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1034"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1048"/>
         <source>Light</source>
         <translation>Hell</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1037"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1051"/>
         <source>Dark</source>
         <translation>Dunkel</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1040"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1054"/>
         <source>System</source>
         <translation>System</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1044"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1058"/>
         <source>Unknown</source>
         <translation>Unbekannt</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1083"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1097"/>
         <source>New File</source>
         <translation>New File</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1083"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1088"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1169"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1174"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1180"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1185"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1662"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1097"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1102"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1183"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1188"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1194"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1199"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1716"/>
         <source>This feature is not yet implemented.</source>
         <translation>Diese Funktion ist noch nicht implementiert.</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1088"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1102"/>
         <source>Open File</source>
         <translation>Open File</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1104"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1145"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1118"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1159"/>
         <source>Not implemented in this sprint.</source>
         <translation>In diesem Sprint noch nicht implementiert.</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1121"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1129"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1138"/>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1145"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1135"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1143"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1152"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1159"/>
         <source>Save As</source>
         <translation>Speichern unter</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1121"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1135"/>
         <source>All Files (*)</source>
         <translation>Alle Dateien (*)</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1129"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1143"/>
         <source>Invalid file path.</source>
         <translation>Ungültiger Dateipfad.</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1139"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1153"/>
         <source>Failed to create directory:
 %1
 
@@ -602,17 +602,17 @@ Eigenschaften werden hier angezeigt.</translation>
 %2</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1630"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1684"/>
         <source>Phoenix %1 - Optical Design Studio</source>
         <translation>Phoenix %1 - Optikdesign-Studio</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1646"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1700"/>
         <source>About Phoenix</source>
         <translation>Über Phoenix</translation>
     </message>
     <message>
-        <location filename="../src/ui/main/MainWindow.cpp" line="1647"/>
+        <location filename="../src/ui/main/MainWindow.cpp" line="1701"/>
         <source>Phoenix
 Version %1
 
@@ -623,6 +623,49 @@ Version %1
 
 Erstellt mit Qt %2
 Läuft auf %3</translation>
+    </message>
+</context>
+<context>
+    <name>PhoenixSplashScreen</name>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="43"/>
+        <source>Initializing Phoenix...</source>
+        <translation>Phoenix wird initialisiert …</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="44"/>
+        <source>Loading Font Awesome icons...</source>
+        <translation>Font Awesome-Symbole werden geladen …</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="45"/>
+        <source>Setting up theme system...</source>
+        <translation>Designsystem wird eingerichtet …</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="46"/>
+        <source>Preparing user interface...</source>
+        <translation>Benutzeroberfläche wird vorbereitet …</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="47"/>
+        <source>Loading preferences...</source>
+        <translation>Einstellungen werden geladen …</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="48"/>
+        <source>Almost ready...</source>
+        <translation>Fast fertig …</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="132"/>
+        <source>Ready!</source>
+        <translation>Bereit!</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="171"/>
+        <source>Optical Design Studio</source>
+        <translation>Optische Design-Software</translation>
     </message>
 </context>
 <context>
