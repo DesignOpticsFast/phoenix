@@ -108,6 +108,7 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     , m_themeManager(nullptr)  // Defer initialization to avoid circular dependency
     , m_debugTimer(new QTimer(this))
 {
+    // Set initial window title (will be retranslated after translators are active)
     setWindowTitle(QStringLiteral("Phoenix %1 - Optical Design Studio")
                    .arg(QStringLiteral(PHOENIX_VERSION)));
     setMinimumSize(phx::ui::kMainMinSize);
@@ -136,6 +137,9 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     
     // Setup translations after UI is ready
     setupTranslations();
+    
+    // Retranslate UI elements (including window title) now that translators are active
+    retranslateUi();
     
     m_uiInitialized = true;
     

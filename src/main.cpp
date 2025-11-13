@@ -77,6 +77,13 @@ int main(int argc, char** argv) {
     splash.initializeMessages();
     splash.show();
     app.processEvents(); // Process splash screen display
+    
+    // Force repaint to ensure translated text is displayed
+    splash.repaint();
+    app.processEvents();
+    
+    // Record when splash was shown for minimum display duration
+    const qint64 splashShownAt = QDateTime::currentMSecsSinceEpoch();
 
     // Initialize Font Awesome icons (must be before any icon rendering)
     IconBootstrap::InitFonts();
@@ -100,9 +107,19 @@ int main(int argc, char** argv) {
     MainWindow mainWindow(settingsProvider);
     mainWindow.setStartupStartTime(startupStartMs);
     
-    // Connect splash finish to firstShown signal
-    QObject::connect(&mainWindow, &MainWindow::firstShown, [&]() {
-        splash.finish(&mainWindow);
+    // Connect splash finish to firstShown signal with minimum display duration
+    QObject::connect(&mainWindow, &MainWindow::firstShown, [&, splashShownAt]() {
+        const qint64 now = QDateTime::currentMSecsSinceEpoch();
+        const qint64 elapsed = now - splashShownAt;
+        const qint64 minDuration = 1000; // Minimum 1 second display time
+        
+        if (elapsed >= minDuration) {
+            splash.finish(&mainWindow);
+        } else {
+            QTimer::singleShot(static_cast<int>(minDuration - elapsed), &splash, [&]() {
+                splash.finish(&mainWindow);
+            });
+        }
     });
     
     // Show main window (triggers showEvent → firstShown → finish splash)

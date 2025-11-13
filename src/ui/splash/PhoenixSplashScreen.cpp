@@ -17,6 +17,7 @@ PhoenixSplashScreen::PhoenixSplashScreen(QWidget *parent)
     , m_progressTimer(nullptr)
     , m_currentProgress(0)
     , m_messageIndex(0)
+    , m_subtitleText()  // Will be set in initializeMessages() after translators are active
     , m_startTime(QDateTime::currentMSecsSinceEpoch())
 {
     setupUI();
@@ -46,6 +47,9 @@ void PhoenixSplashScreen::initializeMessages()
                      << tr("Preparing user interface...")
                      << tr("Loading preferences...")
                      << tr("Almost ready...");
+    
+    // Cache translated subtitle for use in drawContents()
+    m_subtitleText = tr("Optical Design Studio");
     
     // Set initial message if we have messages
     if (!m_loadingMessages.isEmpty()) {
@@ -168,7 +172,8 @@ void PhoenixSplashScreen::drawContents(QPainter *painter)
     painter->setPen(QColor(100, 100, 100));
     
     QFontMetrics subtitleMetrics(subtitleFont);
-    QString subtitle = tr("Optical Design Studio");
+    // Use cached subtitle text (set in initializeMessages() after translators are active)
+    QString subtitle = m_subtitleText.isEmpty() ? QStringLiteral("Optical Design Studio") : m_subtitleText;
     QRect subtitleRect = subtitleMetrics.boundingRect(subtitle);
     int subtitleX = (width() - subtitleRect.width()) / 2;
     int subtitleY = titleY + 35;

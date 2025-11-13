@@ -39,6 +39,7 @@ private:
     QString m_currentMessage;
     QStringList m_loadingMessages;
     int m_messageIndex;
+    QString m_subtitleText;  // Cached translated subtitle
     
     // Startup timing
     qint64 m_startTime;
