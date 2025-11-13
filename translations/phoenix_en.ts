@@ -610,42 +610,42 @@ Running on %3</source>
 <context>
     <name>PhoenixSplashScreen</name>
     <message>
-        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="26"/>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="43"/>
         <source>Initializing Phoenix...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="27"/>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="44"/>
         <source>Loading Font Awesome icons...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="28"/>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="45"/>
         <source>Setting up theme system...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="29"/>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="46"/>
         <source>Preparing user interface...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="30"/>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="47"/>
         <source>Loading preferences...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="31"/>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="48"/>
         <source>Almost ready...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="83"/>
-        <source>Initializing...</source>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="171"/>
+        <source>Optical Design Studio</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="123"/>
+        <location filename="../src/ui/splash/PhoenixSplashScreen.cpp" line="132"/>
         <source>Ready!</source>
         <translation type="unfinished"></translation>
     </message>
