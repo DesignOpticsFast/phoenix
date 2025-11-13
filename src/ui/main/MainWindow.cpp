@@ -960,6 +960,17 @@ void MainWindow::loadSettings()
         if (!okG || !okS) {
             // Restore failed: fall back to canonical layout
             applyCanonicalLayout();
+        } else {
+            // Restore succeeded: verify both docks are visible
+            // If both are invisible, treat as failed restore (e.g., floating docks lost off-screen)
+            const bool toolboxVisible = m_toolboxDock && m_toolboxDock->isVisible();
+            const bool propertiesVisible = m_propertiesDock && m_propertiesDock->isVisible();
+            
+            if (!toolboxVisible && !propertiesVisible) {
+                // Both primary docks are effectively lost → treat as failed layout
+                qWarning() << "loadSettings: restored layout hides both docks; applying canonical layout";
+                applyCanonicalLayout();
+            }
         }
     }
     
