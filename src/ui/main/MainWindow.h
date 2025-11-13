@@ -31,7 +31,6 @@ public:
     ~MainWindow() override;
     
     // Startup timing
-    void setStartupTime(qint64 startTime);
     void setStartupStartTime(qint64 ms);
     
     // Layout management
@@ -94,7 +93,6 @@ private slots:
     void applyIcons();
     
     // UI initialization (deferred)
-    void initializeUI();
     
     // UI retranslation
     void retranslateUi();

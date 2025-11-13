@@ -939,29 +939,31 @@ void MainWindow::loadSettings()
     if (!m_settingsProvider) return;
     auto& s = m_settingsProvider->settings();
     
-    // Detect language change
+    // Detect language change by comparing current language with last stored value
     const QString currentLang = s.value(PhxKeys::UI_LANGUAGE, QStringLiteral("en")).toString();
     const QString lastLang = s.value(PhxKeys::UI_LAST_LANGUAGE, currentLang).toString();
     const bool languageChanged = (currentLang != lastLang);
     
     const bool firstRun = !s.contains(PhxKeys::UI_FIRST_RUN_COMPLETE);
     if (firstRun) {
+        // First launch: apply canonical layout (toolbars/docks in default positions)
         applyCanonicalLayout();
         s.setValue(PhxKeys::UI_FIRST_RUN_COMPLETE, true);
         s.sync();
     } else if (languageChanged) {
-        // Language changed - reset to canonical layout
+        // Language changed: reset to canonical layout to ensure docks remain visible
         applyCanonicalLayout();
     } else {
-        // Normal restore
+        // Normal startup: restore saved geometry and window state
         const bool okG = restoreGeometry(s.value(PhxKeys::UI_GEOMETRY).toByteArray());
         const bool okS = restoreState(s.value(PhxKeys::UI_WINDOW_STATE).toByteArray());
         if (!okG || !okS) {
+            // Restore failed: fall back to canonical layout
             applyCanonicalLayout();
         }
     }
     
-    // Store current language for next launch
+    // Store current language for next launch (used to detect language changes)
     s.setValue(PhxKeys::UI_LAST_LANGUAGE, currentLang);
     s.sync();
 }
@@ -986,13 +988,6 @@ void MainWindow::updateStatusMessage(const QString& message)
     if (m_statusLabel) {
         m_statusLabel->setText(message);
     }
-}
-
-void MainWindow::setStartupTime(qint64 startTime)
-{
-    // Legacy method - kept for compatibility if needed
-    // New code should use setStartupStartTime()
-    Q_UNUSED(startTime);
 }
 
 void MainWindow::setStartupStartTime(qint64 ms)
@@ -1400,7 +1395,6 @@ void MainWindow::applyIcons()
 
 void MainWindow::refreshAllIconsForTheme()
 {
-    qCDebug(phxIcons) << "GLOBAL ICON REFRESH (menus+toolbars) after theme/palette change";
     // Unified rebuildAction lambda: always clear→set to drop cached pixmaps
     auto rebuildAction = [](QAction* a, QWidget* w) {
         if (!a) return;
@@ -1421,17 +1415,6 @@ void MainWindow::refreshAllIconsForTheme()
     
     // Gather all menus from both menubar actions and MainWindow tree
     const auto menus = gatherAllMenus(menuBar(), this);
-    
-#ifdef PHX_DEV_DIAG
-    {
-        QStringList names;
-        names.reserve(menus.size());
-        for (auto* m : menus) {
-            names << m->title();
-        }
-        qCDebug(phxIcons) << "MENUS FOUND:" << names;
-    }
-#endif
     
     // Close any open menus first to clear Qt's cached pixmaps
     for (QMenu* m : menus) {
@@ -1673,13 +1656,6 @@ void MainWindow::wireSideRibbonAction(QAction* action, const QString& iconKey, Q
             button->setIconSize(target->iconSize());
         }
     }
-}
-
-void MainWindow::initializeUI()
-{
-    // This method is called by QTimer::singleShot in the constructor
-    // It's already implemented in the constructor, so this is a stub
-    // The actual initialization happens in the constructor
 }
 
 void MainWindow::retranslateUi()
