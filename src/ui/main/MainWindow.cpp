@@ -201,17 +201,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
 bool MainWindow::event(QEvent* e)
 {
     if (e->type() == QEvent::WindowActivate) {
-        // Nudge floating bars above their parent window when MainWindow regains focus
-        for (auto *tb : findChildren<QToolBar*>()) {
-            if (tb->isFloating()) {
-                tb->raise();
-            }
-        }
-        for (auto *dw : findChildren<QDockWidget*>()) {
-            if (dw->isFloating()) {
-                dw->raise();
-            }
-        }
+        // Removed raise() calls on floating toolbars/docks - on Wayland this triggers
+        // popup-only mouse grab. Qt's default z-ordering handles floating widgets correctly.
+        // No action needed here; Qt manages floating widget stacking automatically.
     } else if (e->type() == QEvent::WindowDeactivate) {
         // Don't raise floating windows when Phoenix loses focus
         return QMainWindow::event(e);
@@ -848,14 +840,16 @@ void MainWindow::setupFloatingToolbarsAndDocks()
             connect(tb, &QToolBar::topLevelChanged, this, [w](bool floating) {
                 if (floating) {
                     w->show();
-                    w->raise();
+                    // Removed w->raise() - on Wayland this triggers popup-only mouse grab
+                    // Qt's default z-ordering is sufficient on all platforms
                 }
             });
         } else if (auto* dw = qobject_cast<QDockWidget*>(w)) {
             connect(dw, &QDockWidget::topLevelChanged, this, [w](bool floating) {
                 if (floating) {
                     w->show();
-                    w->raise();
+                    // Removed w->raise() - on Wayland this triggers popup-only mouse grab
+                    // Qt's default z-ordering is sufficient on all platforms
                 }
             });
         }
