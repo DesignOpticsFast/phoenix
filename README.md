@@ -105,6 +105,33 @@ Use conventional style:
 
 ---
 
+## 🐧 Linux Platform Notes
+
+Phoenix uses X11/XWayland by default on Linux (`QT_QPA_PLATFORM=xcb`) to provide 
+reliable toolbar and dock dragging. Native Wayland docking in Qt is currently 
+limited and may produce warnings like:
+
+> "This plugin supports grabbing the mouse only for popup windows"
+
+Advanced users can force native Wayland by setting `PHOENIX_FORCE_WAYLAND=1` 
+before launching Phoenix, but docking behavior may be constrained on some compositors.
+
+This is a temporary, pragmatic choice until Qt's Wayland docking support improves.
+
+**Example:**
+```bash
+# Use default X11/XWayland (recommended)
+./phoenix_app
+
+# Force native Wayland
+PHOENIX_FORCE_WAYLAND=1 ./phoenix_app
+
+# Or set QT_QPA_PLATFORM directly
+QT_QPA_PLATFORM=wayland ./phoenix_app
+```
+
+---
+
 ## ✅ Definition of Done (for Sprint 1)
 
 - Phoenix builds and runs

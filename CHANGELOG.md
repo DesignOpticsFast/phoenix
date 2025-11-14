@@ -13,6 +13,14 @@ This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 - **Message Dispatcher Scaffold**: Type→handler registration system for protocol frames. Handlers are called after `messageReceived()` signal emission, allowing both signal/slot and callback patterns. Unregistered message types log debug output.
 - **Version 0.0.3 Display**: Version now appears in splash screen, main window title ("Phoenix 0.0.3 - Optical Design Studio"), and About dialog. All locations use single source of truth from CMake `PROJECT_VERSION`.
 - **Prototype Removal**: Removed STEP prototype code and Bedrock adapter. Deleted obsolete files: MainWindow.cpp/hpp/ui (prototype), StepViewer.cpp/hpp, bedrock_client.cpp/hpp, noop.cpp. Cleaned CMakeLists.txt references. No Bedrock/STEP references remain in Phoenix codebase.
+- **Sprint 4.1 – Shell Stability & Platform Cohesion**:
+  - **Shell Stability & macOS Crash Fixes**: Fixed macOS startup crashes related to early status bar access and deferred initialization. Guarded theme refresh until UI is ready, preventing null pointer dereferences during startup.
+  - **Restart Now / Restart Later UX**: Implemented robust restart dialog with "Restart Now" and "Restart Later" options. Added macOS-specific restart relaunch logic. Dialog properly wires to application lifecycle and handles window resolution/modal behavior.
+  - **Startup Timing Refactor**: Real startup timing measurement from splash screen display to application ready state. Status bar semantics finalized with proper "Starting..." → "Ready" transition. Startup duration displayed in status bar.
+  - **Canonical Layout & Dock Restore Fixes**: Implemented canonical layout detection and restoration. Fixed invisible dock detection after restore, falling back to canonical layout when needed. Layout persistence and factory reset functionality working correctly.
+  - **Internationalization (EN/DE)**: Complete i18n integration for menus, splash screen, dialogs, status bar, and window titles. German translations added for all Sprint 4.1 UI strings. Fixed early `tr()` calls in splash screen constructor. Translation system working across all platforms.
+  - **Theme Action Consistency**: Enforced single-checked theme action across menus and ribbons. Theme actions sync properly between menu bar and side ribbon. Palette-aware ribbon rendering on macOS. Theme changes propagate correctly throughout UI.
+  - **Linux XWayland Default**: Phoenix now defaults to X11/XWayland (`QT_QPA_PLATFORM=xcb`) on Linux to avoid Qt/Wayland docking limitations. Removed `raise()` calls that triggered popup-only mouse grab warnings. Advanced users can force native Wayland via `PHOENIX_FORCE_WAYLAND=1` environment variable.
 
 ---
 
