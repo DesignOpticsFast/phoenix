@@ -20,6 +20,27 @@
 #include <QSettings>
 
 int main(int argc, char** argv) {
+#ifdef Q_OS_LINUX
+    // Use X11/XWayland by default for stable docking on Linux.
+    // Advanced users can:
+    //  - set PHOENIX_FORCE_WAYLAND to keep native Wayland, or
+    //  - set QT_QPA_PLATFORM themselves to any backend they want.
+    const bool forceWayland = qEnvironmentVariableIsSet("PHOENIX_FORCE_WAYLAND");
+    const QByteArray existingPlatform = qgetenv("QT_QPA_PLATFORM");
+
+    if (forceWayland) {
+        qInfo() << "[platform] Linux detected - PHOENIX_FORCE_WAYLAND set,"
+                << "using native Wayland backend (QT_QPA_PLATFORM left as-is)";
+    } else if (!existingPlatform.isEmpty()) {
+        qInfo() << "[platform] Linux detected - QT_QPA_PLATFORM already set to"
+                << existingPlatform << "- using user-specified backend";
+    } else {
+        qputenv("QT_QPA_PLATFORM", QByteArray("xcb"));
+        qInfo() << "[platform] Linux detected - using X11/XWayland backend"
+                << "(QT_QPA_PLATFORM=xcb) for stable docking behavior";
+    }
+#endif
+
     QApplication app(argc, argv);
     
     // Disable verbose logs by default (still toggleable via QT_LOGGING_RULES)
