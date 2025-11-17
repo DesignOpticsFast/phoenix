@@ -2,6 +2,8 @@
 
 **Purpose**: Configure dev-01 as the dedicated Qt build runner for Phoenix CI/CD pipeline.
 
+**Note**: dev-01 is configured to use Pacific time (PST/PDT). All local timestamps on dev-01 will reflect Pacific time.
+
 ---
 
 ## **Required Runner Labels**
@@ -184,7 +186,8 @@ The CI workflow includes an environment verification step that will:
 
 ### **Daily Heartbeat**
 
-- **Schedule**: Daily at 09:00 UTC
+- **Schedule**: Daily at 09:00 UTC (GitHub Actions schedules use UTC)
+- **Local Time**: Runs at 01:00 PST / 02:00 PDT on dev-01 (Pacific time)
 - **Purpose**: Verify dev-01 is online and Qt is available
 - **Manual Trigger**: Available via `workflow_dispatch`
 
