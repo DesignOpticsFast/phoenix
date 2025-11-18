@@ -48,9 +48,6 @@ int main(int argc, char** argv) {
         "phx.icons.debug=false\n"
         "phx.fonts.debug=false\n"
         "phx.ui.debug=false\n"
-        "phx.palantir.debug=false\n"
-        "phx.palantir.conn.debug=false\n"
-        "phx.palantir.proto.debug=false\n"
     ));
     
     // Set application properties

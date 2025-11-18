@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/qml">
+        <file alias="XYPlotView.qml">XYPlotView.qml</file>
+    </qresource>
+</RCC>
+

@@ -15,17 +15,14 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-# === Palantir integration toggle (default OFF for Sprint 4) ===
-option(PHX_WITH_PALANTIR "Enable Palantir integration" OFF)
-
 # === Developer tools toggle (default OFF for release builds) ===
 option(PHX_DEV_TOOLS "Build developer tools" OFF)
 
-# Make the flag visible to all targets
-add_compile_definitions(
-    $<$<BOOL:${PHX_WITH_PALANTIR}>:PHX_WITH_PALANTIR=1>
-    $<$<NOT:$<BOOL:${PHX_WITH_PALANTIR}>>:PHX_WITH_PALANTIR=0>
-)
+# === libsodium crypto support (default ON) ===
+option(PHX_WITH_LIBSODIUM "Build with libsodium crypto support" ON)
+
+# === Palantir contracts submodule support (default ON) ===
+option(PHX_WITH_PALANTIR_CONTRACTS "Enable Palantir contract stub generation" ON)
 
 # (Note: real/stub source selection will be added in a later chunk)
 
@@ -37,7 +34,7 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 
 # ---- Qt packages (find these BEFORE defining targets) -----------------------
 # Qt Graphs replaces old Qt Charts; ensure the component list matches your code.
-find_package(Qt6 6.6 REQUIRED COMPONENTS Widgets Concurrent Core Graphs LinguistTools)
+find_package(Qt6 6.10 REQUIRED COMPONENTS Widgets Concurrent Core Graphs GraphsWidgets QuickWidgets LinguistTools PrintSupport)
 
 # ---- QML Debugging: explicitly disable -------------------------------------
 # Ensure QML debugging macro is NOT defined even if the IDE injects it.
@@ -129,14 +126,6 @@ set(PHOENIX_SOURCES
   src/ui/icons/phoenix_icons.qrc
 )
 
-if(PHX_WITH_PALANTIR)
-  list(APPEND PHOENIX_SOURCES
-    src/palantir/PalantirClient.cpp
-    src/palantir/PalantirLogging.cpp
-    src/palantir/PalantirClient.hpp
-  )
-endif()
-
 if(PHX_DEV_TOOLS)
   list(APPEND PHOENIX_SOURCES
     src/tools/IconGallery.cpp
@@ -224,6 +213,131 @@ endfunction()
 
 wire_translations_for(phoenix_app)
 
+# ---- libsodium library ----------------------------------------------------
+if(PHX_WITH_LIBSODIUM)
+  # Collect all libsodium source files
+  file(GLOB_RECURSE LIBSODIUM_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium/*.c"
+  )
+
+  add_library(phoenix_libsodium STATIC
+    ${LIBSODIUM_SOURCES}
+  )
+
+  target_include_directories(phoenix_libsodium PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium/include
+  )
+
+  # Platform-specific compilation flags
+  if(WIN32)
+    # Windows-specific flags for libsodium
+    target_compile_definitions(phoenix_libsodium PRIVATE
+      SODIUM_STATIC=1
+    )
+  endif()
+
+  if(APPLE)
+    # macOS-specific flags if needed
+    target_compile_definitions(phoenix_libsodium PRIVATE
+      SODIUM_STATIC=1
+    )
+  endif()
+
+  if(UNIX AND NOT APPLE)
+    # Linux-specific flags
+    target_compile_definitions(phoenix_libsodium PRIVATE
+      SODIUM_STATIC=1
+    )
+  endif()
+endif()
+
+# ---- canonical_json library ----------------------------------------------------
+add_library(phoenix_canonical_json STATIC
+  src/common/canonical_json.cpp
+)
+
+target_include_directories(phoenix_canonical_json PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(phoenix_canonical_json PUBLIC
+  Qt6::Core
+)
+
+# ---- transport library ----------------------------------------------------
+add_library(phoenix_transport STATIC
+  src/transport/TransportClient.hpp
+  src/transport/GrpcUdsChannel.hpp
+  src/transport/GrpcUdsChannel.cpp
+  src/transport/LocalSocketChannel.hpp
+  src/transport/LocalSocketChannel.cpp
+)
+
+target_include_directories(phoenix_transport PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(phoenix_transport PUBLIC
+  Qt6::Core
+)
+
+# ---- analysis library ----------------------------------------------------
+add_library(phoenix_analysis STATIC
+  src/ui/analysis/IAnalysisView.hpp
+  src/ui/analysis/AnalysisWindow.cpp
+  src/ui/analysis/AnalysisWindow.hpp
+  src/plot/XYPlotViewGraphs.cpp
+  src/plot/XYPlotViewGraphs.hpp
+  src/qml/phoenix_qml.qrc
+)
+
+target_include_directories(phoenix_analysis PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(phoenix_analysis PUBLIC
+  Qt6::Core
+  Qt6::Widgets
+  Qt6::Graphs
+  Qt6::GraphsWidgets
+  Qt6::QuickWidgets
+)
+
+# ---- Palantir contracts proto generation scaffolding ---------------------------
+if(PHX_WITH_PALANTIR_CONTRACTS)
+  # Discover proto files in contracts/ submodule
+  file(GLOB_RECURSE PALANTIR_PROTO_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/contracts/*.proto"
+  )
+
+  if(PALANTIR_PROTO_FILES)
+    # Future: proto generation will go here
+    # Set up generated code directory
+    set(PALANTIR_GENERATED_DIR ${CMAKE_BINARY_DIR}/generated/contracts)
+    file(MAKE_DIRECTORY ${PALANTIR_GENERATED_DIR})
+
+    # Find protoc and grpc_cpp_plugin (for future use)
+    find_program(PROTOC protoc)
+    find_program(GRPC_CPP_PLUGIN grpc_cpp_plugin)
+
+    if(PROTOC AND GRPC_CPP_PLUGIN)
+      message(STATUS "Palantir proto files found: ${PALANTIR_PROTO_FILES}")
+      message(STATUS "Proto generation scaffolding ready (protoc: ${PROTOC}, grpc_cpp_plugin: ${GRPC_CPP_PLUGIN})")
+      message(STATUS "Generated code will be placed in: ${PALANTIR_GENERATED_DIR}")
+      # TODO: When .proto files exist, add code generation here
+    else()
+      if(NOT PROTOC)
+        message(WARNING "protoc not found - proto generation will not be available")
+      endif()
+      if(NOT GRPC_CPP_PLUGIN)
+        message(WARNING "grpc_cpp_plugin not found - proto generation will not be available")
+      endif()
+    endif()
+  else()
+    message(STATUS "No Palantir .proto files found under contracts/. Skipping stub generation.")
+  endif()
+endif()
+
 include(CTest)
 if(BUILD_TESTING)
   add_subdirectory(tests)
@@ -242,6 +356,7 @@ target_link_libraries(phoenix_app
     Qt6::Concurrent
     Qt6::Core
     Qt6::Graphs
+    phoenix_analysis
 )
 
 if(WIN32)
