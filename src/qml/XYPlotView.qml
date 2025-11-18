@@ -6,15 +6,11 @@ Item {
     
     GraphsView {
         id: graphView
-        objectName: "graphsView"  // For C++ findChild access
+        objectName: "graphsView"
         anchors.fill: parent
         
-        // Chart configuration for 2D XY line plot
-        LineSeries {
-            id: lineSeries
-            objectName: "mainSeries"  // For C++ findChild access
-            name: "Data"
-        }
+        // Enable interactions (pan/zoom/resize)
+        interactive: true
         
         // Value axes for X and Y
         ValueAxis {
@@ -27,10 +23,13 @@ Item {
             titleText: "Y"
         }
         
-        // Set axes on the series
-        Component.onCompleted: {
-            lineSeries.axisX = axisX
-            lineSeries.axisY = axisY
+        // LineSeries with axes assigned directly (not in Component.onCompleted)
+        LineSeries {
+            id: lineSeries
+            objectName: "mainSeries"  // For C++ findChild access
+            name: "Data"
+            axisX: axisX
+            axisY: axisY
         }
     }
 }
