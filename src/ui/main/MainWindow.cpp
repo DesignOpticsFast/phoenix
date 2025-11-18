@@ -42,6 +42,11 @@
 #include <QStyle>
 #include <functional>
 #include <cmath>
+#include "ui/analysis/AnalysisWindow.hpp"
+#include "plot/XYPlotViewGraphs.hpp"
+#include <QPointF>
+#include <vector>
+#include <memory>
 
 namespace {
     // Gather all menus from both menubar actions and MainWindow tree
@@ -1195,7 +1200,31 @@ void MainWindow::showSystemViewer()
 // Analysis menu actions
 void MainWindow::showXYPlot()
 {
-    QMessageBox::information(this, tr("XY Plot"), tr("This feature is not yet implemented."));
+    // Create AnalysisWindow with main window as parent
+    auto* win = new AnalysisWindow(this);
+    win->setWindowTitle(tr("XY Plot – Qt Graphs"));
+    
+    // Generate a simple test dataset: 1000-point sine wave
+    std::vector<QPointF> points;
+    points.reserve(1000);
+    for (int i = 0; i < 1000; ++i) {
+        double x = i * 0.01;  // x from 0 to 9.99
+        double y = std::sin(x);
+        points.emplace_back(x, y);
+    }
+    
+    // Create XYPlotViewGraphs instance and set the data
+    auto view = std::make_unique<XYPlotViewGraphs>();
+    view->setTitle(tr("Sine Wave Test"));
+    view->setData(points);
+    
+    // Install the view into AnalysisWindow
+    win->setView(std::move(view));
+    
+    // Configure and show the window
+    win->resize(900, 600);
+    win->setAttribute(Qt::WA_DeleteOnClose);  // Clean up when closed
+    win->show();
 }
 
 void MainWindow::show2DPlot()
