@@ -18,6 +18,17 @@ This document lists the licenses for third-party software used in Phoenix.
 
 **Note**: Font Awesome Pro is a commercial product. Ensure you have a valid license before using in production.
 
+## libsodium
+
+**Version:** 1.0.18  
+**License:** ISC License  
+**Location:** `third_party/libsodium/`  
+**Source:** https://download.libsodium.org/libsodium/releases/libsodium-1.0.18.tar.gz
+
+libsodium is a modern, easy-to-use software library for encryption, decryption, signatures, password hashing and more. It is a portable, cross-compilable, installable, packageable fork of NaCl, with a compatible API, and an extended API to improve usability even further.
+
+**License Text:** See `third_party/libsodium/LICENSE`
+
 ## Other Dependencies
 
 Other third-party dependencies are listed in their respective package managers (CMake, Python, etc.).

@@ -39,13 +39,49 @@ phoenix/
 ├── src/
 │    ├── ui/                # Qt windows, dialogs, widgets
 │    ├── palantir/          # Palantir IPC client (non-blocking FSM, protocol framing)
-│    └── app/               # Application core (settings, I/O utilities)
+│    ├── app/               # Application core (settings, I/O utilities)
+│    └── common/            # Shared utilities (canonical_json, etc.)
+├── contracts/              # Palantir contracts submodule (DesignOpticsFast/palantir)
+├── third_party/            # Third-party dependencies (qcustomplot, libsodium)
 ├── resources/              # icons, Qt .ui files
 ├── docs/                   # ADRs, design notes
+├── .contract-version       # Pinned contracts commit SHA
 ├── CMakeLists.txt          # build config
 └── .github/
 ├── workflows/         # CI pipelines
 └── pull_request_template.md
+
+---
+
+## 📋 Contracts Submodule
+
+Phoenix uses the Palantir contracts repository as a git submodule:
+
+- **Path:** `contracts/`
+- **Repository:** `DesignOpticsFast/palantir`
+- **Current Version:** v1.0.0 (commit `ad0e9882cd3d9cbbf80fc3b4ac23cd1df7547f53`)
+- **Purpose:** Shared transport/contract specifications for Phoenix ↔ Bedrock communication
+
+The contracts submodule is pinned via `.contract-version` file. CI enforces that the submodule commit matches the `.contract-version` file to ensure contract SHA parity between Phoenix and Bedrock.
+
+**To initialize the submodule:**
+```bash
+git submodule update --init --recursive
+```
+
+**To update the contracts submodule:**
+```bash
+cd contracts
+git fetch origin
+git checkout <desired-commit-or-tag>
+cd ..
+# Update .contract-version to match the new commit SHA
+git add contracts .contract-version
+git commit -m "chore: update contracts submodule to <version>"
+```
+
+**Note:** Phoenix must keep the contracts submodule in sync with Bedrock. Both repos use the same commit SHA (`ad0e988...`) to ensure compatibility.
+
 ---
 
 ## 🛠️ Development Workflow
@@ -71,9 +107,20 @@ phoenix/
 ssh -i ~/.ssh/github_phoenix mark@100.97.54.75
 cd /home/ec2-user/workspace/phoenix
 
+# Initialize submodules (if not already done)
+git submodule update --init --recursive
+
+# Build with Qt 6.10.0 (required)
+cmake -S . -B build \
+  -DCMAKE_PREFIX_PATH=/opt/Qt/6.10.0/gcc_64 \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo
+cmake --build build
+
 # Test GUI with Xvfb
-xvfb-run -a ./phoenix_app
+xvfb-run -a ./build/phoenix_app
 ```
+
+**Important:** Phoenix must be configured with Qt 6.10.0 on dev-01. Always use `-DCMAKE_PREFIX_PATH=/opt/Qt/6.10.0/gcc_64` when configuring CMake.
 
 ### **Branch Naming**
 Use `type/scope/short-desc`:

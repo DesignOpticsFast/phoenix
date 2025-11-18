@@ -232,6 +232,25 @@ jobs:
       QTFRAMEWORK_BYPASS_LICENSE_CHECK: "1"
     steps:
       - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      
+      - name: Verify contracts submodule SHA parity
+        run: |
+          expected=$(cat .contract-version)
+          actual=$(git -C contracts rev-parse HEAD)
+          
+          echo "Expected contracts SHA: $expected"
+          echo "Actual   contracts SHA: $actual"
+          
+          if [ "$expected" != "$actual" ]; then
+            echo "ERROR: Contract SHA mismatch."
+            echo "Expected: $expected"
+            echo "Actual:   $actual"
+            echo "Fix: update contracts/ or .contract-version in a coordinated change."
+            exit 1
+          fi
+          echo "✅ Contracts SHA parity check passed"
       
       - name: Verify dev-01 labels & env
         shell: bash
