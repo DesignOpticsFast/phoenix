@@ -1,18 +1,40 @@
 root = true
 
 [*]
+charset = utf-8
 end_of_line = lf
 insert_final_newline = true
-charset = utf-8
 trim_trailing_whitespace = true
 
-[*.{c,cc,cpp,h,hpp}]
+[*.{cpp,hpp,h,cxx,cc,c}]
+indent_style = space
+indent_size = 4
+
+[*.{cmake,txt}]
+indent_style = space
+indent_size = 2
+
+[*.qml]
+indent_style = space
+indent_size = 4
+
+[*.{json,jsonc}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+indent_style = space
+indent_size = 2
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[*.{sh,bash}]
 indent_style = space
 indent_size = 2
 
 [*.py]
 indent_style = space
 indent_size = 4
-
-[*.{md,txt}]
-trim_trailing_whitespace = false
