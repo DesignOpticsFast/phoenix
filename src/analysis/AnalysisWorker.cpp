@@ -113,6 +113,9 @@ void AnalysisWorker::executeCompute()
         // Compute XY Sine
         XYSineResult result;
         if (!client->computeXYSine(m_params, result, progressCallback)) {
+            // Store job ID before disconnect (for potential cancel)
+            m_currentJobId = client->currentJobId();
+            
             client->disconnect();
             m_currentClient = nullptr;
             
