@@ -13,6 +13,7 @@
 #include <QPushButton>
 #include <QProgressBar>
 #include <QMessageBox>
+#include <QTimer>
 #include <QThread>
 #include <QDebug>
 #include <QPointF>
