@@ -35,6 +35,99 @@ namespace TestLicenseHelpers {
         
         return {publicKey, privateKey};
     }
+    
+    CanonicalValue jsonValueToCanonical(const QJsonValue& value) {
+        if (value.isNull()) {
+            return CanonicalValue{nullptr};
+        } else if (value.isBool()) {
+            return CanonicalValue{value.toBool()};
+        } else if (value.isDouble()) {
+            double d = value.toDouble();
+            qint64 i = static_cast<qint64>(d);
+            if (d == static_cast<double>(i)) {
+                return CanonicalValue{int64_t{i}};
+            }
+            return CanonicalValue{d};
+        } else if (value.isString()) {
+            return CanonicalValue{value.toString().toStdString()};
+        } else if (value.isArray()) {
+            std::vector<CanonicalValue> arr;
+            QJsonArray jsonArray = value.toArray();
+            for (const QJsonValue& item : jsonArray) {
+                arr.push_back(jsonValueToCanonical(item));
+            }
+            return CanonicalValue{arr};
+        } else if (value.isObject()) {
+            std::map<std::string, CanonicalValue> obj;
+            QJsonObject jsonObj = value.toObject();
+            for (auto it = jsonObj.begin(); it != jsonObj.end(); ++it) {
+                obj[it.key().toStdString()] = jsonValueToCanonical(it.value());
+            }
+            return CanonicalValue{obj};
+        }
+        return CanonicalValue{nullptr};
+    }
+    
+    QByteArray signCanonicalJson(const QByteArray& canonicalJson, const QByteArray& privateKey)
+    {
+        std::array<unsigned char, crypto_sign_BYTES> sig{};
+        unsigned long long siglen = 0;
+        
+        if (crypto_sign_detached(sig.data(), &siglen,
+                                 reinterpret_cast<const unsigned char*>(canonicalJson.data()),
+                                 canonicalJson.size(),
+                                 reinterpret_cast<const unsigned char*>(privateKey.data())) != 0) {
+            return QByteArray();
+        }
+        
+        return QByteArray(reinterpret_cast<const char*>(sig.data()), static_cast<int>(siglen));
+    }
+    
+    QJsonObject createSignedLicense(const QByteArray& privateKey,
+                                    const QString& subject,
+                                    const QStringList& features,
+                                    const QDateTime& issuedAt,
+                                    const std::optional<QDateTime>& expiresAt = std::nullopt)
+    {
+        QJsonObject license;
+        license["subject"] = subject;
+        license["issued_at"] = issuedAt.toString(Qt::ISODate);
+        if (expiresAt.has_value()) {
+            license["expires_at"] = expiresAt.value().toString(Qt::ISODate);
+        } else {
+            license["expires_at"] = QJsonValue::Null;
+        }
+        
+        QJsonArray featuresArray;
+        for (const QString& feature : features) {
+            featuresArray.append(feature);
+        }
+        license["features"] = featuresArray;
+        
+        // Convert to canonical JSON (without signature)
+        CanonicalValue canonicalValue = jsonValueToCanonical(QJsonValue(license));
+        std::string canonicalJsonStr = to_canonical_json(canonicalValue);
+        QByteArray canonicalJson = QByteArray::fromStdString(canonicalJsonStr);
+        
+        // Sign canonical JSON
+        QByteArray signature = signCanonicalJson(canonicalJson, privateKey);
+        license["signature"] = QString::fromLatin1(signature.toBase64());
+        
+        return license;
+    }
+    
+    QString writeTempLicenseFile(const QJsonObject& licenseJson, QTemporaryDir& tempDir)
+    {
+        QString licensePath = tempDir.filePath("license.json");
+        QFile licenseFile(licensePath);
+        if (!licenseFile.open(QIODevice::WriteOnly)) {
+            return QString();
+        }
+        QJsonDocument doc(licenseJson);
+        licenseFile.write(doc.toJson());
+        licenseFile.close();
+        return licensePath;
+    }
 }
 
 class EchoDialogTests : public QObject {
@@ -149,53 +242,22 @@ void EchoDialogTests::setupTestLicense(const QString& subject, const QByteArray&
         ? QDateTime::currentDateTimeUtc().addDays(-1)
         : QDateTime::currentDateTimeUtc().addDays(30);
     
-    License license(subject, features, issuedAt, expiresAt);
+    // Use helper to create signed license
+    QJsonObject licenseJson = TestLicenseHelpers::createSignedLicense(
+        privateKey, subject, features, issuedAt, expiresAt);
     
-    QJsonObject licenseObj;
-    licenseObj["subject"] = subject;
-    licenseObj["issued_at"] = issuedAt.toUTC().toString(Qt::ISODate);
-    licenseObj["expires_at"] = expiresAt.toUTC().toString(Qt::ISODate);
+    QString licensePath = TestLicenseHelpers::writeTempLicenseFile(licenseJson, *m_tempDir);
+    QVERIFY(!licensePath.isEmpty());
     
-    QJsonArray featuresArray;
-    for (const QString& feature : features) {
-        featuresArray.append(feature);
-    }
-    licenseObj["features"] = featuresArray;
+    // Set public key and license path in environment
+    auto [publicKey, _] = TestLicenseHelpers::generateTestKeypair();
+    QString base64Key = QString::fromUtf8(publicKey.toBase64());
+    qputenv("PHOENIX_LICENSE_PUBLIC_KEY", base64Key.toUtf8());
+    qputenv("PHOENIX_LICENSE_PATH", licensePath.toUtf8());
     
-    QJsonDocument doc(licenseObj);
-    QByteArray canonicalJson = canonicalize(doc.toJson(QJsonDocument::Compact));
-    
-    // Sign the license
-    std::array<unsigned char, crypto_sign_BYTES> signature{};
-    if (crypto_sign_detached(signature.data(), nullptr,
-                             reinterpret_cast<const unsigned char*>(canonicalJson.constData()),
-                             canonicalJson.size(),
-                             privateKey.constData()) != 0) {
-        QFAIL("Failed to sign license");
-    }
-    
-    QByteArray signatureBytes(reinterpret_cast<const char*>(signature.data()), crypto_sign_BYTES);
-    QString signatureBase64 = signatureBytes.toBase64();
-    
-    QJsonObject signedLicense;
-    signedLicense["license"] = licenseObj;
-    signedLicense["signature"] = signatureBase64;
-    
-    QJsonDocument signedDoc(signedLicense);
-    
-    // Write license file
-    QString licensePath = m_tempDir->filePath("license.json");
-    QFile licenseFile(licensePath);
-    QVERIFY(licenseFile.open(QIODevice::WriteOnly));
-    licenseFile.write(signedDoc.toJson());
-    licenseFile.close();
-    
-    // Set license path in environment
-    qputenv("PHOENIX_LICENSE_PATH", licensePath.toLocal8Bit());
-    
-    // Refresh license manager
+    // Initialize license manager
     LicenseManager* mgr = LicenseManager::instance();
-    mgr->refresh();
+    mgr->initialize();
 }
 
 void EchoDialogTests::cleanupTestLicense()
@@ -206,9 +268,10 @@ void EchoDialogTests::cleanupTestLicense()
     }
     
     qunsetenv("PHOENIX_LICENSE_PATH");
+    qunsetenv("PHOENIX_LICENSE_PUBLIC_KEY");
     
     LicenseManager* mgr = LicenseManager::instance();
-    mgr->refresh();
+    mgr->initialize(); // Reinitialize to clear state
 }
 
 QTEST_MAIN(EchoDialogTests)
