@@ -141,15 +141,20 @@ void AsyncArchitectureTests::testUINonBlocking()
     // Wait for finished signal (process events to allow delivery)
     QElapsedTimer waitTimer;
     waitTimer.start();
-    while (!finishedSpy.wait(100) && waitTimer.elapsed() < 5000) {
+    while (finishedSpy.count() == 0 && waitTimer.elapsed() < 5000) {
+        if (finishedSpy.wait(100)) {
+            break;
+        }
         QCoreApplication::processEvents();
     }
     
-    // Wait for thread to finish
-    QVERIFY(thread->wait(1000));
-    
     // Verify finished signal was received
-    QCOMPARE(finishedSpy.count(), 1);
+    QVERIFY(finishedSpy.count() == 1);
+    
+    // Thread should finish (may already be finished)
+    if (thread->isRunning()) {
+        QVERIFY(thread->wait(1000));
+    }
 }
 
 void AsyncArchitectureTests::testThreadCleanup()
