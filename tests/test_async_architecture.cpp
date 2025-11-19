@@ -3,6 +3,7 @@
 #include <QThread>
 #include <QSignalSpy>
 #include <QElapsedTimer>
+#include <QCoreApplication>
 #include <QMap>
 #include <QVariant>
 
@@ -58,8 +59,15 @@ void AsyncArchitectureTests::testNoopFeature()
     // Start thread
     thread->start();
     
-    // Wait for completion (with timeout)
-    QVERIFY(thread->wait(5000));
+    // Wait for completion (with timeout) - process events to allow signal delivery
+    QElapsedTimer timer;
+    timer.start();
+    while (!finishedSpy.wait(100) && timer.elapsed() < 5000) {
+        QCoreApplication::processEvents();
+    }
+    
+    // Wait for thread to finish
+    QVERIFY(thread->wait(1000));
     
     // Verify signals were emitted
     QCOMPARE(startedSpy.count(), 1);
@@ -89,7 +97,15 @@ void AsyncArchitectureTests::testWorkerSignals()
     connect(thread, &QThread::finished, thread, &QObject::deleteLater);
     
     thread->start();
-    QVERIFY(thread->wait(5000));
+    
+    // Wait for finished signal
+    QElapsedTimer timer;
+    timer.start();
+    while (!finishedSpy.wait(100) && timer.elapsed() < 5000) {
+        QCoreApplication::processEvents();
+    }
+    
+    QVERIFY(thread->wait(1000));
     
     // Verify signal order: started before finished
     QVERIFY(startedSpy.count() > 0);
@@ -122,8 +138,15 @@ void AsyncArchitectureTests::testUINonBlocking()
     qint64 elapsedBeforeWait = timer.elapsed();
     QVERIFY(elapsedBeforeWait < 100);  // Should return in < 100ms
     
-    // Wait for completion
-    QVERIFY(thread->wait(5000));
+    // Wait for finished signal (process events to allow delivery)
+    QElapsedTimer waitTimer;
+    waitTimer.start();
+    while (!finishedSpy.wait(100) && waitTimer.elapsed() < 5000) {
+        QCoreApplication::processEvents();
+    }
+    
+    // Wait for thread to finish
+    QVERIFY(thread->wait(1000));
     
     // Verify finished signal was received
     QCOMPARE(finishedSpy.count(), 1);
@@ -138,13 +161,23 @@ void AsyncArchitectureTests::testThreadCleanup()
     QMap<QString, QVariant> params;
     worker->setParameters("noop", params);
     
+    QSignalSpy finishedSpy(worker, &AnalysisWorker::finished);
+    
     connect(thread, &QThread::started, worker, &AnalysisWorker::run);
     connect(worker, &AnalysisWorker::finished, thread, &QThread::quit);
     connect(thread, &QThread::finished, worker, &QObject::deleteLater);
     connect(thread, &QThread::finished, thread, &QObject::deleteLater);
     
     thread->start();
-    QVERIFY(thread->wait(5000));
+    
+    // Wait for finished signal
+    QElapsedTimer timer;
+    timer.start();
+    while (!finishedSpy.wait(100) && timer.elapsed() < 5000) {
+        QCoreApplication::processEvents();
+    }
+    
+    QVERIFY(thread->wait(1000));
     
     // Thread should be finished
     QVERIFY(!thread->isRunning());
