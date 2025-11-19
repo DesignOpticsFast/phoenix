@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package bedrock.echo;
+
+// TODO: This proto file should eventually be moved to the shared Palantir contracts
+// repository. For WP2.A, we're using a local copy to enable gRPC client generation
+// in Phoenix. Once Echo is added to the contracts repo, Phoenix should consume it
+// from there instead of maintaining a local copy.
+
+service EchoService {
+  rpc Echo(EchoRequest) returns (EchoReply);
+}
+
+message EchoRequest {
+  string message = 1;
+}
+
+message EchoReply {
+  string message = 1;
+}
+

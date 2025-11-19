@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 project(Phoenix
   VERSION 0.0.3
   DESCRIPTION "Qt UI for Bedrock"
-  LANGUAGES CXX)
+  LANGUAGES CXX C)
 
 # ---- C++ & Qt automations ---------------------------------------------------
 # C++/Qt config (confirmed present)
@@ -34,7 +34,7 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 
 # ---- Qt packages (find these BEFORE defining targets) -----------------------
 # Qt Graphs replaces old Qt Charts; ensure the component list matches your code.
-find_package(Qt6 6.10 REQUIRED COMPONENTS Widgets Concurrent Core Graphs GraphsWidgets QuickWidgets LinguistTools PrintSupport)
+find_package(Qt6 6.10 REQUIRED COMPONENTS Widgets Concurrent Core Network Graphs GraphsWidgets QuickWidgets LinguistTools PrintSupport)
 
 # ---- QML Debugging: explicitly disable -------------------------------------
 # Ensure QML debugging macro is NOT defined even if the IDE injects it.
@@ -219,6 +219,11 @@ if(PHX_WITH_LIBSODIUM)
   file(GLOB_RECURSE LIBSODIUM_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium/*.c"
   )
+  list(LENGTH LIBSODIUM_SOURCES LIBSODIUM_SOURCES_COUNT)
+  message(STATUS "Found ${LIBSODIUM_SOURCES_COUNT} libsodium source files")
+  if(LIBSODIUM_SOURCES_COUNT EQUAL 0)
+    message(WARNING "No libsodium source files found! Check path: ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium/")
+  endif()
 
   add_library(phoenix_libsodium STATIC
     ${LIBSODIUM_SOURCES}
@@ -226,6 +231,14 @@ if(PHX_WITH_LIBSODIUM)
 
   target_include_directories(phoenix_libsodium PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium/include
+  )
+  
+  # Libsodium source files need include paths for headers
+  # include/sodium for core.h etc, and include for sodium/version.h
+  target_include_directories(phoenix_libsodium PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium/include/sodium
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium
   )
 
   # Platform-specific compilation flags
@@ -264,6 +277,250 @@ target_link_libraries(phoenix_canonical_json PUBLIC
   Qt6::Core
 )
 
+# ---- gRPC and Protobuf dependencies (for transport) ------------------------
+find_package(Protobuf CONFIG QUIET)
+set(Protobuf_FOUND_CONFIG ${Protobuf_FOUND})
+if(NOT Protobuf_FOUND)
+    find_package(Protobuf MODULE QUIET)
+    set(Protobuf_FOUND_MODULE ${Protobuf_FOUND})
+endif()
+
+message(STATUS "Protobuf CONFIG found: ${Protobuf_FOUND_CONFIG}, MODULE found: ${Protobuf_FOUND_MODULE}, Final: ${Protobuf_FOUND}")
+message(STATUS "Protobuf_LIBRARIES: ${Protobuf_LIBRARIES}, Protobuf_INCLUDE_DIRS: ${Protobuf_INCLUDE_DIRS}")
+
+# Reset Protobuf_FOUND if we don't have the necessary components
+# Check if LIBRARIES is empty string (CMake treats empty string as falsy)
+set(PROTOBUF_WAS_FOUND ${Protobuf_FOUND})
+if(Protobuf_FOUND)
+    if("${Protobuf_LIBRARIES}" STREQUAL "" OR "${Protobuf_INCLUDE_DIRS}" STREQUAL "")
+        message(STATUS "Protobuf_FOUND is TRUE but missing LIBRARIES or INCLUDE_DIRS, resetting")
+        set(Protobuf_FOUND FALSE CACHE BOOL "Protobuf found" FORCE)
+    else()
+        message(STATUS "Protobuf is properly configured with LIBRARIES and INCLUDE_DIRS")
+        # Explicitly ensure it stays TRUE
+        set(Protobuf_FOUND TRUE CACHE BOOL "Protobuf found" FORCE)
+    endif()
+endif()
+
+# If Protobuf still not found, try manual detection
+if(NOT Protobuf_FOUND)
+    message(STATUS "Protobuf not found via find_package, trying manual detection")
+    # Check for protoc
+    find_program(PROTOC protoc)
+    message(STATUS "PROTOC found: ${PROTOC}")
+    if(PROTOC)
+        # Try to find protobuf library
+        find_library(PROTOBUF_LIB protobuf PATHS /usr/lib64 /usr/lib)
+        message(STATUS "PROTOBUF_LIB: ${PROTOBUF_LIB}")
+        if(PROTOBUF_LIB)
+            set(Protobuf_FOUND TRUE)
+            set(Protobuf_LIBRARIES ${PROTOBUF_LIB})
+            # Try common include paths
+            if(EXISTS "/usr/include/google/protobuf")
+                set(Protobuf_INCLUDE_DIRS "/usr/include")
+            elseif(EXISTS "/usr/local/include/google/protobuf")
+                set(Protobuf_INCLUDE_DIRS "/usr/local/include")
+            else()
+                # Use pkg-config to get include dirs
+                execute_process(
+                    COMMAND pkg-config --cflags-only-I protobuf
+                    OUTPUT_VARIABLE PROTOBUF_CFLAGS
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                )
+                string(REGEX REPLACE "-I" "" Protobuf_INCLUDE_DIRS "${PROTOBUF_CFLAGS}")
+                string(STRIP "${Protobuf_INCLUDE_DIRS}" Protobuf_INCLUDE_DIRS)
+            endif()
+            message(STATUS "Found Protobuf manually: ${PROTOBUF_LIB}")
+            # Explicitly set FOUND flag
+            set(Protobuf_FOUND TRUE CACHE BOOL "Protobuf found" FORCE)
+            # Create imported target
+            if(NOT TARGET protobuf::libprotobuf)
+                add_library(protobuf::libprotobuf INTERFACE IMPORTED)
+                set_target_properties(protobuf::libprotobuf PROPERTIES
+                    INTERFACE_INCLUDE_DIRECTORIES "${Protobuf_INCLUDE_DIRS}"
+                    INTERFACE_LINK_LIBRARIES "${Protobuf_LIBRARIES}"
+                )
+            endif()
+        endif()
+    endif()
+endif()
+
+find_package(gRPC CONFIG QUIET)
+set(gRPC_FOUND_CONFIG ${gRPC_FOUND})
+if(NOT gRPC_FOUND)
+    find_package(gRPC MODULE QUIET)
+    set(gRPC_FOUND_MODULE ${gRPC_FOUND})
+endif()
+
+message(STATUS "gRPC CONFIG found: ${gRPC_FOUND_CONFIG}, MODULE found: ${gRPC_FOUND_MODULE}, Final: ${gRPC_FOUND}")
+message(STATUS "gRPC_LIBRARIES: ${gRPC_LIBRARIES}, gRPC_INCLUDE_DIRS: ${gRPC_INCLUDE_DIRS}")
+
+# Reset gRPC_FOUND if we don't have the necessary components
+# Check if LIBRARIES is empty string (CMake treats empty string as falsy)
+set(GRPC_WAS_FOUND ${gRPC_FOUND})
+if(gRPC_FOUND)
+    if("${gRPC_LIBRARIES}" STREQUAL "" OR "${gRPC_INCLUDE_DIRS}" STREQUAL "")
+        message(STATUS "gRPC_FOUND is TRUE but missing LIBRARIES or INCLUDE_DIRS, resetting")
+        set(gRPC_FOUND FALSE CACHE BOOL "gRPC found" FORCE)
+    else()
+        message(STATUS "gRPC is properly configured with LIBRARIES and INCLUDE_DIRS")
+        # Explicitly ensure it stays TRUE
+        set(gRPC_FOUND TRUE CACHE BOOL "gRPC found" FORCE)
+    endif()
+endif()
+
+# If gRPC still not found, try manual detection
+if(NOT gRPC_FOUND)
+    message(STATUS "gRPC not found via find_package, trying manual detection")
+    find_program(GRPC_CPP_PLUGIN grpc_cpp_plugin)
+    message(STATUS "GRPC_CPP_PLUGIN found: ${GRPC_CPP_PLUGIN}")
+    if(GRPC_CPP_PLUGIN)
+        # Try to find gRPC libraries
+        find_library(GRPCXX_LIB grpc++ PATHS /usr/lib64 /usr/lib)
+        find_library(GRPC_LIB grpc PATHS /usr/lib64 /usr/lib)
+        message(STATUS "GRPCXX_LIB: ${GRPCXX_LIB}, GRPC_LIB: ${GRPC_LIB}")
+        if(GRPCXX_LIB AND GRPC_LIB)
+            set(gRPC_FOUND TRUE)
+            set(gRPC_LIBRARIES ${GRPCXX_LIB} ${GRPC_LIB})
+            # Try common include paths
+            if(EXISTS "/usr/include/grpcpp/grpcpp.h")
+                set(gRPC_INCLUDE_DIRS "/usr/include")
+            elseif(EXISTS "/usr/local/include/grpcpp/grpcpp.h")
+                set(gRPC_INCLUDE_DIRS "/usr/local/include")
+            else()
+                # Use pkg-config to get include dirs
+                execute_process(
+                    COMMAND pkg-config --cflags-only-I grpc++
+                    OUTPUT_VARIABLE GRPC_CFLAGS
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                )
+                string(REGEX REPLACE "-I" "" gRPC_INCLUDE_DIRS "${GRPC_CFLAGS}")
+                string(STRIP "${gRPC_INCLUDE_DIRS}" gRPC_INCLUDE_DIRS)
+            endif()
+            message(STATUS "Found gRPC manually: ${GRPCXX_LIB}")
+            # Explicitly set FOUND flag
+            set(gRPC_FOUND TRUE CACHE BOOL "gRPC found" FORCE)
+            # Create imported target
+            if(NOT TARGET gRPC::grpc++)
+                add_library(gRPC::grpc++ INTERFACE IMPORTED)
+                set_target_properties(gRPC::grpc++ PROPERTIES
+                    INTERFACE_INCLUDE_DIRECTORIES "${gRPC_INCLUDE_DIRS}"
+                    INTERFACE_LINK_LIBRARIES "${gRPC_LIBRARIES}"
+                )
+            endif()
+        endif()
+    endif()
+endif()
+
+# Proto generation for bedrock_echo.proto
+set(ECHO_PROTO_FILE ${CMAKE_CURRENT_SOURCE_DIR}/proto/bedrock_echo.proto)
+set(ECHO_GENERATED_DIR ${CMAKE_BINARY_DIR}/generated/echo)
+file(MAKE_DIRECTORY ${ECHO_GENERATED_DIR})
+
+# Proto generation for palantir.proto (LocalSocket transport)
+set(PALANTIR_PROTO_FILE ${CMAKE_CURRENT_SOURCE_DIR}/proto/palantir.proto)
+set(PALANTIR_GENERATED_DIR ${CMAKE_BINARY_DIR}/generated/palantir)
+file(MAKE_DIRECTORY ${PALANTIR_GENERATED_DIR})
+
+# Determine if we have working Protobuf and gRPC based on actual library availability
+set(HAVE_PROTOBUF FALSE)
+set(HAVE_GRPC FALSE)
+
+if(Protobuf_LIBRARIES AND Protobuf_INCLUDE_DIRS)
+    set(HAVE_PROTOBUF TRUE)
+    message(STATUS "Protobuf available: ${Protobuf_LIBRARIES}")
+else()
+    message(STATUS "Protobuf not available (missing LIBRARIES or INCLUDE_DIRS)")
+endif()
+
+if(gRPC_LIBRARIES AND gRPC_INCLUDE_DIRS)
+    set(HAVE_GRPC TRUE)
+    message(STATUS "gRPC available: ${gRPC_LIBRARIES}")
+else()
+    message(STATUS "gRPC not available (missing LIBRARIES or INCLUDE_DIRS)")
+endif()
+
+message(STATUS "Final check - HAVE_PROTOBUF: ${HAVE_PROTOBUF}, HAVE_GRPC: ${HAVE_GRPC}")
+
+if(HAVE_PROTOBUF AND HAVE_GRPC)
+    # Find protoc and grpc_cpp_plugin (may already be found)
+    if(NOT PROTOC)
+        find_program(PROTOC protoc)
+    endif()
+    if(NOT GRPC_CPP_PLUGIN)
+        find_program(GRPC_CPP_PLUGIN grpc_cpp_plugin)
+    endif()
+    
+    if(PROTOC AND GRPC_CPP_PLUGIN)
+        # Generate protobuf and gRPC stubs for bedrock_echo.proto
+        set(ECHO_PROTO_SRCS ${ECHO_GENERATED_DIR}/bedrock_echo.pb.cc)
+        set(ECHO_PROTO_HDRS ${ECHO_GENERATED_DIR}/bedrock_echo.pb.h)
+        set(ECHO_GRPC_SRCS ${ECHO_GENERATED_DIR}/bedrock_echo.grpc.pb.cc)
+        set(ECHO_GRPC_HDRS ${ECHO_GENERATED_DIR}/bedrock_echo.grpc.pb.h)
+        
+        add_custom_command(
+            OUTPUT ${ECHO_PROTO_SRCS} ${ECHO_PROTO_HDRS} ${ECHO_GRPC_SRCS} ${ECHO_GRPC_HDRS}
+            COMMAND ${PROTOC}
+            ARGS --cpp_out=${ECHO_GENERATED_DIR}
+                 --grpc_out=${ECHO_GENERATED_DIR}
+                 --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+                 --proto_path=${CMAKE_CURRENT_SOURCE_DIR}/proto
+                 ${ECHO_PROTO_FILE}
+            DEPENDS ${ECHO_PROTO_FILE}
+            COMMENT "Generating gRPC stubs for bedrock_echo.proto"
+        )
+        
+        message(STATUS "Proto generation configured for bedrock_echo.proto")
+        message(STATUS "Generated files will be in: ${ECHO_GENERATED_DIR}")
+    else()
+        message(WARNING "protoc or grpc_cpp_plugin not found - gRPC transport will not be available")
+        set(ECHO_PROTO_SRCS "")
+        set(ECHO_PROTO_HDRS "")
+        set(ECHO_GRPC_SRCS "")
+        set(ECHO_GRPC_HDRS "")
+    endif()
+else()
+    message(WARNING "Protobuf or gRPC not found - gRPC transport will not be available")
+    set(ECHO_PROTO_SRCS "")
+    set(ECHO_PROTO_HDRS "")
+    set(ECHO_GRPC_SRCS "")
+    set(ECHO_GRPC_HDRS "")
+endif()
+
+# Palantir proto generation (protobuf only, no gRPC)
+if(HAVE_PROTOBUF)
+    if(NOT PROTOC)
+        find_program(PROTOC protoc)
+    endif()
+    
+    if(PROTOC)
+        # Generate protobuf stubs for palantir.proto
+        set(PALANTIR_PROTO_SRCS ${PALANTIR_GENERATED_DIR}/palantir.pb.cc)
+        set(PALANTIR_PROTO_HDRS ${PALANTIR_GENERATED_DIR}/palantir.pb.h)
+        
+        add_custom_command(
+            OUTPUT ${PALANTIR_PROTO_SRCS} ${PALANTIR_PROTO_HDRS}
+            COMMAND ${PROTOC}
+            ARGS --cpp_out=${PALANTIR_GENERATED_DIR}
+                 --proto_path=${CMAKE_CURRENT_SOURCE_DIR}/proto
+                 ${PALANTIR_PROTO_FILE}
+            DEPENDS ${PALANTIR_PROTO_FILE}
+            COMMENT "Generating protobuf stubs for palantir.proto"
+        )
+        
+        message(STATUS "Proto generation configured for palantir.proto")
+        message(STATUS "Generated files will be in: ${PALANTIR_GENERATED_DIR}")
+    else()
+        message(WARNING "protoc not found - LocalSocket transport will not be available")
+        set(PALANTIR_PROTO_SRCS "")
+        set(PALANTIR_PROTO_HDRS "")
+    endif()
+else()
+    message(WARNING "Protobuf not found - LocalSocket transport will not be available")
+    set(PALANTIR_PROTO_SRCS "")
+    set(PALANTIR_PROTO_HDRS "")
+endif()
+
 # ---- transport library ----------------------------------------------------
 add_library(phoenix_transport STATIC
   src/transport/TransportClient.hpp
@@ -271,15 +528,78 @@ add_library(phoenix_transport STATIC
   src/transport/GrpcUdsChannel.cpp
   src/transport/LocalSocketChannel.hpp
   src/transport/LocalSocketChannel.cpp
+  src/transport/TransportFactory.hpp
+  src/transport/TransportFactory.cpp
+  ${ECHO_PROTO_SRCS}
+  ${ECHO_GRPC_SRCS}
+  ${PALANTIR_PROTO_SRCS}
 )
 
 target_include_directories(phoenix_transport PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${ECHO_GENERATED_DIR}
+  ${PALANTIR_GENERATED_DIR}
 )
 
 target_link_libraries(phoenix_transport PUBLIC
   Qt6::Core
+  Qt6::Network
 )
+
+# Link Protobuf (needed for both gRPC and LocalSocket)
+if(HAVE_PROTOBUF)
+    if(TARGET protobuf::libprotobuf)
+        target_link_libraries(phoenix_transport PRIVATE protobuf::libprotobuf)
+    else()
+        target_link_libraries(phoenix_transport PRIVATE ${Protobuf_LIBRARIES})
+    endif()
+    
+    # Add include directories for protobuf
+    if(Protobuf_INCLUDE_DIRS)
+        target_include_directories(phoenix_transport PRIVATE ${Protobuf_INCLUDE_DIRS})
+    endif()
+endif()
+
+# Link gRPC (only needed for gRPC transport)
+if(HAVE_PROTOBUF AND HAVE_GRPC AND PROTOC AND GRPC_CPP_PLUGIN)
+    if(TARGET gRPC::grpc++)
+        target_link_libraries(phoenix_transport PRIVATE gRPC::grpc++)
+    else()
+        target_link_libraries(phoenix_transport PRIVATE ${gRPC_LIBRARIES})
+    endif()
+    
+    # Add include directories for gRPC
+    if(gRPC_INCLUDE_DIRS)
+        target_include_directories(phoenix_transport PRIVATE ${gRPC_INCLUDE_DIRS})
+    endif()
+endif()
+
+# ---- license library ----------------------------------------------------
+add_library(phoenix_license STATIC
+  src/license/License.hpp
+  src/license/License.cpp
+  src/license/LicenseVerifier.hpp
+  src/license/LicenseVerifier.cpp
+)
+
+target_include_directories(phoenix_license PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(phoenix_license PUBLIC
+  Qt6::Core
+  phoenix_canonical_json
+)
+
+if(PHX_WITH_LIBSODIUM)
+  target_link_libraries(phoenix_license PRIVATE
+    phoenix_libsodium
+  )
+  # Ensure libsodium include directories are available
+  target_include_directories(phoenix_license PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium/include
+  )
+endif()
 
 # ---- analysis library ----------------------------------------------------
 add_library(phoenix_analysis STATIC

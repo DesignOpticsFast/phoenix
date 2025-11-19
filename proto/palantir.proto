@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package palantir;
+
+// TODO: This proto file should eventually be moved to the shared Palantir contracts
+// repository. For WP2.B, we're using a local copy to enable LocalSocket transport
+// in Phoenix. Once Palantir schema is properly centralized in the contracts repo,
+// Phoenix should consume it from there instead of maintaining a local copy.
+
+// CapabilitiesRequest - empty message used to request server capabilities
+message CapabilitiesRequest {
+}
+
+// Capabilities - server capabilities response
+message Capabilities {
+    int32 max_concurrency = 1;
+    string protocol_version = 2;
+    repeated string supported_features = 3;
+}
+
+// Pong - heartbeat/ping response
+message Pong {
+    int64 timestamp_ms = 1;
+}
+
+// Ping - heartbeat/ping request (empty message)
+message Ping {
+}
+
+// Job ID wrapper
+message JobId {
+    string id = 1;
+}
+
+// StartJob - request to start a computation job
+message StartJob {
+    JobId job_id = 1;
+    ComputeSpec spec = 2;
+}
+
+// StartReply - response to StartJob
+message StartReply {
+    JobId job_id = 1;
+    string status = 2;  // "OK", "UNIMPLEMENTED", "RESOURCE_EXHAUSTED", etc.
+    string error_message = 3;
+}
+
+// Cancel - request to cancel a job
+message Cancel {
+    JobId job_id = 1;
+}
+
+// ComputeSpec - specification for a computation job
+message ComputeSpec {
+    string feature_id = 1;  // e.g., "xy_sine"
+    map<string, string> params = 2;  // Feature-specific parameters
+}
+
+// Progress - job progress update
+message Progress {
+    JobId job_id = 1;
+    double progress_pct = 2;
+    string status = 3;
+}
+
+// ResultMeta - metadata for job result
+message ResultMeta {
+    JobId job_id = 1;
+    string status = 2;  // "SUCCEEDED", "FAILED", "CANCELLED"
+    string dtype = 3;  // e.g., "f64"
+    repeated int32 shape = 4;
+    int64 compute_elapsed_ms = 5;
+    int64 bytes_total = 6;
+}
+
+// DataChunk - chunk of result data
+message DataChunk {
+    JobId job_id = 1;
+    int32 chunk_index = 2;
+    int32 total_chunks = 3;
+    bytes data = 4;
+}
+

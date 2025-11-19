@@ -71,7 +71,47 @@ if(BUILD_TESTING)
       ${CMAKE_SOURCE_DIR}/src
   )
 
+  # Link Protobuf libraries (needed for both gRPC and LocalSocket)
+  if(HAVE_PROTOBUF)
+    if(TARGET protobuf::libprotobuf)
+      target_link_libraries(transport_sanity_tests PRIVATE protobuf::libprotobuf)
+    else()
+      target_link_libraries(transport_sanity_tests PRIVATE ${Protobuf_LIBRARIES})
+    endif()
+  endif()
+  
+  # Link gRPC libraries if available (only needed for gRPC transport)
+  if(HAVE_PROTOBUF AND HAVE_GRPC)
+    if(TARGET gRPC::grpc++)
+      target_link_libraries(transport_sanity_tests PRIVATE gRPC::grpc++)
+    else()
+      target_link_libraries(transport_sanity_tests PRIVATE ${gRPC_LIBRARIES})
+    endif()
+  endif()
+
   add_test(NAME transport_sanity_tests COMMAND transport_sanity_tests)
+endif()
+
+# license verification tests
+if(BUILD_TESTING AND PHX_WITH_LIBSODIUM)
+  add_executable(license_verification_tests
+    license_verification_tests.cpp
+  )
+
+  target_link_libraries(license_verification_tests PRIVATE
+    phoenix_license
+    phoenix_canonical_json
+    phoenix_libsodium
+    Qt6::Core
+    Qt6::Test
+  )
+
+  target_include_directories(license_verification_tests
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME license_verification_tests COMMAND license_verification_tests)
 endif()
 
 # analysis sanity tests
