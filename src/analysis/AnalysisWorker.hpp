@@ -7,6 +7,8 @@
 #include <atomic>
 #include "AnalysisProgress.hpp"
 
+class LocalSocketChannel;
+
 class AnalysisWorker : public QObject {
     Q_OBJECT
 
