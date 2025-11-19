@@ -2,13 +2,10 @@
 
 #include <QMap>
 #include <QVariant>
-#include <vector>
 
-// Result structure for XY Sine computation (matches LocalSocketChannel)
-struct XYSineResult {
-    std::vector<double> x;
-    std::vector<double> y;
-};
+// Forward declaration - XYSineResult is defined in LocalSocketChannel.hpp
+// We use the same type to maintain compatibility
+struct XYSineResult;
 
 // TODO(Sprint 4.4): Remove demo-mode local XY Sine once Mac testing is complete.
 // This is a temporary path for Capo testing and MUST NOT become permanent.
