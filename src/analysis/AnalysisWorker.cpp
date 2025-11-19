@@ -18,7 +18,9 @@
 AnalysisWorker::AnalysisWorker(QObject* parent)
     : QObject(parent)
     , m_cancelRequested(false)
+#ifdef PHX_WITH_TRANSPORT_DEPS
     , m_currentClient(nullptr)
+#endif
 {
     // Register meta-types for signal/slot passing
     qRegisterMetaType<XYSineResult>("XYSineResult");
