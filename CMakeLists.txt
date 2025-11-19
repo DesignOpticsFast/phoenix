@@ -655,6 +655,8 @@ target_include_directories(phoenix_analysis PUBLIC
 
 target_link_libraries(phoenix_analysis PUBLIC
   phoenix_feature_registry
+  phoenix_transport
+  phoenix_license_manager
   Qt6::Core
   Qt6::Widgets
   Qt6::Graphs
