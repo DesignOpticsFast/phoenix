@@ -32,7 +32,6 @@ AnalysisWindow::AnalysisWindow(QWidget* parent)
     , m_workerThread(nullptr)
     , m_worker(nullptr)
     , m_timeoutTimer(nullptr)
-    , m_timeoutTimer(nullptr)
 {
     QHBoxLayout* layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
