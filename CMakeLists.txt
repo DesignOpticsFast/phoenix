@@ -115,9 +115,6 @@ set(PHOENIX_SOURCES
   src/ui/dialogs/LicenseDialog.h
   src/ui/dialogs/EchoTestDialog.h
 
-  # New UI structure - Widgets
-  src/ui/widgets/FeatureParameterPanel.hpp
-
   # New UI structure - Themes
   src/ui/themes/ThemeManager.h
 
