@@ -3,6 +3,7 @@
 #include "ui/widgets/FeatureParameterPanel.hpp"
 #include "features/FeatureRegistry.hpp"
 #include "analysis/AnalysisWorker.hpp"
+#include "transport/LocalSocketChannel.hpp"
 #include "app/LicenseManager.h"
 #include "plot/XYPlotViewGraphs.hpp"
 #include <QHBoxLayout>
