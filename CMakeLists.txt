@@ -81,6 +81,9 @@ set(PHOENIX_SOURCES
   src/ui/dialogs/LicenseDialog.cpp
   src/ui/dialogs/EchoTestDialog.cpp
 
+  # New UI structure - Widgets
+  src/ui/widgets/FeatureParameterPanel.cpp
+
   # New UI structure - Themes
   src/ui/themes/ThemeManager.cpp
 
@@ -114,6 +117,9 @@ set(PHOENIX_SOURCES
   src/ui/dialogs/LanguagePage.h
   src/ui/dialogs/LicenseDialog.h
   src/ui/dialogs/EchoTestDialog.h
+
+  # New UI structure - Widgets
+  src/ui/widgets/FeatureParameterPanel.hpp
 
   # New UI structure - Themes
   src/ui/themes/ThemeManager.h

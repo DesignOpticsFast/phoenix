@@ -199,6 +199,27 @@ if(BUILD_TESTING)
   add_test(NAME feature_registry_tests COMMAND feature_registry_tests)
 endif()
 
+# feature parameter panel tests
+if(BUILD_TESTING)
+  add_executable(feature_parameter_panel_tests
+    feature_parameter_panel_tests.cpp
+  )
+
+  target_link_libraries(feature_parameter_panel_tests PRIVATE
+    phoenix_feature_registry
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Test
+  )
+
+  target_include_directories(feature_parameter_panel_tests
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME feature_parameter_panel_tests COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:feature_parameter_panel_tests>)
+endif()
+
 # analysis sanity tests
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests
