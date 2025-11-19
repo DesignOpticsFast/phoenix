@@ -8,6 +8,8 @@ class QSplitter;
 class FeatureParameterPanel;
 class QPushButton;
 class QVBoxLayout;
+class QThread;
+class AnalysisWorker;
 
 class AnalysisWindow : public QWidget {
     Q_OBJECT
@@ -24,9 +26,11 @@ public:
 
 private slots:
     void runFeature();
+    void onWorkerFinished(bool success, const QVariant& result, const QString& error);
 
 private:
     void setupParameterPanel(const QString& featureId);
+    void cleanupWorker();
     
     std::unique_ptr<IAnalysisView> m_view;
     QSplitter* m_splitter;
@@ -34,5 +38,9 @@ private:
     QPushButton* m_runButton;
     QVBoxLayout* m_panelLayout;
     QString m_currentFeatureId;
+    
+    // Worker thread infrastructure
+    QThread* m_workerThread;
+    AnalysisWorker* m_worker;
 };
 

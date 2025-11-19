@@ -644,6 +644,8 @@ add_library(phoenix_analysis STATIC
   src/ui/analysis/AnalysisWindow.hpp
   src/ui/widgets/FeatureParameterPanel.cpp
   src/ui/widgets/FeatureParameterPanel.hpp
+  src/analysis/AnalysisWorker.cpp
+  src/analysis/AnalysisWorker.hpp
   src/plot/XYPlotViewGraphs.cpp
   src/plot/XYPlotViewGraphs.hpp
   src/qml/phoenix_qml.qrc

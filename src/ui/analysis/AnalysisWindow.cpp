@@ -2,8 +2,7 @@
 #include "ui/analysis/IAnalysisView.hpp"
 #include "ui/widgets/FeatureParameterPanel.hpp"
 #include "features/FeatureRegistry.hpp"
-#include "transport/LocalSocketChannel.hpp"
-#include "transport/TransportFactory.hpp"
+#include "analysis/AnalysisWorker.hpp"
 #include "app/LicenseManager.h"
 #include "plot/XYPlotViewGraphs.hpp"
 #include <QHBoxLayout>
@@ -11,6 +10,7 @@
 #include <QSplitter>
 #include <QPushButton>
 #include <QMessageBox>
+#include <QThread>
 #include <QDebug>
 #include <QPointF>
 #include <vector>
@@ -23,11 +23,16 @@ AnalysisWindow::AnalysisWindow(QWidget* parent)
     , m_parameterPanel(nullptr)
     , m_runButton(nullptr)
     , m_panelLayout(nullptr)
+    , m_workerThread(nullptr)
+    , m_worker(nullptr)
 {
     QHBoxLayout* layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(m_splitter);
     setLayout(layout);
+    
+    // Register XYSineResult meta-type for signal/slot passing
+    qRegisterMetaType<XYSineResult>("XYSineResult");
 }
 
 AnalysisWindow::~AnalysisWindow() = default;
@@ -122,17 +127,15 @@ void AnalysisWindow::setupParameterPanel(const QString& featureId)
 
 void AnalysisWindow::runFeature()
 {
-    // Check license
-    LicenseManager* mgr = LicenseManager::instance();
-    if (mgr->currentState() != LicenseManager::LicenseState::NotConfigured &&
-        !mgr->hasFeature("feature_xy_plot")) {
-        QMessageBox::warning(this, tr("Feature Unavailable"),
-            tr("XY Sine computation requires a valid license with the 'feature_xy_plot' feature.\n\n"
-               "Please check your license status via Help → License..."));
+    // Prevent double-click spam
+    if (m_workerThread && m_workerThread->isRunning()) {
         return;
     }
     
-    // Validate parameters
+    // Clean up any existing worker
+    cleanupWorker();
+    
+    // Validate parameters (UI thread validation)
     if (!m_parameterPanel || !m_parameterPanel->isValid()) {
         QStringList errors = m_parameterPanel->validationErrors();
         QMessageBox::warning(this, tr("Invalid Parameters"),
@@ -144,53 +147,92 @@ void AnalysisWindow::runFeature()
     // Get parameters
     QMap<QString, QVariant> params = m_parameterPanel->parameters();
     
-    // Create LocalSocketChannel (explicitly, not from env)
-    auto client = std::make_unique<LocalSocketChannel>();
+    // Create worker thread
+    m_workerThread = new QThread(this);
+    m_worker = new AnalysisWorker();
     
-    // Connect
-    if (!client->connect()) {
-        QMessageBox::warning(this, tr("Connection Failed"),
-            tr("Failed to connect to Bedrock server.\n\n"
-               "Please ensure Bedrock is running and accessible via LocalSocket."));
+    // Move worker to thread
+    m_worker->moveToThread(m_workerThread);
+    
+    // Set parameters
+    m_worker->setParameters(m_currentFeatureId, params);
+    
+    // Connect signals (use QueuedConnection for cross-thread safety)
+    connect(m_workerThread, &QThread::started, m_worker, &AnalysisWorker::run);
+    connect(m_worker, &AnalysisWorker::finished, this, &AnalysisWindow::onWorkerFinished, Qt::QueuedConnection);
+    
+    // Cleanup connections
+    connect(m_workerThread, &QThread::finished, m_worker, &QObject::deleteLater);
+    connect(m_workerThread, &QThread::finished, m_workerThread, &QObject::deleteLater);
+    
+    // Disable Run button
+    if (m_runButton) {
+        m_runButton->setEnabled(false);
+    }
+    
+    // Start thread
+    m_workerThread->start();
+}
+
+void AnalysisWindow::onWorkerFinished(bool success, const QVariant& result, const QString& error)
+{
+    // Re-enable Run button
+    if (m_runButton) {
+        m_runButton->setEnabled(true);
+    }
+    
+    // Handle error
+    if (!success) {
+        if (!error.isEmpty()) {
+            QMessageBox::warning(this, tr("Computation Failed"), error);
+        }
+        cleanupWorker();
         return;
     }
     
-    // Compute XY Sine
-    XYSineResult result;
-    if (!client->computeXYSine(params, result)) {
-        QMessageBox::warning(this, tr("Computation Failed"),
-            tr("XY Sine computation failed.\n\n"
-               "Please check the server logs for details."));
-        client->disconnect();
-        return;
+    // Handle success - update plot
+    if (m_currentFeatureId == "xy_sine") {
+        XYSineResult xyResult = result.value<XYSineResult>();
+        
+        // Convert to QPointF vector
+        std::vector<QPointF> points;
+        points.reserve(xyResult.x.size());
+        for (size_t i = 0; i < xyResult.x.size(); ++i) {
+            points.emplace_back(xyResult.x[i], xyResult.y[i]);
+        }
+        
+        // Update XYPlotViewGraphs
+        XYPlotViewGraphs* xyView = dynamic_cast<XYPlotViewGraphs*>(m_view.get());
+        if (xyView) {
+            xyView->setData(points);
+            qDebug() << "AnalysisWindow::onWorkerFinished: Updated plot with" << points.size() << "points";
+        } else {
+            qWarning() << "AnalysisWindow::onWorkerFinished: Current view is not XYPlotViewGraphs";
+            QMessageBox::warning(this, tr("View Error"),
+                tr("Current view does not support XY data display."));
+        }
     }
     
-    client->disconnect();
-    
-    // Update plot view
-    if (result.x.size() != result.y.size()) {
-        qWarning() << "AnalysisWindow::runFeature: Mismatched x/y array sizes";
-        QMessageBox::warning(this, tr("Data Error"),
-            tr("Received invalid data from server (mismatched array sizes)."));
-        return;
+    cleanupWorker();
+}
+
+void AnalysisWindow::cleanupWorker()
+{
+    if (m_workerThread) {
+        if (m_workerThread->isRunning()) {
+            m_workerThread->quit();
+            m_workerThread->wait(1000);  // Wait up to 1 second
+        }
+        if (m_workerThread->isRunning()) {
+            qWarning() << "AnalysisWindow::cleanupWorker: Thread did not stop, terminating";
+            m_workerThread->terminate();
+            m_workerThread->wait(1000);
+        }
+        m_workerThread->deleteLater();
+        m_workerThread = nullptr;
     }
     
-    // Convert to QPointF vector
-    std::vector<QPointF> points;
-    points.reserve(result.x.size());
-    for (size_t i = 0; i < result.x.size(); ++i) {
-        points.emplace_back(result.x[i], result.y[i]);
-    }
-    
-    // Update XYPlotViewGraphs
-    XYPlotViewGraphs* xyView = dynamic_cast<XYPlotViewGraphs*>(m_view.get());
-    if (xyView) {
-        xyView->setData(points);
-        qDebug() << "AnalysisWindow::runFeature: Updated plot with" << points.size() << "points";
-    } else {
-        qWarning() << "AnalysisWindow::runFeature: Current view is not XYPlotViewGraphs";
-        QMessageBox::warning(this, tr("View Error"),
-            tr("Current view does not support XY data display."));
-    }
+    // Worker will be deleted by thread's finished signal
+    m_worker = nullptr;
 }
 

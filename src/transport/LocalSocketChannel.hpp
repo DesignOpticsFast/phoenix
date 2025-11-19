@@ -17,6 +17,8 @@ struct XYSineResult {
     std::vector<double> y;
 };
 
+Q_DECLARE_METATYPE(XYSineResult)
+
 class LocalSocketChannel : public TransportClient {
 public:
     explicit LocalSocketChannel(const QString& socketName = QString());

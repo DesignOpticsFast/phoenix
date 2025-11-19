@@ -251,6 +251,26 @@ if(BUILD_TESTING)
   add_test(NAME test_xysine_transport COMMAND test_xysine_transport)
 endif()
 
+# async architecture tests
+if(BUILD_TESTING)
+  add_executable(test_async_architecture
+    test_async_architecture.cpp
+  )
+
+  target_link_libraries(test_async_architecture PRIVATE
+    phoenix_analysis
+    Qt6::Core
+    Qt6::Test
+  )
+
+  target_include_directories(test_async_architecture
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME test_async_architecture COMMAND test_async_architecture)
+endif()
+
 # analysis sanity tests
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests
