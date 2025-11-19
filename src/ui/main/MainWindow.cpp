@@ -1247,13 +1247,15 @@ void MainWindow::showXYPlot()
         points.emplace_back(x, y);
     }
     
-    // Create XYPlotViewGraphs instance and set the data
+    // Create XYPlotViewGraphs instance
     auto view = std::make_unique<XYPlotViewGraphs>();
-    view->setTitle(tr("Sine Wave Test"));
-    view->setData(points);
+    view->setTitle(tr("XY Sine"));
     
     // Install the view into AnalysisWindow
     win->setView(std::move(view));
+    
+    // Set XY Sine feature to show parameter panel
+    win->setFeature("xy_sine");
     
     // Configure and show the window
     win->resize(900, 600);

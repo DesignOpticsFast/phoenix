@@ -2,14 +2,27 @@
 #include "ui/analysis/IAnalysisView.hpp"
 #include "ui/widgets/FeatureParameterPanel.hpp"
 #include "features/FeatureRegistry.hpp"
+#include "transport/LocalSocketChannel.hpp"
+#include "transport/TransportFactory.hpp"
+#include "app/LicenseManager.h"
+#include "plot/XYPlotViewGraphs.hpp"
 #include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QSplitter>
+#include <QPushButton>
+#include <QMessageBox>
+#include <QDebug>
+#include <QPointF>
+#include <vector>
+#include <memory>
 
 AnalysisWindow::AnalysisWindow(QWidget* parent)
     : QWidget(parent)
     , m_view(nullptr)
     , m_splitter(new QSplitter(Qt::Horizontal, this))
     , m_parameterPanel(nullptr)
+    , m_runButton(nullptr)
+    , m_panelLayout(nullptr)
 {
     QHBoxLayout* layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -58,27 +71,124 @@ void AnalysisWindow::setupParameterPanel(const QString& featureId)
         return;
     }
     
+    m_currentFeatureId = featureId;
+    
     // Remove existing parameter panel if any
     if (m_parameterPanel) {
-        int index = m_splitter->indexOf(m_parameterPanel);
+        int index = m_splitter->indexOf(m_parameterPanel->parentWidget());
         if (index >= 0) {
-            m_splitter->widget(index)->setParent(nullptr);
+            QWidget* panelWidget = m_splitter->widget(index);
+            m_splitter->removeWidget(panelWidget);
+            panelWidget->setParent(nullptr);
+            delete panelWidget;
         }
-        delete m_parameterPanel;
         m_parameterPanel = nullptr;
+        m_runButton = nullptr;
+        m_panelLayout = nullptr;
     }
     
-    // Create new parameter panel
-    m_parameterPanel = new FeatureParameterPanel(*desc, this);
-    m_splitter->addWidget(m_parameterPanel);
+    // Create container widget for parameter panel + Run button
+    QWidget* panelContainer = new QWidget(this);
+    m_panelLayout = new QVBoxLayout(panelContainer);
+    m_panelLayout->setContentsMargins(0, 0, 0, 0);
+    
+    // Create parameter panel
+    m_parameterPanel = new FeatureParameterPanel(*desc, panelContainer);
+    m_panelLayout->addWidget(m_parameterPanel);
+    
+    // Create Run button
+    m_runButton = new QPushButton(tr("Run"), panelContainer);
+    m_runButton->setMinimumHeight(32);
+    connect(m_runButton, &QPushButton::clicked, this, &AnalysisWindow::runFeature);
+    
+    // Add button in horizontal layout (aligned right)
+    QHBoxLayout* buttonLayout = new QHBoxLayout();
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(m_runButton);
+    m_panelLayout->addLayout(buttonLayout);
+    
+    panelContainer->setLayout(m_panelLayout);
+    m_splitter->addWidget(panelContainer);
     
     // Set splitter sizes (70% view, 30% params)
     m_splitter->setSizes({700, 300});
     
     // Set minimum widths
     m_splitter->setChildrenCollapsible(false);
-    if (m_parameterPanel) {
-        m_parameterPanel->setMinimumWidth(200);
+    panelContainer->setMinimumWidth(200);
+}
+
+void AnalysisWindow::runFeature()
+{
+    // Check license
+    LicenseManager* mgr = LicenseManager::instance();
+    if (mgr->currentState() != LicenseManager::LicenseState::NotConfigured &&
+        !mgr->hasFeature("feature_xy_plot")) {
+        QMessageBox::warning(this, tr("Feature Unavailable"),
+            tr("XY Sine computation requires a valid license with the 'feature_xy_plot' feature.\n\n"
+               "Please check your license status via Help → License..."));
+        return;
+    }
+    
+    // Validate parameters
+    if (!m_parameterPanel || !m_parameterPanel->isValid()) {
+        QStringList errors = m_parameterPanel->validationErrors();
+        QMessageBox::warning(this, tr("Invalid Parameters"),
+            tr("Please correct the following parameter errors:\n\n%1")
+            .arg(errors.join("\n")));
+        return;
+    }
+    
+    // Get parameters
+    QMap<QString, QVariant> params = m_parameterPanel->parameters();
+    
+    // Create LocalSocketChannel (explicitly, not from env)
+    auto client = std::make_unique<LocalSocketChannel>();
+    
+    // Connect
+    if (!client->connect()) {
+        QMessageBox::warning(this, tr("Connection Failed"),
+            tr("Failed to connect to Bedrock server.\n\n"
+               "Please ensure Bedrock is running and accessible via LocalSocket."));
+        return;
+    }
+    
+    // Compute XY Sine
+    XYSineResult result;
+    if (!client->computeXYSine(params, result)) {
+        QMessageBox::warning(this, tr("Computation Failed"),
+            tr("XY Sine computation failed.\n\n"
+               "Please check the server logs for details."));
+        client->disconnect();
+        return;
+    }
+    
+    client->disconnect();
+    
+    // Update plot view
+    if (result.x.size() != result.y.size()) {
+        qWarning() << "AnalysisWindow::runFeature: Mismatched x/y array sizes";
+        QMessageBox::warning(this, tr("Data Error"),
+            tr("Received invalid data from server (mismatched array sizes)."));
+        return;
+    }
+    
+    // Convert to QPointF vector
+    std::vector<QPointF> points;
+    points.reserve(result.x.size());
+    for (size_t i = 0; i < result.x.size(); ++i) {
+        points.emplace_back(result.x[i], result.y[i]);
+    }
+    
+    // Update XYPlotViewGraphs
+    XYPlotViewGraphs* xyView = dynamic_cast<XYPlotViewGraphs*>(m_view.get());
+    if (xyView) {
+        xyView->setData(points);
+        qDebug() << "AnalysisWindow::runFeature: Updated plot with" << points.size() << "points";
+    } else {
+        qWarning() << "AnalysisWindow::runFeature: Current view is not XYPlotViewGraphs";
+        QMessageBox::warning(this, tr("View Error"),
+            tr("Current view does not support XY data display."));
     }
 }
 

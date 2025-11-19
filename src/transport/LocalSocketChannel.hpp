@@ -3,10 +3,19 @@
 #include "TransportClient.hpp"
 #include <QString>
 #include <QStringList>
+#include <QVariant>
+#include <QMap>
 #include <memory>
+#include <vector>
 
 class QLocalSocket;
 class QByteArray;
+
+// Result structure for XY Sine computation
+struct XYSineResult {
+    std::vector<double> x;
+    std::vector<double> y;
+};
 
 class LocalSocketChannel : public TransportClient {
 public:
@@ -21,6 +30,10 @@ public:
     // Request server capabilities (round-trip test for WP2.B)
     // Returns true on success, false on failure. Logs errors internally.
     bool requestCapabilities(QStringList& features);
+    
+    // Compute XY Sine feature
+    // Returns true on success, false on failure. Logs errors internally.
+    bool computeXYSine(const QMap<QString, QVariant>& params, XYSineResult& outResult);
 
 private:
     QString socketName_;

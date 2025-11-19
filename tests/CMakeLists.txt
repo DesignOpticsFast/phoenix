@@ -221,6 +221,36 @@ if(BUILD_TESTING)
   add_test(NAME feature_parameter_panel_tests COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:feature_parameter_panel_tests>)
 endif()
 
+# XY Sine transport tests
+if(BUILD_TESTING)
+  add_executable(test_xysine_transport
+    test_xysine_transport.cpp
+  )
+
+  target_link_libraries(test_xysine_transport PRIVATE
+    phoenix_transport
+    phoenix_feature_registry
+    Qt6::Core
+    Qt6::Test
+  )
+
+  target_include_directories(test_xysine_transport
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  # Link Protobuf libraries (needed for transport)
+  if(HAVE_PROTOBUF)
+    if(TARGET protobuf::libprotobuf)
+      target_link_libraries(test_xysine_transport PRIVATE protobuf::libprotobuf)
+    else()
+      target_link_libraries(test_xysine_transport PRIVATE ${Protobuf_LIBRARIES})
+    endif()
+  endif()
+
+  add_test(NAME test_xysine_transport COMMAND test_xysine_transport)
+endif()
+
 # analysis sanity tests
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests
