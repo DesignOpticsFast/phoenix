@@ -81,7 +81,26 @@ void AnalysisWindow::setFeature(const QString& featureId)
     
     // Check if this feature should auto-run
     const FeatureDescriptor* desc = FeatureRegistry::instance().getFeature(featureId);
-    if (desc && desc->autoRunOnOpen() && !m_autoRunDone && m_view) {
+    if (!desc) {
+        return;  // Already handled in setupParameterPanel
+    }
+    
+    // Determine global analysis run mode
+    AnalysisRunMode globalMode = AnalysisRunMode::AutoRunOnOpen;
+    if (m_settings) {
+        globalMode = getAnalysisRunMode(*m_settings);
+    } else {
+        QSettings localSettings;
+        globalMode = getAnalysisRunMode(localSettings);
+    }
+    
+    // Combined decision: feature flag AND global preference AND conditions
+    bool shouldAutoRun = desc->autoRunOnOpen()
+                         && !m_autoRunDone
+                         && m_view
+                         && (globalMode == AnalysisRunMode::AutoRunOnOpen);
+    
+    if (shouldAutoRun) {
         // Schedule auto-run after UI is fully constructed
         // Use QueuedConnection to ensure event loop has processed setupParameterPanel
         QMetaObject::invokeMethod(this, "runFeature", Qt::QueuedConnection);
