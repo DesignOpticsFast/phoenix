@@ -177,6 +177,39 @@ PHOENIX_FORCE_WAYLAND=1 ./phoenix_app
 QT_QPA_PLATFORM=wayland ./phoenix_app
 ```
 
+## 🍎 macOS Platform Notes
+
+Phoenix builds as a native macOS app bundle (`Phoenix.app`). For detailed macOS build instructions, see [docs/MAC_DEVELOPMENT_ENVIRONMENT.md](docs/MAC_DEVELOPMENT_ENVIRONMENT.md) and [docs/build/phoenix_build.md](docs/build/phoenix_build.md).
+
+**Quick Start (macOS):**
+```bash
+# Clone and initialize
+git clone <repo-url>
+cd phoenix
+git submodule update --init --recursive
+
+# Generate app icon (required)
+./scripts/generate_macos_icon.sh
+
+# Build app-only (recommended for first build)
+mkdir -p build && cd build
+cmake -S .. -B . \
+  -DCMAKE_PREFIX_PATH=~/Qt/6.10.0/macos \
+  -DBUILD_TESTING=OFF \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo
+cmake --build . --target phoenix_app --parallel
+
+# Run
+open Phoenix.app
+```
+
+**Requirements:**
+- Qt 6.10.0 installed (typically at `~/Qt/6.10.0/macos`)
+- Xcode Command Line Tools
+- CMake 3.20+
+
+**Note:** libsodium (vendored) builds automatically and is required for licensing features. The vendored libsodium builds cleanly on macOS.
+
 ---
 
 ## ✅ Definition of Done (for Sprint 1)

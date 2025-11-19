@@ -34,6 +34,14 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 
 # ---- Qt packages (find these BEFORE defining targets) -----------------------
 # Qt Graphs replaces old Qt Charts; ensure the component list matches your code.
+
+# Helpful warning for macOS developers if CMAKE_PREFIX_PATH is not set
+if(APPLE)
+    if(NOT CMAKE_PREFIX_PATH AND NOT Qt6_DIR)
+        message(WARNING "CMAKE_PREFIX_PATH not set. On macOS, you probably want: -DCMAKE_PREFIX_PATH=/path/to/Qt/6.10.0/macos")
+    endif()
+endif()
+
 find_package(Qt6 6.10 REQUIRED COMPONENTS Widgets Concurrent Core Network Graphs GraphsWidgets QuickWidgets LinguistTools PrintSupport)
 
 # ---- QML Debugging: explicitly disable -------------------------------------
@@ -757,7 +765,12 @@ if (APPLE)
 
     # Guard for missing macOS icon
     if (NOT EXISTS "${APP_ICNS}")
-      message(FATAL_ERROR "Missing Phoenix.icns — run scripts/generate_macos_icon.sh on macOS.")
+      message(FATAL_ERROR
+        "Missing Phoenix.icns — required for macOS app bundle.\n"
+        "To generate the icon:\n"
+        "  1. Run: scripts/generate_macos_icon.sh\n"
+        "  2. Or manually create: resources/macos/Phoenix.icns\n"
+        "Expected location: ${APP_ICNS}")
     endif()
 
 elseif (WIN32)
