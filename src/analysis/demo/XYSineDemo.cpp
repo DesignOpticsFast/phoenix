@@ -2,6 +2,7 @@
 // This is a temporary path for Capo testing and MUST NOT become permanent.
 
 #include "XYSineDemo.hpp"
+#include "transport/LocalSocketChannel.hpp"  // For XYSineResult definition
 #include <cmath>
 #include <QDebug>
 
