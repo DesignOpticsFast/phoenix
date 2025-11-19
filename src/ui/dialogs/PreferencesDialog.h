@@ -11,6 +11,7 @@
 
 class EnvironmentPage;
 class LanguagePage;
+class AnalysisPage;
 class MainWindow;
 
 class PreferencesDialog : public QDialog
@@ -49,6 +50,7 @@ private:
     // Pages
     EnvironmentPage* m_environmentPage;
     LanguagePage* m_languagePage;
+    AnalysisPage* m_analysisPage;
     
     // MainWindow reference (for accessing settings and restart dialog)
     MainWindow* m_mainWindow = nullptr;

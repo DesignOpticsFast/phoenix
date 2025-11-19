@@ -1,6 +1,7 @@
 #include "PreferencesDialog.h"
 #include "EnvironmentPage.h"
 #include "LanguagePage.h"
+#include "AnalysisPage.h"
 #include "../main/MainWindow.h"
 #include "app/SettingsProvider.h"
 #include "app/SettingsKeys.h"
@@ -25,6 +26,7 @@ PreferencesDialog::PreferencesDialog(MainWindow* mainWindow, QWidget *parent)
     , m_applyButton(nullptr)
     , m_environmentPage(nullptr)
     , m_languagePage(nullptr)
+    , m_analysisPage(nullptr)
     , m_mainWindow(mainWindow)
     , m_settings(mainWindow->settingsProvider()->settings())
 {
@@ -63,6 +65,7 @@ void PreferencesDialog::setupUI()
     // Add categories
     m_categoryList->addItem(tr("Environment"));
     m_categoryList->addItem(tr("Language"));
+    m_categoryList->addItem(tr("Analysis"));
     // Future categories can be added here
     
     m_splitter->addWidget(m_categoryList);
@@ -78,6 +81,9 @@ void PreferencesDialog::setupUI()
     
     m_languagePage = new LanguagePage(m_settings, this);
     m_contentStack->addWidget(m_languagePage);
+    
+    m_analysisPage = new AnalysisPage(m_settings, this);
+    m_contentStack->addWidget(m_analysisPage);
     
     m_splitter->addWidget(m_contentStack);
     m_splitter->setSizes({200, 600}); // Set initial sizes
@@ -161,6 +167,9 @@ void PreferencesDialog::loadSettings()
     if (m_languagePage) {
         m_languagePage->loadSettings();
     }
+    if (m_analysisPage) {
+        m_analysisPage->loadSettings();
+    }
 }
 
 void PreferencesDialog::saveSettings()
@@ -174,5 +183,8 @@ void PreferencesDialog::saveSettings()
     }
     if (m_languagePage) {
         m_languagePage->saveSettings();
+    }
+    if (m_analysisPage) {
+        m_analysisPage->saveSettings();
     }
 }
