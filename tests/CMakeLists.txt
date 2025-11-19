@@ -203,6 +203,7 @@ endif()
 if(BUILD_TESTING)
   add_executable(feature_parameter_panel_tests
     feature_parameter_panel_tests.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/widgets/FeatureParameterPanel.cpp
   )
 
   target_link_libraries(feature_parameter_panel_tests PRIVATE
