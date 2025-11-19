@@ -32,5 +32,9 @@ private:
     QString m_featureId;
     QMap<QString, QVariant> m_params;
     std::atomic<bool> m_cancelRequested;
+    
+    // For cancel support
+    LocalSocketChannel* m_currentClient;
+    QString m_currentJobId;
 };
 

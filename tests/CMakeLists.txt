@@ -291,6 +291,27 @@ if(BUILD_TESTING)
   add_test(NAME test_analysis_progress COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysis_progress>)
 endif()
 
+# analysis cancel tests
+if(BUILD_TESTING)
+  add_executable(test_analysis_cancel
+    test_analysis_cancel.cpp
+  )
+
+  target_link_libraries(test_analysis_cancel PRIVATE
+    phoenix_analysis
+    phoenix_transport
+    Qt6::Core
+    Qt6::Test
+  )
+
+  target_include_directories(test_analysis_cancel
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME test_analysis_cancel COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysis_cancel>)
+endif()
+
 # analysis sanity tests
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests

@@ -25,6 +25,7 @@ AnalysisWindow::AnalysisWindow(QWidget* parent)
     , m_splitter(new QSplitter(Qt::Horizontal, this))
     , m_parameterPanel(nullptr)
     , m_runButton(nullptr)
+    , m_cancelButton(nullptr)
     , m_progressBar(nullptr)
     , m_panelLayout(nullptr)
     , m_workerThread(nullptr)
@@ -96,6 +97,7 @@ void AnalysisWindow::setupParameterPanel(const QString& featureId)
         }
         m_parameterPanel = nullptr;
         m_runButton = nullptr;
+        m_cancelButton = nullptr;
         m_panelLayout = nullptr;
     }
     
@@ -116,13 +118,19 @@ void AnalysisWindow::setupParameterPanel(const QString& featureId)
     m_progressBar->setVisible(false);
     m_panelLayout->addWidget(m_progressBar);
     
-    // Create Run button
+    // Create Cancel and Run buttons
+    m_cancelButton = new QPushButton(tr("Cancel"), panelContainer);
+    m_cancelButton->setMinimumHeight(32);
+    m_cancelButton->setVisible(false);
+    connect(m_cancelButton, &QPushButton::clicked, this, &AnalysisWindow::onCancelClicked);
+    
     m_runButton = new QPushButton(tr("Run"), panelContainer);
     m_runButton->setMinimumHeight(32);
     connect(m_runButton, &QPushButton::clicked, this, &AnalysisWindow::runFeature);
     
-    // Add button in horizontal layout (aligned right)
+    // Add buttons in horizontal layout (Cancel left, Run right)
     QHBoxLayout* buttonLayout = new QHBoxLayout();
+    buttonLayout->addWidget(m_cancelButton);
     buttonLayout->addStretch();
     buttonLayout->addWidget(m_runButton);
     m_panelLayout->addLayout(buttonLayout);
@@ -174,14 +182,19 @@ void AnalysisWindow::runFeature()
     connect(m_workerThread, &QThread::started, m_worker, &AnalysisWorker::run);
     connect(m_worker, &AnalysisWorker::progressChanged, this, &AnalysisWindow::onProgressChanged, Qt::QueuedConnection);
     connect(m_worker, &AnalysisWorker::finished, this, &AnalysisWindow::onWorkerFinished, Qt::QueuedConnection);
+    connect(m_worker, &AnalysisWorker::cancelled, this, &AnalysisWindow::onWorkerCancelled, Qt::QueuedConnection);
     
     // Cleanup connections
     connect(m_workerThread, &QThread::finished, m_worker, &QObject::deleteLater);
     connect(m_workerThread, &QThread::finished, m_workerThread, &QObject::deleteLater);
     
-    // Disable Run button and show progress bar
+    // Disable Run button, show Cancel button and progress bar
     if (m_runButton) {
         m_runButton->setEnabled(false);
+    }
+    if (m_cancelButton) {
+        m_cancelButton->setEnabled(true);
+        m_cancelButton->setVisible(true);
     }
     if (m_progressBar) {
         m_progressBar->setValue(0);
@@ -190,6 +203,39 @@ void AnalysisWindow::runFeature()
     
     // Start thread
     m_workerThread->start();
+}
+
+void AnalysisWindow::onCancelClicked()
+{
+    if (m_worker) {
+        m_worker->requestCancel();
+        // Disable Cancel button to prevent double-click spam
+        if (m_cancelButton) {
+            m_cancelButton->setEnabled(false);
+        }
+    }
+}
+
+void AnalysisWindow::onWorkerCancelled()
+{
+    // Hide progress bar and Cancel button
+    if (m_progressBar) {
+        m_progressBar->setVisible(false);
+    }
+    if (m_cancelButton) {
+        m_cancelButton->setVisible(false);
+        m_cancelButton->setEnabled(true);  // Re-enable for next run
+    }
+    
+    // Re-enable Run button
+    if (m_runButton) {
+        m_runButton->setEnabled(true);
+    }
+    
+    // Optionally show info message
+    // For WP3.5.3, we'll keep it minimal - just update UI state
+    
+    cleanupWorker();
 }
 
 void AnalysisWindow::onProgressChanged(const AnalysisProgress& progress)
@@ -202,9 +248,13 @@ void AnalysisWindow::onProgressChanged(const AnalysisProgress& progress)
 
 void AnalysisWindow::onWorkerFinished(bool success, const QVariant& result, const QString& error)
 {
-    // Hide progress bar
+    // Hide progress bar and Cancel button
     if (m_progressBar) {
         m_progressBar->setVisible(false);
+    }
+    if (m_cancelButton) {
+        m_cancelButton->setVisible(false);
+        m_cancelButton->setEnabled(true);  // Re-enable for next run
     }
     
     // Re-enable Run button

@@ -28,7 +28,9 @@ public:
 
 private slots:
     void runFeature();
+    void onCancelClicked();
     void onWorkerFinished(bool success, const QVariant& result, const QString& error);
+    void onWorkerCancelled();
     void onProgressChanged(const AnalysisProgress& progress);
 
 private:
@@ -39,6 +41,7 @@ private:
     QSplitter* m_splitter;
     FeatureParameterPanel* m_parameterPanel;
     QPushButton* m_runButton;
+    QPushButton* m_cancelButton;
     QProgressBar* m_progressBar;
     QVBoxLayout* m_panelLayout;
     QString m_currentFeatureId;

@@ -263,6 +263,9 @@ bool LocalSocketChannel::computeXYSine(const QMap<QString, QVariant>& params,
         // Generate unique job ID
         QString jobId = QUuid::createUuid().toString(QUuid::WithoutBraces);
         
+        // Store job ID for cancel access
+        m_currentJobId = jobId;
+        
         // Build ComputeSpec
         ComputeSpec spec;
         spec.set_feature_id("xy_sine");
@@ -498,6 +501,49 @@ bool LocalSocketChannel::computeXYSine(const QMap<QString, QVariant>& params,
         
     } catch (const std::exception& e) {
         qWarning() << "LocalSocketChannel::computeXYSine: Exception:" << e.what();
+        return false;
+    }
+}
+
+bool LocalSocketChannel::cancelJob(const QString& jobId)
+{
+    if (!isConnected()) {
+        qWarning() << "LocalSocketChannel::cancelJob: Not connected";
+        return false;
+    }
+    
+    // Use provided jobId or fall back to current job ID
+    QString targetJobId = jobId.isEmpty() ? m_currentJobId : jobId;
+    
+    if (targetJobId.isEmpty()) {
+        qWarning() << "LocalSocketChannel::cancelJob: No job ID available";
+        return false;
+    }
+    
+    try {
+        // Build Cancel message
+        Cancel cancelMsg;
+        cancelMsg.mutable_job_id()->set_id(targetJobId.toStdString());
+        
+        // Serialize
+        std::string serialized;
+        if (!cancelMsg.SerializeToString(&serialized)) {
+            qWarning() << "LocalSocketChannel::cancelJob: Failed to serialize Cancel";
+            return false;
+        }
+        
+        QByteArray cancelData(serialized.data(), static_cast<int>(serialized.size()));
+        
+        // Send Cancel message
+        if (!sendMessage(cancelData)) {
+            qWarning() << "LocalSocketChannel::cancelJob: Failed to send Cancel";
+            return false;
+        }
+        
+        qDebug() << "LocalSocketChannel::cancelJob: Sent cancel for job" << targetJobId;
+        return true;
+    } catch (const std::exception& e) {
+        qWarning() << "LocalSocketChannel::cancelJob: Exception:" << e.what();
         return false;
     }
 }
