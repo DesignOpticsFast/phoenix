@@ -12,13 +12,14 @@ class QVBoxLayout;
 class QProgressBar;
 class QThread;
 class QTimer;
+class QSettings;
 class AnalysisWorker;
 
 class AnalysisWindow : public QWidget {
     Q_OBJECT
 
 public:
-    explicit AnalysisWindow(QWidget* parent = nullptr);
+    explicit AnalysisWindow(QWidget* parent = nullptr, QSettings* settings = nullptr);
     ~AnalysisWindow() override;
 
     void setView(std::unique_ptr<IAnalysisView> view);
@@ -58,5 +59,8 @@ private:
     
     // Auto-run tracking
     bool m_autoRunDone = false;  // Track if auto-run has been performed for current feature
+    
+    // Settings access (optional, for tests)
+    QSettings* m_settings = nullptr;
 };
 

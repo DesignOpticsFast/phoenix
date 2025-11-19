@@ -2,11 +2,14 @@
 #include "ui/analysis/AnalysisWindow.hpp"
 #include "features/FeatureRegistry.hpp"
 #include "features/FeatureDescriptor.hpp"
+#include "app/AnalysisRunMode.hpp"
 #include "plot/XYPlotViewGraphs.hpp"
 #include <QSignalSpy>
 #include <QElapsedTimer>
 #include <QApplication>
 #include <QThread>
+#include <QSettings>
+#include <QTemporaryFile>
 
 class AnalysisWindowAutoRunTests : public QObject {
     Q_OBJECT
@@ -17,6 +20,9 @@ private slots:
     void testAutoRunRunsOnlyOnce();
     void testAutoRunResetsOnFeatureChange();
     void testAutoRunRequiresView();
+    void testAutoRunRespectsGlobalMode_AutoRun();
+    void testAutoRunRespectsGlobalMode_ShowOptionsFirst();
+    void testAutoRunDefaultModeIsAuto();
 };
 
 void AnalysisWindowAutoRunTests::testAutoRunFlagRespected()

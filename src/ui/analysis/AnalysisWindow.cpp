@@ -6,6 +6,7 @@
 #include "analysis/AnalysisProgress.hpp"
 #include "transport/LocalSocketChannel.hpp"
 #include "app/LicenseManager.h"
+#include "app/AnalysisRunMode.hpp"
 #include "plot/XYPlotViewGraphs.hpp"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -16,12 +17,13 @@
 #include <QTimer>
 #include <QThread>
 #include <QMetaObject>
+#include <QSettings>
 #include <QDebug>
 #include <QPointF>
 #include <vector>
 #include <memory>
 
-AnalysisWindow::AnalysisWindow(QWidget* parent)
+AnalysisWindow::AnalysisWindow(QWidget* parent, QSettings* settings)
     : QWidget(parent)
     , m_view(nullptr)
     , m_splitter(new QSplitter(Qt::Horizontal, this))
@@ -33,6 +35,7 @@ AnalysisWindow::AnalysisWindow(QWidget* parent)
     , m_workerThread(nullptr)
     , m_worker(nullptr)
     , m_timeoutTimer(nullptr)
+    , m_settings(settings)
 {
     QHBoxLayout* layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
