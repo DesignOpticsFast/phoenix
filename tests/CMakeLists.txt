@@ -137,6 +137,48 @@ if(BUILD_TESTING AND PHX_WITH_LIBSODIUM)
   add_test(NAME license_manager_tests COMMAND license_manager_tests)
 endif()
 
+# echo dialog tests
+if(BUILD_TESTING AND PHX_WITH_LIBSODIUM)
+  add_executable(echo_dialog_tests
+    echo_dialog_tests.cpp
+  )
+
+  target_link_libraries(echo_dialog_tests PRIVATE
+    phoenix_transport
+    phoenix_license_manager
+    phoenix_license
+    phoenix_canonical_json
+    phoenix_libsodium
+    Qt6::Core
+    Qt6::Test
+  )
+
+  target_include_directories(echo_dialog_tests
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  # Link Protobuf libraries (needed for transport)
+  if(HAVE_PROTOBUF)
+    if(TARGET protobuf::libprotobuf)
+      target_link_libraries(echo_dialog_tests PRIVATE protobuf::libprotobuf)
+    else()
+      target_link_libraries(echo_dialog_tests PRIVATE ${Protobuf_LIBRARIES})
+    endif()
+  endif()
+  
+  # Link gRPC libraries if available
+  if(HAVE_PROTOBUF AND HAVE_GRPC)
+    if(TARGET gRPC::grpc++)
+      target_link_libraries(echo_dialog_tests PRIVATE gRPC::grpc++)
+    else()
+      target_link_libraries(echo_dialog_tests PRIVATE ${gRPC_LIBRARIES})
+    endif()
+  endif()
+
+  add_test(NAME echo_dialog_tests COMMAND echo_dialog_tests)
+endif()
+
 # analysis sanity tests
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests

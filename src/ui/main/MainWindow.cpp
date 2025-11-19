@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "../dialogs/PreferencesDialog.h"
 #include "../dialogs/LicenseDialog.h"
+#include "../dialogs/EchoTestDialog.h"
 #include "../themes/ThemeManager.h"
 #include "../icons/IconProvider.h"
 #include "../icons/PhxLogging.h"
@@ -102,6 +103,7 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     , m_saveAction(nullptr)
     , m_saveAsAction(nullptr)
     , m_preferencesAction(nullptr)
+    , m_testEchoAction(nullptr)
     , m_exitAction(nullptr)
     , m_lensInspectorAction(nullptr)
     , m_systemViewerAction(nullptr)
@@ -402,11 +404,20 @@ QMenu* MainWindow::createToolsMenu()
 {
     QMenu* toolsMenu = new QMenu(tr("&Tools"), this);
     
-    // Add tools actions here in the future
     QAction* settingsAction = new QAction(tr("&Settings"), this);
     settingsAction->setStatusTip(tr("Open application settings"));
     connect(settingsAction, &QAction::triggered, this, &MainWindow::showPreferences);
     toolsMenu->addAction(settingsAction);
+    
+    toolsMenu->addSeparator();
+    
+    m_testEchoAction = new QAction(tr("Test Bedrock Connection…"), this);
+    m_testEchoAction->setStatusTip(tr("Test connectivity to Bedrock server"));
+    connect(m_testEchoAction, &QAction::triggered, this, &MainWindow::showEchoTestDialog);
+    toolsMenu->addAction(m_testEchoAction);
+    
+    // Gate Echo Test action based on license
+    updateActionLicenseState(m_testEchoAction, "feature_echo_test");
     
     return toolsMenu;
 }
@@ -1758,6 +1769,15 @@ void MainWindow::showLicense()
     LicenseDialog* dialog = new LicenseDialog(this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->exec();
+}
+
+void MainWindow::showEchoTestDialog()
+{
+    if (!m_echoTestDialog) {
+        m_echoTestDialog = new EchoTestDialog(this);
+        m_echoTestDialog->setAttribute(Qt::WA_DeleteOnClose);
+    }
+    m_echoTestDialog->exec();
 }
 
 void MainWindow::updateActionLicenseState(QAction* action, const QString& feature)

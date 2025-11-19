@@ -20,6 +20,7 @@ class QWidget;
 QT_END_NAMESPACE
 
 class PreferencesDialog;
+class EchoTestDialog;
 class ThemeManager;
 
 class MainWindow : public QMainWindow
@@ -71,6 +72,7 @@ private slots:
     void show2DPlot();
     
     // Tools menu actions
+    void showEchoTestDialog();
     
     // Help menu actions
     void showAbout();
@@ -164,6 +166,7 @@ private:
     QAction* m_saveAction;
     QAction* m_saveAsAction;
     QAction* m_preferencesAction;
+    QAction* m_testEchoAction;
     QAction* m_exitAction;
     
     QAction* m_lensInspectorAction;
@@ -179,6 +182,7 @@ private:
     
     // Dialogs (QPointer auto-nulls when dialog is deleted)
     QPointer<PreferencesDialog> m_preferencesDialog;
+    QPointer<class EchoTestDialog> m_echoTestDialog;
     
     // Settings and state
     QPointer<class SettingsProvider> m_settingsProvider;
