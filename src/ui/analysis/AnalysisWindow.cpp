@@ -108,6 +108,14 @@ void AnalysisWindow::setupParameterPanel(const QString& featureId)
     m_parameterPanel = new FeatureParameterPanel(*desc, panelContainer);
     m_panelLayout->addWidget(m_parameterPanel);
     
+    // Create progress bar (initially hidden)
+    m_progressBar = new QProgressBar(panelContainer);
+    m_progressBar->setRange(0, 100);
+    m_progressBar->setValue(0);
+    m_progressBar->setTextVisible(true);
+    m_progressBar->setVisible(false);
+    m_panelLayout->addWidget(m_progressBar);
+    
     // Create Run button
     m_runButton = new QPushButton(tr("Run"), panelContainer);
     m_runButton->setMinimumHeight(32);
