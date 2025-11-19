@@ -7,8 +7,9 @@ AnalysisWorker::AnalysisWorker(QObject* parent)
     : QObject(parent)
     , m_cancelRequested(false)
 {
-    // Register XYSineResult meta-type for signal/slot passing
+    // Register meta-types for signal/slot passing
     qRegisterMetaType<XYSineResult>("XYSineResult");
+    qRegisterMetaType<AnalysisProgress>("AnalysisProgress");
 }
 
 AnalysisWorker::~AnalysisWorker() = default;
@@ -43,6 +44,9 @@ void AnalysisWorker::executeCompute()
 {
     // Handle "noop" feature for tests
     if (m_featureId == "noop") {
+        // Emit progress updates
+        emit progressChanged(AnalysisProgress(0.0, tr("Starting...")));
+        emit progressChanged(AnalysisProgress(100.0, tr("Done")));
         // Return immediately with dummy success
         emit finished(true, QVariant(), QString());
         return;
@@ -62,6 +66,9 @@ void AnalysisWorker::executeCompute()
         // Create LocalSocketChannel
         auto client = std::make_unique<LocalSocketChannel>();
         
+        // Emit initial progress
+        emit progressChanged(AnalysisProgress(0.0, tr("Connecting...")));
+        
         // Connect
         if (!client->connect()) {
             emit finished(false, QVariant(),
@@ -78,9 +85,18 @@ void AnalysisWorker::executeCompute()
             return;
         }
         
+        // Emit progress before compute
+        emit progressChanged(AnalysisProgress(25.0, tr("Computing...")));
+        
+        // Set up progress callback
+        auto progressCallback = [this](double percent, const QString& status) {
+            AnalysisProgress progress(percent, status);
+            emit progressChanged(progress);
+        };
+        
         // Compute XY Sine
         XYSineResult result;
-        if (!client->computeXYSine(m_params, result)) {
+        if (!client->computeXYSine(m_params, result, progressCallback)) {
             client->disconnect();
             emit finished(false, QVariant(),
                 tr("XY Sine computation failed.\n\n"
@@ -96,6 +112,9 @@ void AnalysisWorker::executeCompute()
                 tr("Received invalid data from server (mismatched array sizes)."));
             return;
         }
+        
+        // Emit final progress
+        emit progressChanged(AnalysisProgress(100.0, tr("Done")));
         
         // Emit success with result
         emit finished(true, QVariant::fromValue(result), QString());

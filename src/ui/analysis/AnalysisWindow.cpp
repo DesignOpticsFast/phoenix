@@ -3,6 +3,7 @@
 #include "ui/widgets/FeatureParameterPanel.hpp"
 #include "features/FeatureRegistry.hpp"
 #include "analysis/AnalysisWorker.hpp"
+#include "analysis/AnalysisProgress.hpp"
 #include "transport/LocalSocketChannel.hpp"
 #include "app/LicenseManager.h"
 #include "plot/XYPlotViewGraphs.hpp"
@@ -10,6 +11,7 @@
 #include <QVBoxLayout>
 #include <QSplitter>
 #include <QPushButton>
+#include <QProgressBar>
 #include <QMessageBox>
 #include <QThread>
 #include <QDebug>
@@ -23,6 +25,7 @@ AnalysisWindow::AnalysisWindow(QWidget* parent)
     , m_splitter(new QSplitter(Qt::Horizontal, this))
     , m_parameterPanel(nullptr)
     , m_runButton(nullptr)
+    , m_progressBar(nullptr)
     , m_panelLayout(nullptr)
     , m_workerThread(nullptr)
     , m_worker(nullptr)
@@ -32,8 +35,9 @@ AnalysisWindow::AnalysisWindow(QWidget* parent)
     layout->addWidget(m_splitter);
     setLayout(layout);
     
-    // Register XYSineResult meta-type for signal/slot passing
+    // Register meta-types for signal/slot passing
     qRegisterMetaType<XYSineResult>("XYSineResult");
+    qRegisterMetaType<AnalysisProgress>("AnalysisProgress");
 }
 
 AnalysisWindow::~AnalysisWindow() = default;
@@ -160,23 +164,41 @@ void AnalysisWindow::runFeature()
     
     // Connect signals (use QueuedConnection for cross-thread safety)
     connect(m_workerThread, &QThread::started, m_worker, &AnalysisWorker::run);
+    connect(m_worker, &AnalysisWorker::progressChanged, this, &AnalysisWindow::onProgressChanged, Qt::QueuedConnection);
     connect(m_worker, &AnalysisWorker::finished, this, &AnalysisWindow::onWorkerFinished, Qt::QueuedConnection);
     
     // Cleanup connections
     connect(m_workerThread, &QThread::finished, m_worker, &QObject::deleteLater);
     connect(m_workerThread, &QThread::finished, m_workerThread, &QObject::deleteLater);
     
-    // Disable Run button
+    // Disable Run button and show progress bar
     if (m_runButton) {
         m_runButton->setEnabled(false);
+    }
+    if (m_progressBar) {
+        m_progressBar->setValue(0);
+        m_progressBar->setVisible(true);
     }
     
     // Start thread
     m_workerThread->start();
 }
 
+void AnalysisWindow::onProgressChanged(const AnalysisProgress& progress)
+{
+    if (m_progressBar) {
+        m_progressBar->setValue(static_cast<int>(progress.progressPercent));
+        m_progressBar->setToolTip(progress.status);
+    }
+}
+
 void AnalysisWindow::onWorkerFinished(bool success, const QVariant& result, const QString& error)
 {
+    // Hide progress bar
+    if (m_progressBar) {
+        m_progressBar->setVisible(false);
+    }
+    
     // Re-enable Run button
     if (m_runButton) {
         m_runButton->setEnabled(true);

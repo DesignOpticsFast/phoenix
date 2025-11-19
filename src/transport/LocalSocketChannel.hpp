@@ -7,6 +7,7 @@
 #include <QMap>
 #include <memory>
 #include <vector>
+#include <functional>
 
 class QLocalSocket;
 class QByteArray;
@@ -35,7 +36,10 @@ public:
     
     // Compute XY Sine feature
     // Returns true on success, false on failure. Logs errors internally.
-    bool computeXYSine(const QMap<QString, QVariant>& params, XYSineResult& outResult);
+    // progressCallback: Optional callback for progress updates (progress_pct, status)
+    bool computeXYSine(const QMap<QString, QVariant>& params, 
+                       XYSineResult& outResult,
+                       std::function<void(double, const QString&)> progressCallback = nullptr);
 
 private:
     QString socketName_;

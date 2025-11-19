@@ -271,6 +271,26 @@ if(BUILD_TESTING)
   add_test(NAME test_async_architecture COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_async_architecture>)
 endif()
 
+# analysis progress tests
+if(BUILD_TESTING)
+  add_executable(test_analysis_progress
+    test_analysis_progress.cpp
+  )
+
+  target_link_libraries(test_analysis_progress PRIVATE
+    phoenix_analysis
+    Qt6::Core
+    Qt6::Test
+  )
+
+  target_include_directories(test_analysis_progress
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME test_analysis_progress COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysis_progress>)
+endif()
+
 # analysis sanity tests
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests

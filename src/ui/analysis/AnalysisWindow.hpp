@@ -8,6 +8,7 @@ class QSplitter;
 class FeatureParameterPanel;
 class QPushButton;
 class QVBoxLayout;
+class QProgressBar;
 class QThread;
 class AnalysisWorker;
 
@@ -27,6 +28,7 @@ public:
 private slots:
     void runFeature();
     void onWorkerFinished(bool success, const QVariant& result, const QString& error);
+    void onProgressChanged(const AnalysisProgress& progress);
 
 private:
     void setupParameterPanel(const QString& featureId);
@@ -36,6 +38,7 @@ private:
     QSplitter* m_splitter;
     FeatureParameterPanel* m_parameterPanel;
     QPushButton* m_runButton;
+    QProgressBar* m_progressBar;
     QVBoxLayout* m_panelLayout;
     QString m_currentFeatureId;
     

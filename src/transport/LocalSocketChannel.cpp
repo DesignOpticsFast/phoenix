@@ -250,7 +250,9 @@ bool LocalSocketChannel::requestCapabilities(QStringList& features) {
     }
 }
 
-bool LocalSocketChannel::computeXYSine(const QMap<QString, QVariant>& params, XYSineResult& outResult)
+bool LocalSocketChannel::computeXYSine(const QMap<QString, QVariant>& params, 
+                                       XYSineResult& outResult,
+                                       std::function<void(double, const QString&)> progressCallback)
 {
     if (!isConnected()) {
         qWarning() << "LocalSocketChannel::computeXYSine: Not connected";
@@ -387,6 +389,7 @@ bool LocalSocketChannel::computeXYSine(const QMap<QString, QVariant>& params, XY
         std::map<int, QByteArray> chunkMap;  // chunk_index -> data
         
         // Read chunks until we have all of them
+        // Also handle Progress messages if callback is provided
         while (true) {
             // Wait for next message
             timeoutTimer.setInterval(5000);  // 5 second timeout per chunk
@@ -401,14 +404,28 @@ bool LocalSocketChannel::computeXYSine(const QMap<QString, QVariant>& params, XY
                 break;
             }
             
-            QByteArray chunkData = readMessage();
-            if (chunkData.isEmpty()) {
+            QByteArray messageData = readMessage();
+            if (messageData.isEmpty()) {
                 break;
+            }
+            
+            // Try to parse as Progress first (if callback is provided)
+            if (progressCallback) {
+                Progress progressMsg;
+                if (progressMsg.ParseFromArray(messageData.data(), messageData.size())) {
+                    // Verify job ID matches
+                    if (QString::fromStdString(progressMsg.job_id().id()) == jobId) {
+                        // Call progress callback
+                        progressCallback(progressMsg.progress_pct(), 
+                                       QString::fromStdString(progressMsg.status()));
+                        continue;  // Continue to next message
+                    }
+                }
             }
             
             // Try to parse as DataChunk
             DataChunk chunk;
-            if (chunk.ParseFromArray(chunkData.data(), chunkData.size())) {
+            if (chunk.ParseFromArray(messageData.data(), messageData.size())) {
                 // Verify job ID matches
                 if (QString::fromStdString(chunk.job_id().id()) != jobId) {
                     qWarning() << "LocalSocketChannel::computeXYSine: Received chunk for different job";
@@ -420,12 +437,19 @@ bool LocalSocketChannel::computeXYSine(const QMap<QString, QVariant>& params, XY
                 expectedChunks = chunk.total_chunks();
                 receivedChunks++;
                 
+                // Emit progress based on chunks received (if no Progress messages received)
+                if (progressCallback && expectedChunks > 0) {
+                    double chunkProgress = (receivedChunks * 100.0) / expectedChunks;
+                    progressCallback(chunkProgress, tr("Receiving data... (%1/%2)")
+                                    .arg(receivedChunks).arg(expectedChunks));
+                }
+                
                 // Check if we have all chunks
                 if (receivedChunks >= expectedChunks) {
                     break;
                 }
             } else {
-                // Not a DataChunk, might be something else - break
+                // Not a DataChunk or Progress, might be something else - break
                 break;
             }
         }

@@ -5,6 +5,7 @@
 #include <QVariant>
 #include <QMap>
 #include <atomic>
+#include "AnalysisProgress.hpp"
 
 class AnalysisWorker : public QObject {
     Q_OBJECT
@@ -17,12 +18,13 @@ public:
 
 public slots:
     void run();  // Executes compute in worker thread
-    void requestCancel();  // Placeholder for WP3.5.2
+    void requestCancel();  // Placeholder for WP3.5.3
 
 signals:
     void started();
+    void progressChanged(const AnalysisProgress& progress);
     void finished(bool success, const QVariant& result, const QString& error);
-    void cancelled();  // Placeholder for WP3.5.2
+    void cancelled();  // Placeholder for WP3.5.3
 
 private:
     void executeCompute();
