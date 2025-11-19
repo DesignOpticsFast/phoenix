@@ -55,5 +55,8 @@ private:
     // Timeout handling
     QTimer* m_timeoutTimer;
     static constexpr int DEFAULT_ANALYSIS_TIMEOUT_SEC = 30;
+    
+    // Auto-run tracking
+    bool m_autoRunDone = false;  // Track if auto-run has been performed for current feature
 };
 

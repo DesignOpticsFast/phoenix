@@ -334,6 +334,28 @@ if(BUILD_TESTING)
   add_test(NAME test_analysis_timeout COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysis_timeout>)
 endif()
 
+# analysis window auto-run tests
+if(BUILD_TESTING)
+  add_executable(test_analysiswindow_autorun
+    test_analysiswindow_autorun.cpp
+  )
+
+  target_link_libraries(test_analysiswindow_autorun PRIVATE
+    phoenix_analysis
+    phoenix_feature_registry
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Test
+  )
+
+  target_include_directories(test_analysiswindow_autorun
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME test_analysiswindow_autorun COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysiswindow_autorun>)
+endif()
+
 # analysis sanity tests
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests

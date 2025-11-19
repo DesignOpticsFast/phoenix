@@ -74,6 +74,15 @@ IAnalysisView* AnalysisWindow::view() const {
 void AnalysisWindow::setFeature(const QString& featureId)
 {
     setupParameterPanel(featureId);
+    
+    // Check if this feature should auto-run
+    const FeatureDescriptor* desc = FeatureRegistry::instance().getFeature(featureId);
+    if (desc && desc->autoRunOnOpen() && !m_autoRunDone && m_view) {
+        // Schedule auto-run after UI is fully constructed
+        // Use QueuedConnection to ensure event loop has processed setupParameterPanel
+        QMetaObject::invokeMethod(this, "runFeature", Qt::QueuedConnection);
+        m_autoRunDone = true;  // Mark as done to prevent multiple auto-runs
+    }
 }
 
 void AnalysisWindow::setupParameterPanel(const QString& featureId)
@@ -85,6 +94,7 @@ void AnalysisWindow::setupParameterPanel(const QString& featureId)
     }
     
     m_currentFeatureId = featureId;
+    m_autoRunDone = false;  // Reset auto-run flag when feature changes
     
     // Remove existing parameter panel if any
     if (m_parameterPanel) {
