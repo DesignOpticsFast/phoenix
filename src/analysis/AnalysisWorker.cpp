@@ -46,6 +46,13 @@ void AnalysisWorker::requestCancel()
     }
 }
 
+// Check if demo mode is enabled (PHOENIX_DEMO_MODE=1)
+static bool isDemoModeEnabled()
+{
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    return env.value("PHOENIX_DEMO_MODE") == "1";
+}
+
 void AnalysisWorker::executeCompute()
 {
     // Handle "noop" feature for tests
@@ -95,6 +102,7 @@ void AnalysisWorker::executeCompute()
     // Handle "xy_sine" feature
     if (m_featureId == "xy_sine") {
         // Check license (in worker thread - this is OK for LicenseManager)
+        // License check applies even in demo mode - licensing is core, not optional
         LicenseManager* mgr = LicenseManager::instance();
         if (mgr->currentState() != LicenseManager::LicenseState::NotConfigured &&
             !mgr->hasFeature("feature_xy_plot")) {
@@ -103,6 +111,52 @@ void AnalysisWorker::executeCompute()
             return;
         }
         
+        // TODO(Sprint 4.4): Demo mode is temporary for Mac testing - remove once permanent solution exists
+        // Check if demo mode is enabled (PHOENIX_DEMO_MODE=1)
+        if (isDemoModeEnabled()) {
+            // Local compute path (demo mode)
+            emit progressChanged(AnalysisProgress(0.0, tr("Computing locally...")));
+            
+            // Check for cancel before compute
+            if (m_cancelRequested.load()) {
+                emit cancelled();
+                return;
+            }
+            
+            // Compute locally using demo helper
+            XYSineResult result;
+            if (!XYSineDemo::compute(m_params, result)) {
+                emit finished(false, QVariant(),
+                    tr("Local XY Sine computation failed."));
+                return;
+            }
+            
+            // Check for cancel after compute
+            if (m_cancelRequested.load()) {
+                emit cancelled();
+                return;
+            }
+            
+            // Emit progress
+            emit progressChanged(AnalysisProgress(50.0, tr("Processing...")));
+            
+            // Small delay to show progress (local compute is very fast)
+            QThread::msleep(10);
+            
+            // Check for cancel before emitting finished
+            if (m_cancelRequested.load()) {
+                emit cancelled();
+                return;
+            }
+            
+            emit progressChanged(AnalysisProgress(100.0, tr("Done")));
+            
+            // Emit success with result
+            emit finished(true, QVariant::fromValue(result), QString());
+            return;
+        }
+        
+        // Original Bedrock path (unchanged when demo mode is off)
         // Create LocalSocketChannel
         auto client = std::make_unique<LocalSocketChannel>();
         m_currentClient = client.get();
