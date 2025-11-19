@@ -9,9 +9,6 @@ Item {
         objectName: "graphsView"
         anchors.fill: parent
         
-        // Enable interactions (pan/zoom/resize)
-        interactive: true
-        
         // Value axes for X and Y
         ValueAxis {
             id: axisX
