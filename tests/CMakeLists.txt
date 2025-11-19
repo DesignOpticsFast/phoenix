@@ -179,6 +179,26 @@ if(BUILD_TESTING AND PHX_WITH_LIBSODIUM)
   add_test(NAME echo_dialog_tests COMMAND echo_dialog_tests)
 endif()
 
+# feature registry tests
+if(BUILD_TESTING)
+  add_executable(feature_registry_tests
+    feature_registry_tests.cpp
+  )
+
+  target_link_libraries(feature_registry_tests PRIVATE
+    phoenix_feature_registry
+    Qt6::Core
+    Qt6::Test
+  )
+
+  target_include_directories(feature_registry_tests
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME feature_registry_tests COMMAND feature_registry_tests)
+endif()
+
 # analysis sanity tests
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests

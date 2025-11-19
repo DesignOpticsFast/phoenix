@@ -7,6 +7,7 @@
 #include "app/LocaleInit.hpp"
 #include "app/SettingsProvider.h"
 #include "app/LicenseManager.h"
+#include "features/FeatureRegistry.hpp"
 #include "version.h"
 #include <QApplication>
 #include <QTimer>
@@ -124,6 +125,9 @@ int main(int argc, char** argv) {
     
     // Initialize LicenseManager (load license if env vars are set)
     LicenseManager::instance()->initialize();
+    
+    // Register default features
+    FeatureRegistry::instance().registerDefaultFeatures();
     
     // Create main window (but don't show it yet)
     MainWindow mainWindow(settingsProvider);
