@@ -440,8 +440,9 @@ bool LocalSocketChannel::computeXYSine(const QMap<QString, QVariant>& params,
                 // Emit progress based on chunks received (if no Progress messages received)
                 if (progressCallback && expectedChunks > 0) {
                     double chunkProgress = (receivedChunks * 100.0) / expectedChunks;
-                    progressCallback(chunkProgress, tr("Receiving data... (%1/%2)")
-                                    .arg(receivedChunks).arg(expectedChunks));
+                    QString status = QString("Receiving data... (%1/%2)")
+                                    .arg(receivedChunks).arg(expectedChunks);
+                    progressCallback(chunkProgress, status);
                 }
                 
                 // Check if we have all chunks
