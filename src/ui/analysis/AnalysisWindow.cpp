@@ -30,6 +30,8 @@ AnalysisWindow::AnalysisWindow(QWidget* parent)
     , m_panelLayout(nullptr)
     , m_workerThread(nullptr)
     , m_worker(nullptr)
+    , m_timeoutTimer(nullptr)
+    , m_timeoutTimer(nullptr)
 {
     QHBoxLayout* layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -218,6 +220,11 @@ void AnalysisWindow::onCancelClicked()
 
 void AnalysisWindow::onWorkerCancelled()
 {
+    // Stop timeout timer
+    if (m_timeoutTimer && m_timeoutTimer->isActive()) {
+        m_timeoutTimer->stop();
+    }
+    
     // Hide progress bar and Cancel button
     if (m_progressBar) {
         m_progressBar->setVisible(false);
@@ -248,6 +255,11 @@ void AnalysisWindow::onProgressChanged(const AnalysisProgress& progress)
 
 void AnalysisWindow::onWorkerFinished(bool success, const QVariant& result, const QString& error)
 {
+    // Stop timeout timer
+    if (m_timeoutTimer && m_timeoutTimer->isActive()) {
+        m_timeoutTimer->stop();
+    }
+    
     // Hide progress bar and Cancel button
     if (m_progressBar) {
         m_progressBar->setVisible(false);

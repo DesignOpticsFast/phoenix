@@ -11,6 +11,7 @@ class QPushButton;
 class QVBoxLayout;
 class QProgressBar;
 class QThread;
+class QTimer;
 class AnalysisWorker;
 
 class AnalysisWindow : public QWidget {
@@ -29,6 +30,7 @@ public:
 private slots:
     void runFeature();
     void onCancelClicked();
+    void onTimeout();
     void onWorkerFinished(bool success, const QVariant& result, const QString& error);
     void onWorkerCancelled();
     void onProgressChanged(const AnalysisProgress& progress);
@@ -49,5 +51,9 @@ private:
     // Worker thread infrastructure
     QThread* m_workerThread;
     AnalysisWorker* m_worker;
+    
+    // Timeout handling
+    QTimer* m_timeoutTimer;
+    static constexpr int DEFAULT_ANALYSIS_TIMEOUT_SEC = 30;
 };
 

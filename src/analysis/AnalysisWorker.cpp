@@ -58,6 +58,40 @@ void AnalysisWorker::executeCompute()
         return;
     }
     
+    // Handle "noop_sleepy" feature for timeout tests
+    if (m_featureId == "noop_sleepy") {
+        // Sleepy version for timeout tests - sleeps for a configurable duration
+        emit progressChanged(AnalysisProgress(0.0, tr("Sleeping...")));
+        
+        // Check for cancel before sleep
+        if (m_cancelRequested.load()) {
+            emit cancelled();
+            return;
+        }
+        
+        // Sleep for test duration (default 1000ms, can be overridden via params)
+        int sleepMs = 1000;
+        if (m_params.contains("sleep_ms")) {
+            bool ok;
+            int val = m_params.value("sleep_ms").toInt(&ok);
+            if (ok && val > 0) {
+                sleepMs = val;
+            }
+        }
+        
+        QThread::msleep(sleepMs);
+        
+        // Check for cancel after sleep
+        if (m_cancelRequested.load()) {
+            emit cancelled();
+            return;
+        }
+        
+        emit progressChanged(AnalysisProgress(100.0, tr("Done")));
+        emit finished(true, QVariant(), QString());
+        return;
+    }
+    
     // Handle "xy_sine" feature
     if (m_featureId == "xy_sine") {
         // Check license (in worker thread - this is OK for LicenseManager)
