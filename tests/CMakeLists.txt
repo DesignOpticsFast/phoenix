@@ -54,7 +54,7 @@ if(BUILD_TESTING)
 endif()
 
 # transport sanity tests
-if(BUILD_TESTING)
+if(BUILD_TESTING AND PHX_WITH_TRANSPORT_DEPS)
   add_executable(transport_sanity_tests
     transport_sanity_tests.cpp
   )
@@ -138,7 +138,7 @@ if(BUILD_TESTING AND PHX_WITH_LIBSODIUM)
 endif()
 
 # echo dialog tests
-if(BUILD_TESTING AND PHX_WITH_LIBSODIUM)
+if(BUILD_TESTING AND PHX_WITH_LIBSODIUM AND PHX_WITH_TRANSPORT_DEPS)
   add_executable(echo_dialog_tests
     echo_dialog_tests.cpp
   )
@@ -222,7 +222,7 @@ if(BUILD_TESTING)
 endif()
 
 # XY Sine transport tests
-if(BUILD_TESTING)
+if(BUILD_TESTING AND PHX_WITH_TRANSPORT_DEPS)
   add_executable(test_xysine_transport
     test_xysine_transport.cpp
   )

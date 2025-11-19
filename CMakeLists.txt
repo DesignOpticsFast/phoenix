@@ -24,6 +24,9 @@ option(PHX_WITH_LIBSODIUM "Build with libsodium crypto support" ON)
 # === Palantir contracts submodule support (default ON) ===
 option(PHX_WITH_PALANTIR_CONTRACTS "Enable Palantir contract stub generation" ON)
 
+# === Transport dependencies (gRPC + Protobuf) support (default ON) ===
+option(PHX_WITH_TRANSPORT_DEPS "Build Phoenix with gRPC and Protobuf transport" ON)
+
 # (Note: real/stub source selection will be added in a later chunk)
 
 # ---- Version header (generated at configure time)
@@ -292,6 +295,7 @@ target_link_libraries(phoenix_canonical_json PUBLIC
 )
 
 # ---- gRPC and Protobuf dependencies (for transport) ------------------------
+if(PHX_WITH_TRANSPORT_DEPS)
 find_package(Protobuf CONFIG QUIET)
 set(Protobuf_FOUND_CONFIG ${Protobuf_FOUND})
 if(NOT Protobuf_FOUND)
@@ -456,6 +460,36 @@ endif()
 
 message(STATUS "Final check - HAVE_PROTOBUF: ${HAVE_PROTOBUF}, HAVE_GRPC: ${HAVE_GRPC}")
 
+# Proto generation for bedrock_echo.proto
+set(ECHO_PROTO_FILE ${CMAKE_CURRENT_SOURCE_DIR}/proto/bedrock_echo.proto)
+set(ECHO_GENERATED_DIR ${CMAKE_BINARY_DIR}/generated/echo)
+file(MAKE_DIRECTORY ${ECHO_GENERATED_DIR})
+
+# Proto generation for palantir.proto (LocalSocket transport)
+set(PALANTIR_PROTO_FILE ${CMAKE_CURRENT_SOURCE_DIR}/proto/palantir.proto)
+set(PALANTIR_GENERATED_DIR ${CMAKE_BINARY_DIR}/generated/palantir)
+file(MAKE_DIRECTORY ${PALANTIR_GENERATED_DIR})
+
+# Determine if we have working Protobuf and gRPC based on actual library availability
+set(HAVE_PROTOBUF FALSE)
+set(HAVE_GRPC FALSE)
+
+if(Protobuf_LIBRARIES AND Protobuf_INCLUDE_DIRS)
+    set(HAVE_PROTOBUF TRUE)
+    message(STATUS "Protobuf available: ${Protobuf_LIBRARIES}")
+else()
+    message(STATUS "Protobuf not available (missing LIBRARIES or INCLUDE_DIRS)")
+endif()
+
+if(gRPC_LIBRARIES AND gRPC_INCLUDE_DIRS)
+    set(HAVE_GRPC TRUE)
+    message(STATUS "gRPC available: ${gRPC_LIBRARIES}")
+else()
+    message(STATUS "gRPC not available (missing LIBRARIES or INCLUDE_DIRS)")
+endif()
+
+message(STATUS "Final check - HAVE_PROTOBUF: ${HAVE_PROTOBUF}, HAVE_GRPC: ${HAVE_GRPC}")
+
 if(HAVE_PROTOBUF AND HAVE_GRPC)
     # Find protoc and grpc_cpp_plugin (may already be found)
     if(NOT PROTOC)
@@ -534,8 +568,21 @@ else()
     set(PALANTIR_PROTO_SRCS "")
     set(PALANTIR_PROTO_HDRS "")
 endif()
+else()
+    # Transport disabled - set all flags to FALSE and clear proto vars
+    set(HAVE_PROTOBUF FALSE)
+    set(HAVE_GRPC FALSE)
+    set(ECHO_PROTO_SRCS "")
+    set(ECHO_PROTO_HDRS "")
+    set(ECHO_GRPC_SRCS "")
+    set(ECHO_GRPC_HDRS "")
+    set(PALANTIR_PROTO_SRCS "")
+    set(PALANTIR_PROTO_HDRS "")
+    message(WARNING "Building Phoenix WITHOUT transport (gRPC/Protobuf). Only demo/local analyses will work.")
+endif()
 
 # ---- transport library ----------------------------------------------------
+if(PHX_WITH_TRANSPORT_DEPS)
 add_library(phoenix_transport STATIC
   src/transport/TransportClient.hpp
   src/transport/GrpcUdsChannel.hpp
@@ -586,6 +633,11 @@ if(HAVE_PROTOBUF AND HAVE_GRPC AND PROTOC AND GRPC_CPP_PLUGIN)
     if(gRPC_INCLUDE_DIRS)
         target_include_directories(phoenix_transport PRIVATE ${gRPC_INCLUDE_DIRS})
     endif()
+endif()
+else()
+    # Transport disabled - create empty stub library to satisfy dependencies
+    add_library(phoenix_transport INTERFACE)
+    message(STATUS "Transport library disabled - creating stub interface library")
 endif()
 
 # ---- license library ----------------------------------------------------
@@ -669,7 +721,6 @@ target_include_directories(phoenix_analysis PUBLIC
 
 target_link_libraries(phoenix_analysis PUBLIC
   phoenix_feature_registry
-  phoenix_transport
   phoenix_license_manager
   Qt6::Core
   Qt6::Widgets
@@ -677,6 +728,11 @@ target_link_libraries(phoenix_analysis PUBLIC
   Qt6::GraphsWidgets
   Qt6::QuickWidgets
 )
+
+# Conditionally link transport (only when enabled)
+if(PHX_WITH_TRANSPORT_DEPS)
+  target_link_libraries(phoenix_analysis PUBLIC phoenix_transport)
+endif()
 
 # ---- Palantir contracts proto generation scaffolding ---------------------------
 if(PHX_WITH_PALANTIR_CONTRACTS)
@@ -731,11 +787,15 @@ target_link_libraries(phoenix_app
     Qt6::Concurrent
     Qt6::Core
     Qt6::Graphs
-    phoenix_transport
     phoenix_feature_registry
     phoenix_analysis
     phoenix_license_manager
 )
+
+# Conditionally link transport (only when enabled)
+if(PHX_WITH_TRANSPORT_DEPS)
+  target_link_libraries(phoenix_app PRIVATE phoenix_transport)
+endif()
 
 if(WIN32)
   target_link_libraries(phoenix_app PRIVATE Psapi)
