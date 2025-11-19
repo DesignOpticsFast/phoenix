@@ -222,6 +222,36 @@ void FeatureRegistryTests::testParamStringConversion()
     QCOMPARE(intConverted.toInt(), 5000);
 }
 
+void FeatureRegistryTests::testXYSineAutoRunFlag()
+{
+    FeatureRegistry& reg = FeatureRegistry::instance();
+    
+    // Get XY Sine descriptor
+    const FeatureDescriptor* xySine = reg.getFeature("xy_sine");
+    QVERIFY(xySine != nullptr);
+    
+    // Verify XY Sine has autoRunOnOpen = true
+    QVERIFY(xySine->autoRunOnOpen() == true);
+    
+    // Test default value (create a new feature, should be false)
+    FeatureDescriptor testFeature("test_no_auto", "Test No Auto");
+    QVERIFY(testFeature.autoRunOnOpen() == false);
+    
+    // Test setter
+    testFeature.setAutoRunOnOpen(true);
+    QVERIFY(testFeature.autoRunOnOpen() == true);
+    
+    // Test setter back to false
+    testFeature.setAutoRunOnOpen(false);
+    QVERIFY(testFeature.autoRunOnOpen() == false);
+    
+    // Test fluent API (chaining)
+    FeatureDescriptor fluentTest("test_fluent", "Test Fluent");
+    fluentTest.setAutoRunOnOpen(true).setCategory("Test");
+    QVERIFY(fluentTest.autoRunOnOpen() == true);
+    QCOMPARE(fluentTest.category(), QString("Test"));
+}
+
 QTEST_MAIN(FeatureRegistryTests)
 #include "feature_registry_tests.moc"
 
