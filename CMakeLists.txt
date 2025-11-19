@@ -694,6 +694,7 @@ target_link_libraries(phoenix_app
     Qt6::Concurrent
     Qt6::Core
     Qt6::Graphs
+    phoenix_transport
     phoenix_analysis
     phoenix_license_manager
 )
