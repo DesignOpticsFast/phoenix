@@ -6,6 +6,7 @@
 #include "ui/themes/ThemeManager.h"
 #include "app/LocaleInit.hpp"
 #include "app/SettingsProvider.h"
+#include "app/LicenseManager.h"
 #include "version.h"
 #include <QApplication>
 #include <QTimer>
@@ -120,6 +121,9 @@ int main(int argc, char** argv) {
     
     // Wire ThemeManager singleton (must happen before ThemeManager::instance() use)
     ThemeManager::setSettingsProvider(settingsProvider);
+    
+    // Initialize LicenseManager (load license if env vars are set)
+    LicenseManager::instance()->initialize();
     
     // Create main window (but don't show it yet)
     MainWindow mainWindow(settingsProvider);

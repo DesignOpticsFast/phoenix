@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "../dialogs/PreferencesDialog.h"
+#include "../dialogs/LicenseDialog.h"
 #include "../themes/ThemeManager.h"
 #include "../icons/IconProvider.h"
 #include "../icons/PhxLogging.h"
@@ -8,6 +9,7 @@
 #include "app/SettingsProvider.h"
 #include "app/SettingsKeys.h"
 #include "app/MemoryMonitor.hpp"
+#include "app/LicenseManager.h"
 #include "app/io/FileIO.h"
 #include "app/PhxConstants.h"
 #include "version.h"
@@ -382,6 +384,9 @@ QMenu* MainWindow::createAnalysisMenu()
     connect(m_xyPlotAction, &QAction::triggered, this, &MainWindow::showXYPlot);
     analysisMenu->addAction(m_xyPlotAction);
     
+    // Gate XY Plot action based on license
+    updateActionLicenseState(m_xyPlotAction, "feature_xy_plot");
+    
     m_2dPlotAction = new QAction(tr("&2D Plot"), this);
     m_2dPlotAction->setProperty("phx_icon_key", "chart");
     m_2dPlotAction->setIcon(IconProvider::icon("chart", QSize(px, px), analysisMenu));
@@ -471,7 +476,7 @@ QMenu* MainWindow::createViewMenu()
 QMenu* MainWindow::createHelpMenu()
 {
     QMenu* helpMenu = new QMenu(tr("&Help"), this);
-    
+
     QAction* aboutAction = new QAction(tr("&About Phoenix"), this);
     aboutAction->setProperty("phx_icon_key", "info");
     const int px = helpMenu->style()->pixelMetric(QStyle::PM_SmallIconSize, nullptr, helpMenu);
@@ -480,14 +485,19 @@ QMenu* MainWindow::createHelpMenu()
     aboutAction->setStatusTip(tr("Show about dialog"));
     connect(aboutAction, &QAction::triggered, this, &MainWindow::showAbout);
     helpMenu->addAction(aboutAction);
-    
+
+    QAction* licenseAction = new QAction(tr("&License..."), this);
+    licenseAction->setStatusTip(tr("Show license information"));
+    connect(licenseAction, &QAction::triggered, this, &MainWindow::showLicense);
+    helpMenu->addAction(licenseAction);
+
     helpMenu->addSeparator();
-    
+
     QAction* helpAction = new QAction(tr("&Help Contents"), this);
     helpAction->setStatusTip(tr("Open help documentation"));
     connect(helpAction, &QAction::triggered, this, &MainWindow::showHelp);
     helpMenu->addAction(helpAction);
-    
+
     return helpMenu;
 }
 
@@ -593,6 +603,9 @@ QToolBar* MainWindow::createTopRibbon()
         logRibbonAction("xy_plot");
     });
     ribbon->addAction(xyPlotAction);
+    
+    // Gate XY Plot ribbon action based on license
+    updateActionLicenseState(xyPlotAction, "feature_xy_plot");
     
     QAction* plot2DAction = new QAction(tr("2D Plot"), this);
     plot2DAction->setProperty("phx_icon_key", "chart");
@@ -1200,6 +1213,16 @@ void MainWindow::showSystemViewer()
 // Analysis menu actions
 void MainWindow::showXYPlot()
 {
+    // Check license before opening XY Plot
+    LicenseManager* mgr = LicenseManager::instance();
+    if (mgr->currentState() != LicenseManager::LicenseState::NotConfigured &&
+        !mgr->hasFeature("feature_xy_plot")) {
+        QMessageBox::warning(this, tr("Feature Unavailable"),
+            tr("XY Plot requires a valid license with the 'feature_xy_plot' feature.\n\n"
+               "Please check your license status via Help → License..."));
+        return;
+    }
+    
     // Create AnalysisWindow with main window as parent
     auto* win = new AnalysisWindow(this);
     win->setWindowTitle(tr("XY Plot – Qt Graphs"));
@@ -1728,6 +1751,47 @@ void MainWindow::showAbout()
 void MainWindow::showHelp()
 {
     QMessageBox::information(this, tr("Help"), tr("This feature is not yet implemented."));
+}
+
+void MainWindow::showLicense()
+{
+    LicenseDialog* dialog = new LicenseDialog(this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->exec();
+}
+
+void MainWindow::updateActionLicenseState(QAction* action, const QString& feature)
+{
+    if (!action) return;
+    
+    LicenseManager* mgr = LicenseManager::instance();
+    LicenseManager::LicenseState state = mgr->currentState();
+    
+    // If licensing is not configured, allow feature (graceful degradation)
+    if (state == LicenseManager::LicenseState::NotConfigured) {
+        action->setEnabled(true);
+        action->setToolTip(QString()); // Clear any previous tooltip
+        return;
+    }
+    
+    // Check if feature is available
+    bool hasFeature = mgr->hasFeature(feature);
+    
+    if (hasFeature) {
+        action->setEnabled(true);
+        action->setToolTip(QString()); // Clear any previous tooltip
+    } else {
+        action->setEnabled(false);
+        QString tooltip = tr("This feature requires a valid license with the '%1' feature").arg(feature);
+        if (state == LicenseManager::LicenseState::Expired) {
+            tooltip += tr(" (License expired)");
+        } else if (state == LicenseManager::LicenseState::Invalid) {
+            tooltip += tr(" (License invalid)");
+        } else if (state == LicenseManager::LicenseState::NoLicense) {
+            tooltip += tr(" (No license file)");
+        }
+        action->setToolTip(tooltip);
+    }
 }
 
 // Telemetry hooks for UI latency logging

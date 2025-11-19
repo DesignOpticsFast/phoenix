@@ -114,6 +114,29 @@ if(BUILD_TESTING AND PHX_WITH_LIBSODIUM)
   add_test(NAME license_verification_tests COMMAND license_verification_tests)
 endif()
 
+# license manager tests
+if(BUILD_TESTING AND PHX_WITH_LIBSODIUM)
+  add_executable(license_manager_tests
+    license_manager_tests.cpp
+  )
+
+  target_link_libraries(license_manager_tests PRIVATE
+    phoenix_license_manager
+    phoenix_license
+    phoenix_canonical_json
+    phoenix_libsodium
+    Qt6::Core
+    Qt6::Test
+  )
+
+  target_include_directories(license_manager_tests
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME license_manager_tests COMMAND license_manager_tests)
+endif()
+
 # analysis sanity tests
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests

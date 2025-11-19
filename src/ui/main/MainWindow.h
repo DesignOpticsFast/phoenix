@@ -75,6 +75,7 @@ private slots:
     // Help menu actions
     void showAbout();
     void showHelp();
+    void showLicense();
     
     // View menu actions
     void setLightTheme();
@@ -128,6 +129,9 @@ private:
     
     // Icon selection for actions
     QIcon getIcon(const QString& name, QWidget* widget = nullptr) const;
+    
+    // License-based feature gating
+    void updateActionLicenseState(QAction* action, const QString& feature);
     
     // Theme refresh helper
     void refreshAllIconsForTheme();

@@ -78,6 +78,7 @@ set(PHOENIX_SOURCES
   src/ui/dialogs/PreferencesDialog.cpp
   src/ui/dialogs/EnvironmentPage.cpp
   src/ui/dialogs/LanguagePage.cpp
+  src/ui/dialogs/LicenseDialog.cpp
 
   # New UI structure - Themes
   src/ui/themes/ThemeManager.cpp
@@ -110,6 +111,7 @@ set(PHOENIX_SOURCES
   src/ui/dialogs/PreferencesDialog.h
   src/ui/dialogs/EnvironmentPage.h
   src/ui/dialogs/LanguagePage.h
+  src/ui/dialogs/LicenseDialog.h
 
   # New UI structure - Themes
   src/ui/themes/ThemeManager.h
@@ -601,6 +603,20 @@ if(PHX_WITH_LIBSODIUM)
   )
 endif()
 
+# ---- license manager library ----------------------------------------------------
+add_library(phoenix_license_manager STATIC
+  src/app/LicenseManager.cpp
+)
+
+target_include_directories(phoenix_license_manager PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(phoenix_license_manager PUBLIC
+  phoenix_license
+  Qt6::Core
+)
+
 # ---- analysis library ----------------------------------------------------
 add_library(phoenix_analysis STATIC
   src/ui/analysis/IAnalysisView.hpp
@@ -677,6 +693,7 @@ target_link_libraries(phoenix_app
     Qt6::Core
     Qt6::Graphs
     phoenix_analysis
+    phoenix_license_manager
 )
 
 if(WIN32)
