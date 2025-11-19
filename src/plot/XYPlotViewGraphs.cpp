@@ -37,37 +37,49 @@ XYPlotViewGraphs::XYPlotViewGraphs()
     
     // Check QML file availability
     QUrl qmlUrl("qrc:/qml/XYPlotView.qml");
-    qDebug() << "Loading QML from:" << qmlUrl;
+    qDebug() << "XYPlotViewGraphs: Loading QML from:" << qmlUrl;
     m_quickWidget->setSource(qmlUrl);
     
-    // Check for QML errors
-    if (m_quickWidget->status() == QQuickWidget::Error) {
-        qWarning() << "QML errors:" << m_quickWidget->errors();
+    // Check for QML errors immediately after setSource
+    QQuickWidget::Status status = m_quickWidget->status();
+    if (status == QQuickWidget::Error) {
+        qWarning() << "XYPlotViewGraphs: QML load failed. Status: Error";
+        qWarning() << "XYPlotViewGraphs: QML errors:" << m_quickWidget->errors();
+        qWarning() << "XYPlotViewGraphs: QML URL was:" << qmlUrl;
     }
     
     // Get root item for accessing QML properties
     // Wait for QML to be ready (StatusRootObjectCreated means QML is loaded)
-    if (m_quickWidget->status() == QQuickWidget::Ready || m_quickWidget->status() == QQuickWidget::Error) {
+    if (status == QQuickWidget::Ready || status == QQuickWidget::Error) {
         m_rootItem = m_quickWidget->rootObject();
     }
     
     // If not ready yet, try to get it anyway (for cases where status hasn't updated)
     if (!m_rootItem) {
         m_rootItem = m_quickWidget->rootObject();
+        status = m_quickWidget->status(); // Re-check status
     }
     
     if (!m_rootItem) {
-        qWarning() << "Failed to load QML root object. Status:" << m_quickWidget->status();
-        qWarning() << "QML errors:" << m_quickWidget->errors();
+        qWarning() << "XYPlotViewGraphs: Failed to load QML root object.";
+        qWarning() << "XYPlotViewGraphs: Status:" << status;
+        qWarning() << "XYPlotViewGraphs: QML URL:" << qmlUrl;
+        qWarning() << "XYPlotViewGraphs: QML errors:" << m_quickWidget->errors();
     } else {
+        qDebug() << "XYPlotViewGraphs: QML root object loaded successfully";
+        
         // Find and store the mainSeries LineSeries object
         m_mainSeries = m_rootItem->findChild<QObject*>("mainSeries", Qt::FindChildrenRecursively);
         
         if (!m_mainSeries) {
             qWarning() << "XYPlotViewGraphs: mainSeries not found in QML";
+            qWarning() << "XYPlotViewGraphs: Root object type:" << m_rootItem->metaObject()->className();
+            qWarning() << "XYPlotViewGraphs: This may indicate a QML structure issue";
 #ifndef NDEBUG
             Q_ASSERT(false);
 #endif
+        } else {
+            qDebug() << "XYPlotViewGraphs: mainSeries found successfully";
         }
     }
     
