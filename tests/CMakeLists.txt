@@ -268,7 +268,7 @@ if(BUILD_TESTING)
       ${CMAKE_SOURCE_DIR}/src
   )
 
-  add_test(NAME test_async_architecture COMMAND test_async_architecture)
+  add_test(NAME test_async_architecture COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_async_architecture>)
 endif()
 
 # analysis sanity tests
