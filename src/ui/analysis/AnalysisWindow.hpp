@@ -2,6 +2,7 @@
 
 #include <QWidget>
 #include <memory>
+#include "analysis/AnalysisProgress.hpp"
 
 class IAnalysisView;
 class QSplitter;
