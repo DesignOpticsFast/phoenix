@@ -75,12 +75,14 @@ void AnalysisWindow::setupParameterPanel(const QString& featureId)
     
     // Remove existing parameter panel if any
     if (m_parameterPanel) {
-        int index = m_splitter->indexOf(m_parameterPanel->parentWidget());
-        if (index >= 0) {
-            QWidget* panelWidget = m_splitter->widget(index);
-            m_splitter->removeWidget(panelWidget);
-            panelWidget->setParent(nullptr);
-            delete panelWidget;
+        // Find the container widget in the splitter
+        for (int i = 0; i < m_splitter->count(); ++i) {
+            QWidget* widget = m_splitter->widget(i);
+            if (widget && widget->layout() && widget->layout()->indexOf(m_parameterPanel) >= 0) {
+                m_splitter->widget(i)->setParent(nullptr);
+                delete widget;
+                break;
+            }
         }
         m_parameterPanel = nullptr;
         m_runButton = nullptr;

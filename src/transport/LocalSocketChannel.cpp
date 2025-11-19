@@ -272,9 +272,9 @@ bool LocalSocketChannel::computeXYSine(const QMap<QString, QVariant>& params, XY
             
             // Convert QVariant to string
             QString valueStr;
-            if (value.type() == QVariant::Double) {
+            if (value.userType() == QMetaType::Double) {
                 valueStr = QString::number(value.toDouble());
-            } else if (value.type() == QVariant::Int) {
+            } else if (value.userType() == QMetaType::Int) {
                 valueStr = QString::number(value.toInt());
             } else {
                 valueStr = value.toString();
