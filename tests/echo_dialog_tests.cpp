@@ -141,7 +141,7 @@ private slots:
     void testLicenseGatingNotConfigured();
 
 private:
-    void setupTestLicense(const QString& subject, const QByteArray& privateKey, 
+    void setupTestLicense(const QString& subject, const QByteArray& publicKey, const QByteArray& privateKey, 
                           const QStringList& features, bool expired = false);
     void cleanupTestLicense();
     QTemporaryDir* m_tempDir = nullptr;
@@ -187,7 +187,7 @@ void EchoDialogTests::testLicenseGating()
     auto [publicKey, privateKey] = TestLicenseHelpers::generateTestKeypair();
     QVERIFY(!publicKey.isEmpty() && !privateKey.isEmpty());
     
-    setupTestLicense("test@example.com", privateKey, {"feature_echo_test"});
+    setupTestLicense("test@example.com", publicKey, privateKey, {"feature_echo_test"});
     
     LicenseManager* mgr = LicenseManager::instance();
     LicenseManager::LicenseState state = mgr->currentState();
@@ -200,8 +200,8 @@ void EchoDialogTests::testLicenseGating()
     
     cleanupTestLicense();
     
-    // Now setup license without feature_echo_test
-    setupTestLicense("test2@example.com", privateKey, {"feature_xy_plot"});
+    // Now setup license without feature_echo_test (use same keypair)
+    setupTestLicense("test2@example.com", publicKey, privateKey, {"feature_xy_plot"});
     
     state = mgr->currentState();
     QCOMPARE(state, LicenseManager::LicenseState::Valid);
@@ -229,7 +229,7 @@ void EchoDialogTests::testLicenseGatingNotConfigured()
     QVERIFY(!mgr->hasFeature("feature_echo_test"));
 }
 
-void EchoDialogTests::setupTestLicense(const QString& subject, const QByteArray& privateKey,
+void EchoDialogTests::setupTestLicense(const QString& subject, const QByteArray& publicKey, const QByteArray& privateKey,
                                        const QStringList& features, bool expired)
 {
     cleanupTestLicense();
@@ -242,15 +242,14 @@ void EchoDialogTests::setupTestLicense(const QString& subject, const QByteArray&
         ? QDateTime::currentDateTimeUtc().addDays(-1)
         : QDateTime::currentDateTimeUtc().addDays(30);
     
-    // Use helper to create signed license
+    // Use helper to create signed license (privateKey signs the license)
     QJsonObject licenseJson = TestLicenseHelpers::createSignedLicense(
         privateKey, subject, features, issuedAt, expiresAt);
     
     QString licensePath = TestLicenseHelpers::writeTempLicenseFile(licenseJson, *m_tempDir);
     QVERIFY(!licensePath.isEmpty());
     
-    // Set public key and license path in environment
-    auto [publicKey, _] = TestLicenseHelpers::generateTestKeypair();
+    // Set public key (matching the privateKey used to sign) and license path in environment
     QString base64Key = QString::fromUtf8(publicKey.toBase64());
     qputenv("PHOENIX_LICENSE_PUBLIC_KEY", base64Key.toUtf8());
     qputenv("PHOENIX_LICENSE_PATH", licensePath.toUtf8());
