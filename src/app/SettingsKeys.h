@@ -11,5 +11,6 @@ inline constexpr auto UI_APPLIED_LOCALE   = "ui/applied_locale";
 inline constexpr auto UI_FIRST_RUN_COMPLETE = "ui/firstRunComplete";
 inline constexpr auto UI_LAST_LANGUAGE = "ui/lastLanguage";
 inline constexpr auto DIALOG_PREFS_GEO = "dialogs/preferences/geometry";
+inline constexpr auto ANALYSIS_RUN_MODE = "analysis/runMode";
 }
 

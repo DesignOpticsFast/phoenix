@@ -356,6 +356,25 @@ if(BUILD_TESTING)
   add_test(NAME test_analysiswindow_autorun COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysiswindow_autorun>)
 endif()
 
+# analysis run mode settings tests
+if(BUILD_TESTING)
+  add_executable(test_analysis_runmode_settings
+    test_analysis_runmode_settings.cpp
+  )
+
+  target_link_libraries(test_analysis_runmode_settings PRIVATE
+    Qt6::Core
+    Qt6::Test
+  )
+
+  target_include_directories(test_analysis_runmode_settings
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME test_analysis_runmode_settings COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysis_runmode_settings>)
+endif()
+
 # analysis sanity tests
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests
