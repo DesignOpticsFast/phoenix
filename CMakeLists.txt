@@ -641,9 +641,9 @@ else()
 endif()
 
 # Add compile definition when transport is enabled
+# Note: phoenix_analysis compile definition is set after library creation (see below)
 if(PHX_WITH_TRANSPORT_DEPS)
   target_compile_definitions(phoenix_app PRIVATE PHX_WITH_TRANSPORT_DEPS=1)
-  target_compile_definitions(phoenix_analysis PRIVATE PHX_WITH_TRANSPORT_DEPS=1)
 endif()
 
 # ---- license library ----------------------------------------------------
@@ -738,6 +738,7 @@ target_link_libraries(phoenix_analysis PUBLIC
 # Conditionally link transport (only when enabled)
 if(PHX_WITH_TRANSPORT_DEPS)
   target_link_libraries(phoenix_analysis PUBLIC phoenix_transport)
+  target_compile_definitions(phoenix_analysis PRIVATE PHX_WITH_TRANSPORT_DEPS=1)
 endif()
 
 # ---- Palantir contracts proto generation scaffolding ---------------------------
