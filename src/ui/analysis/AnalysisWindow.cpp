@@ -15,6 +15,7 @@
 #include <QMessageBox>
 #include <QTimer>
 #include <QThread>
+#include <QMetaObject>
 #include <QDebug>
 #include <QPointF>
 #include <vector>
