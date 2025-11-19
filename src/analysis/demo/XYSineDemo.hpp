@@ -3,8 +3,7 @@
 #include <QMap>
 #include <QVariant>
 
-// Forward declaration - XYSineResult is defined in LocalSocketChannel.hpp
-// We use the same type to maintain compatibility
+// XYSineResult is defined in analysis/AnalysisResults.hpp
 struct XYSineResult;
 
 // TODO(Sprint 4.4): Remove demo-mode local XY Sine once Mac testing is complete.

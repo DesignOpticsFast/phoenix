@@ -1,8 +1,11 @@
 #include "AnalysisWorker.hpp"
-#include "transport/LocalSocketChannel.hpp"
+#include "analysis/AnalysisResults.hpp"  // For XYSineResult
 #include "analysis/demo/XYSineDemo.hpp"
 #include "app/LicenseManager.h"
 #include "analysis/AnalysisProgress.hpp"
+#ifdef PHX_WITH_TRANSPORT_DEPS
+#include "transport/LocalSocketChannel.hpp"
+#endif
 #include <QDebug>
 #include <QThread>
 #include <QProcessEnvironment>
@@ -48,11 +51,13 @@ void AnalysisWorker::requestCancel()
 {
     m_cancelRequested.store(true);
     
+#ifdef PHX_WITH_TRANSPORT_DEPS
     // If we have an active client and job, send cancel to Bedrock
     if (m_currentClient && !m_currentJobId.isEmpty()) {
         m_currentClient->cancelJob(m_currentJobId);
         qDebug() << "AnalysisWorker::requestCancel: Sent cancel for job" << m_currentJobId;
     }
+#endif
 }
 
 // Check if demo mode is enabled (PHOENIX_DEMO_MODE=1)
@@ -166,6 +171,7 @@ void AnalysisWorker::executeCompute()
         }
         
         // Original Bedrock path (unchanged when demo mode is off)
+#ifdef PHX_WITH_TRANSPORT_DEPS
         // Create LocalSocketChannel
         auto client = std::make_unique<LocalSocketChannel>();
         m_currentClient = client.get();
@@ -255,6 +261,13 @@ void AnalysisWorker::executeCompute()
         // Emit success with result
         emit finished(true, QVariant::fromValue(result), QString());
         return;
+#else
+        // Transport unavailable - fail gracefully
+        emit finished(false, QVariant(),
+            tr("Transport is not available in this build.\n\n"
+               "Please enable demo mode (PHOENIX_DEMO_MODE=1) to use local computation."));
+        return;
+#endif
     }
     
     // Unknown feature

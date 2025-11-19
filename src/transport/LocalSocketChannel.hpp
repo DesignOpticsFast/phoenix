@@ -1,6 +1,7 @@
 #pragma once
 
 #include "TransportClient.hpp"
+#include "analysis/AnalysisResults.hpp"  // For XYSineResult
 #include <QString>
 #include <QStringList>
 #include <QVariant>
@@ -11,14 +12,6 @@
 
 class QLocalSocket;
 class QByteArray;
-
-// Result structure for XY Sine computation
-struct XYSineResult {
-    std::vector<double> x;
-    std::vector<double> y;
-};
-
-Q_DECLARE_METATYPE(XYSineResult)
 
 class LocalSocketChannel : public TransportClient {
 public:

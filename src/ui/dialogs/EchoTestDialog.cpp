@@ -1,8 +1,10 @@
 #include "EchoTestDialog.h"
+#include "app/LicenseManager.h"
+#ifdef PHX_WITH_TRANSPORT_DEPS
 #include "transport/TransportFactory.hpp"
 #include "transport/GrpcUdsChannel.hpp"
 #include "transport/LocalSocketChannel.hpp"
-#include "app/LicenseManager.h"
+#endif
 #include <QProcessEnvironment>
 #include <QMessageBox>
 #include <QHBoxLayout>
@@ -102,6 +104,7 @@ void EchoTestDialog::detectBackend()
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     m_envValue = env.value("PHOENIX_TRANSPORT", "auto");
     
+#ifdef PHX_WITH_TRANSPORT_DEPS
     // Create a temporary client to detect backend
     auto client = makeTransportClientFromEnv();
     if (client) {
@@ -109,6 +112,9 @@ void EchoTestDialog::detectBackend()
     } else {
         m_backendName = tr("Unknown");
     }
+#else
+    m_backendName = tr("Transport unavailable");
+#endif
 }
 
 void EchoTestDialog::checkLicenseState()
@@ -152,6 +158,7 @@ void EchoTestDialog::onSendClicked()
         return;
     }
     
+#ifdef PHX_WITH_TRANSPORT_DEPS
     // Clear previous output
     clearOutput();
     m_statusLabel->setText(tr("Status: Sending..."));
@@ -222,6 +229,15 @@ void EchoTestDialog::onSendClicked()
         appendOutput(tr("Error: Unknown backend type: %1").arg(backendName));
         m_statusLabel->setText(tr("Status: Failed - Unknown backend"));
     }
+#else
+    // Transport unavailable
+    QMessageBox::information(this, tr("Transport Unavailable"),
+        tr("Transport (gRPC/Protobuf) is not available in this build.\n\n"
+           "This dialog requires transport support to test Bedrock connections."));
+    clearOutput();
+    appendOutput(tr("Transport unavailable in this build."));
+    m_statusLabel->setText(tr("Status: Transport unavailable"));
+#endif
 }
 
 void EchoTestDialog::appendOutput(const QString& text)

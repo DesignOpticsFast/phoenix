@@ -640,6 +640,12 @@ else()
     message(STATUS "Transport library disabled - creating stub interface library")
 endif()
 
+# Add compile definition when transport is enabled
+if(PHX_WITH_TRANSPORT_DEPS)
+  target_compile_definitions(phoenix_app PRIVATE PHX_WITH_TRANSPORT_DEPS=1)
+  target_compile_definitions(phoenix_analysis PRIVATE PHX_WITH_TRANSPORT_DEPS=1)
+endif()
+
 # ---- license library ----------------------------------------------------
 add_library(phoenix_license STATIC
   src/license/License.hpp

@@ -7,7 +7,9 @@
 #include <atomic>
 #include "AnalysisProgress.hpp"
 
+#ifdef PHX_WITH_TRANSPORT_DEPS
 class LocalSocketChannel;
+#endif
 
 class AnalysisWorker : public QObject {
     Q_OBJECT
@@ -36,7 +38,9 @@ private:
     std::atomic<bool> m_cancelRequested;
     
     // For cancel support
-    LocalSocketChannel* m_currentClient;
+#ifdef PHX_WITH_TRANSPORT_DEPS
+    LocalSocketChannel* m_currentClient = nullptr;
+#endif
     QString m_currentJobId;
 };
 

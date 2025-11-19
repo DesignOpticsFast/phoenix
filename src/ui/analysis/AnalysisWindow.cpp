@@ -4,7 +4,7 @@
 #include "features/FeatureRegistry.hpp"
 #include "analysis/AnalysisWorker.hpp"
 #include "analysis/AnalysisProgress.hpp"
-#include "transport/LocalSocketChannel.hpp"
+#include "analysis/AnalysisResults.hpp"  // For XYSineResult
 #include "app/LicenseManager.h"
 #include "app/AnalysisRunMode.hpp"
 #include "plot/XYPlotViewGraphs.hpp"
