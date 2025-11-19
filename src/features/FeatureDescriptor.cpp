@@ -34,6 +34,12 @@ FeatureDescriptor& FeatureDescriptor::setRequiresTransport(bool required)
     return *this;
 }
 
+FeatureDescriptor& FeatureDescriptor::setAutoRunOnOpen(bool enabled)
+{
+    m_autoRunOnOpen = enabled;
+    return *this;
+}
+
 const ParamSpec* FeatureDescriptor::findParam(const QString& name) const
 {
     for (const ParamSpec& param : m_params) {

@@ -17,12 +17,14 @@ public:
     QList<ParamSpec> params() const { return m_params; }
     QString requiresLicenseFeature() const { return m_requiresLicenseFeature; }
     bool requiresTransport() const { return m_requiresTransport; }
+    bool autoRunOnOpen() const { return m_autoRunOnOpen; }
     
     // Setters (fluent API)
     FeatureDescriptor& setCategory(const QString& category);
     FeatureDescriptor& addParam(const ParamSpec& param);
     FeatureDescriptor& setRequiresLicenseFeature(const QString& feature);
     FeatureDescriptor& setRequiresTransport(bool required);
+    FeatureDescriptor& setAutoRunOnOpen(bool enabled);
     
     // Lookup
     const ParamSpec* findParam(const QString& name) const;
@@ -38,5 +40,6 @@ private:
     QList<ParamSpec> m_params;         // Parameter specifications
     QString m_requiresLicenseFeature;   // e.g., "feature_xy_sine" (empty if none)
     bool m_requiresTransport = true;    // Default true for Bedrock features
+    bool m_autoRunOnOpen = false;       // Default false - features opt in to auto-run
 };
 

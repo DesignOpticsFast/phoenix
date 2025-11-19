@@ -50,7 +50,8 @@ void FeatureRegistry::registerDefaultFeatures()
     FeatureDescriptor xySine("xy_sine", "XY Sine");
     xySine.setCategory("Analysis")
           .setRequiresLicenseFeature("feature_xy_sine")
-          .setRequiresTransport(true);
+          .setRequiresTransport(true)
+          .setAutoRunOnOpen(true);
     
     // Parameters based on experiments/analysis/XYWindow.cpp
     xySine.addParam(ParamSpec("frequency", "Frequency", ParamSpec::Type::Double)

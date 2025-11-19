@@ -18,6 +18,7 @@ private slots:
     void testFeaturesByCategory();
     void testParamValidation();
     void testParamStringConversion();
+    void testXYSineAutoRunFlag();
 };
 
 void FeatureRegistryTests::testRegistrySingleton()
