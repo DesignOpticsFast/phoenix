@@ -103,6 +103,13 @@ void AnalysisWindow::setupParameterPanel(const QString& featureId)
         m_panelLayout = nullptr;
     }
     
+    // Clean up timeout timer
+    if (m_timeoutTimer) {
+        m_timeoutTimer->stop();
+        m_timeoutTimer->deleteLater();
+        m_timeoutTimer = nullptr;
+    }
+    
     // Create container widget for parameter panel + Run button
     QWidget* panelContainer = new QWidget(this);
     m_panelLayout = new QVBoxLayout(panelContainer);
@@ -203,8 +210,34 @@ void AnalysisWindow::runFeature()
         m_progressBar->setVisible(true);
     }
     
+    // Start timeout timer
+    if (!m_timeoutTimer) {
+        m_timeoutTimer = new QTimer(this);
+        m_timeoutTimer->setSingleShot(true);
+        connect(m_timeoutTimer, &QTimer::timeout, this, &AnalysisWindow::onTimeout);
+    }
+    m_timeoutTimer->start(DEFAULT_ANALYSIS_TIMEOUT_SEC * 1000);
+    
     // Start thread
     m_workerThread->start();
+}
+
+void AnalysisWindow::onTimeout()
+{
+    qWarning() << "AnalysisWindow: Analysis timed out after" << DEFAULT_ANALYSIS_TIMEOUT_SEC << "seconds";
+    
+    // Show timeout message
+    QMessageBox::warning(this, tr("Analysis Timeout"),
+        tr("The analysis timed out after %1 seconds and was cancelled.\n\n"
+           "This may indicate a server issue or network problem.")
+        .arg(DEFAULT_ANALYSIS_TIMEOUT_SEC));
+    
+    // Request cancel on worker (if still exists)
+    if (m_worker) {
+        m_worker->requestCancel();
+    }
+    
+    // Note: Timer will be stopped when cancelled() or finished() signal arrives
 }
 
 void AnalysisWindow::onCancelClicked()
