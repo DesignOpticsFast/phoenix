@@ -657,6 +657,7 @@ add_library(phoenix_analysis STATIC
   src/analysis/AnalysisWorker.cpp
   src/analysis/AnalysisWorker.hpp
   src/analysis/AnalysisProgress.hpp
+  src/analysis/demo/XYSineDemo.cpp
   src/plot/XYPlotViewGraphs.cpp
   src/plot/XYPlotViewGraphs.hpp
   src/qml/phoenix_qml.qrc

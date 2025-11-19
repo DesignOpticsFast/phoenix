@@ -397,6 +397,26 @@ if(BUILD_TESTING)
   add_test(NAME test_preferences_runmode_ui COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_preferences_runmode_ui>)
 endif()
 
+# local XY Sine demo mode tests
+if(BUILD_TESTING)
+  add_executable(test_local_xysine
+    test_local_xysine.cpp
+  )
+
+  target_link_libraries(test_local_xysine PRIVATE
+    phoenix_analysis
+    Qt6::Core
+    Qt6::Test
+  )
+
+  target_include_directories(test_local_xysine
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME test_local_xysine COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_local_xysine>)
+endif()
+
 # analysis sanity tests
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests
