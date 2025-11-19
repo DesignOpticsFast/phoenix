@@ -269,6 +269,24 @@ target_link_libraries(phoenix_canonical_json PUBLIC
 # Will be restored in Phase 3 (transport scaffolding)
 # add_library(phoenix_transport STATIC ...)
 
+# ---- feature registry library --------------------------------------------
+add_library(phoenix_feature_registry STATIC
+  src/features/ParamSpec.hpp
+  src/features/ParamSpec.cpp
+  src/features/FeatureDescriptor.hpp
+  src/features/FeatureDescriptor.cpp
+  src/features/FeatureRegistry.hpp
+  src/features/FeatureRegistry.cpp
+)
+
+target_include_directories(phoenix_feature_registry PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(phoenix_feature_registry PUBLIC
+  Qt6::Core
+)
+
 # ---- analysis library ----------------------------------------------------
 add_library(phoenix_analysis STATIC
   src/ui/analysis/IAnalysisView.hpp
@@ -348,6 +366,7 @@ target_link_libraries(phoenix_app
     Qt6::Concurrent
     Qt6::Core
     Qt6::Graphs
+    phoenix_feature_registry
     phoenix_analysis
 )
 

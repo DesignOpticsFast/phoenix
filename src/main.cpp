@@ -7,6 +7,7 @@
 #include "ui/analysis/AnalysisWindowManager.hpp"
 #include "app/LocaleInit.hpp"
 #include "app/SettingsProvider.h"
+#include "features/FeatureRegistry.hpp"
 #include "version.h"
 #include <QApplication>
 #include <QCoreApplication>
@@ -126,8 +127,10 @@ int main(int argc, char** argv) {
     // Wire ThemeManager singleton (must happen before ThemeManager::instance() use)
     ThemeManager::setSettingsProvider(settingsProvider);
     
+    // Register default features (Phoenix-only, no license dependencies)
+    FeatureRegistry::instance().registerDefaultFeatures();
+    
     // Connect application quit signal to close all analysis windows
-    // Note: LicenseManager and FeatureRegistry initialization removed (transport-dependent, Phase 3+)
     QObject::connect(&app, &QCoreApplication::aboutToQuit, []() {
         AnalysisWindowManager::instance()->closeAll();
     });

@@ -121,6 +121,27 @@ if(BUILD_TESTING)
 
   add_test(NAME test_analysis_window_manager COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysis_window_manager>)
 endif()
+# feature registry tests (Phoenix-only)
+if(BUILD_TESTING)
+  add_executable(feature_registry_tests
+    feature_registry_tests.cpp
+  )
+
+  target_link_libraries(feature_registry_tests PRIVATE
+    phoenix_feature_registry
+    Qt6::Core
+    Qt6::Test
+  )
+
+  target_include_directories(feature_registry_tests
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME feature_registry_tests COMMAND feature_registry_tests)
+endif()
+
+# Note: license_manager_tests and echo_dialog_tests removed (transport-dependent, Phase 3+)
 # analysis sanity tests
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests
