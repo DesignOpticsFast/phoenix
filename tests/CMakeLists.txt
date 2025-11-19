@@ -375,6 +375,28 @@ if(BUILD_TESTING)
   add_test(NAME test_analysis_runmode_settings COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysis_runmode_settings>)
 endif()
 
+# preferences run mode UI tests
+if(BUILD_TESTING)
+  add_executable(test_preferences_runmode_ui
+    test_preferences_runmode_ui.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/dialogs/AnalysisPage.cpp
+  )
+
+  target_link_libraries(test_preferences_runmode_ui PRIVATE
+    phoenix_feature_registry
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Test
+  )
+
+  target_include_directories(test_preferences_runmode_ui
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME test_preferences_runmode_ui COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_preferences_runmode_ui>)
+endif()
+
 # analysis sanity tests
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests

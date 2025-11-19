@@ -78,6 +78,7 @@ set(PHOENIX_SOURCES
   src/ui/dialogs/PreferencesDialog.cpp
   src/ui/dialogs/EnvironmentPage.cpp
   src/ui/dialogs/LanguagePage.cpp
+  src/ui/dialogs/AnalysisPage.cpp
   src/ui/dialogs/LicenseDialog.cpp
   src/ui/dialogs/EchoTestDialog.cpp
 
@@ -112,6 +113,7 @@ set(PHOENIX_SOURCES
   src/ui/dialogs/PreferencesDialog.h
   src/ui/dialogs/EnvironmentPage.h
   src/ui/dialogs/LanguagePage.h
+  src/ui/dialogs/AnalysisPage.h
   src/ui/dialogs/LicenseDialog.h
   src/ui/dialogs/EchoTestDialog.h
 
