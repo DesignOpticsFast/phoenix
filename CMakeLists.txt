@@ -79,6 +79,9 @@ set(PHOENIX_SOURCES
   src/ui/dialogs/EnvironmentPage.cpp
   src/ui/dialogs/LanguagePage.cpp
 
+  # New UI structure - Widgets
+  src/ui/widgets/FeatureParameterPanel.cpp
+
   # New UI structure - Themes
   src/ui/themes/ThemeManager.cpp
 
@@ -110,6 +113,9 @@ set(PHOENIX_SOURCES
   src/ui/dialogs/PreferencesDialog.h
   src/ui/dialogs/EnvironmentPage.h
   src/ui/dialogs/LanguagePage.h
+
+  # New UI structure - Widgets
+  src/ui/widgets/FeatureParameterPanel.hpp
 
   # New UI structure - Themes
   src/ui/themes/ThemeManager.h
