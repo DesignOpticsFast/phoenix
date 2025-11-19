@@ -1,7 +1,16 @@
 #include "AnalysisWorker.hpp"
 #include "transport/LocalSocketChannel.hpp"
+#include "analysis/demo/XYSineDemo.hpp"
 #include "app/LicenseManager.h"
+#include "analysis/AnalysisProgress.hpp"
 #include <QDebug>
+#include <QThread>
+#include <QProcessEnvironment>
+#include <QVariant>
+#include <QMap>
+#include <QString>
+#include <atomic>
+#include <memory>
 
 AnalysisWorker::AnalysisWorker(QObject* parent)
     : QObject(parent)
