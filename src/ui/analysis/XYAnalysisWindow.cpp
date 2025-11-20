@@ -76,29 +76,27 @@ void XYAnalysisWindow::setupParameterPanel(const QString& featureId)
         return;
     }
     
-    // If we already have a parameter panel, remove it and recreate
+    // If we already have a parameter panel, clean it up
     if (m_parameterPanel) {
-        QWidget* central = centralWidget();
-        if (QSplitter* splitter = qobject_cast<QSplitter*>(central)) {
-            // Remove parameter panel from splitter
-            splitter->removeWidget(m_parameterPanel);
-            m_parameterPanel->deleteLater();
-            m_parameterPanel = nullptr;
-            
-            // If splitter only has one widget now, replace with just the plot widget
-            if (splitter->count() == 1) {
-                QWidget* plotWidget = splitter->widget(0);
-                plotWidget->setParent(nullptr);
-                setCentralWidget(plotWidget);
-                splitter->deleteLater();
-            }
-        }
+        m_parameterPanel->deleteLater();
+        m_parameterPanel = nullptr;
     }
     
-    // Create splitter with plot view and parameter panel
-    QWidget* plotWidget = m_plotView->widget();
-    plotWidget->setParent(nullptr);
+    // Get the plot widget (may be in a splitter or directly as central widget)
+    QWidget* plotWidget = nullptr;
+    QWidget* central = centralWidget();
+    if (QSplitter* splitter = qobject_cast<QSplitter*>(central)) {
+        // Extract plot widget from splitter
+        plotWidget = splitter->widget(0);  // Plot is always first widget
+        plotWidget->setParent(nullptr);
+        splitter->deleteLater();
+    } else {
+        // Plot widget is directly the central widget
+        plotWidget = central;
+        plotWidget->setParent(nullptr);
+    }
     
+    // Create new splitter with plot view and parameter panel
     QSplitter* splitter = new QSplitter(Qt::Horizontal, this);
     splitter->addWidget(plotWidget);
     
