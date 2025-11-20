@@ -1,4 +1,5 @@
 #include "ui/analysis/XYAnalysisWindow.hpp"
+#include "ui/analysis/AnalysisWindowManager.hpp"
 #include "plot/XYPlotViewGraphs.hpp"
 #include "ui/widgets/FeatureParameterPanel.hpp"
 #include "features/FeatureRegistry.hpp"
@@ -9,6 +10,7 @@
 #include <QWidget>
 #include <QSplitter>
 #include <QMessageBox>
+#include <QCloseEvent>
 #include <QDebug>
 
 XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
@@ -34,6 +36,9 @@ XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
     
     // Set attribute for cleanup
     setAttribute(Qt::WA_DeleteOnClose);
+    
+    // Register with window manager
+    AnalysisWindowManager::instance()->registerWindow(this);
 }
 
 XYAnalysisWindow::~XYAnalysisWindow() = default;
@@ -147,3 +152,12 @@ void XYAnalysisWindow::onCloseClicked()
     close();
 }
 
+
+void XYAnalysisWindow::closeEvent(QCloseEvent* event)
+{
+    // Unregister from window manager before closing
+    AnalysisWindowManager::instance()->unregisterWindow(this);
+    
+    // Call base class implementation
+    QMainWindow::closeEvent(event);
+}

@@ -4,10 +4,12 @@
 #include "ui/icons/IconProvider.h"
 #include "ui/icons/PhxLogging.h"
 #include "ui/themes/ThemeManager.h"
+#include "ui/analysis/AnalysisWindowManager.hpp"
 #include "app/LocaleInit.hpp"
 #include "app/SettingsProvider.h"
 #include "version.h"
 #include <QApplication>
+#include <QCoreApplication>
 #include <QTimer>
 #include <QIcon>
 #include <QSplashScreen>
@@ -121,6 +123,11 @@ int main(int argc, char** argv) {
     // Wire ThemeManager singleton (must happen before ThemeManager::instance() use)
     ThemeManager::setSettingsProvider(settingsProvider);
     
+    // Connect application quit signal to close all analysis windows
+    // Note: LicenseManager and FeatureRegistry initialization removed (transport-dependent, Phase 3+)
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, []() {
+        AnalysisWindowManager::instance()->closeAll();
+    });
     // Create main window (but don't show it yet)
     MainWindow mainWindow(settingsProvider);
     mainWindow.setStartupStartTime(startupStartMs);

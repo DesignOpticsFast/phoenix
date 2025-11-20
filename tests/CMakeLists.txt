@@ -116,6 +116,26 @@ if(BUILD_TESTING)
 
   add_test(NAME test_analysis_window_creation COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysis_window_creation>)
 endif()
+# Analysis window manager tests (Phoenix-only)
+if(BUILD_TESTING)
+  add_executable(test_analysis_window_manager
+    test_analysis_window_manager.cpp
+  )
+
+  target_link_libraries(test_analysis_window_manager PRIVATE
+    phoenix_analysis
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Test
+  )
+
+  target_include_directories(test_analysis_window_manager
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME test_analysis_window_manager COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysis_window_manager>)
+endif()
 # analysis sanity tests
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests

@@ -8,6 +8,7 @@ class QToolBar;
 class QAction;
 class QWidget;
 class FeatureParameterPanel;
+class QCloseEvent;
 
 class XYAnalysisWindow : public QMainWindow {
     Q_OBJECT
@@ -20,6 +21,9 @@ public:
     
     // Public access to plot view for setting data
     XYPlotViewGraphs* plotView() const { return m_plotView; }
+
+protected:
+    void closeEvent(QCloseEvent* event) override;
 
 private slots:
     void onRunClicked();
