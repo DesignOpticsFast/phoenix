@@ -27,6 +27,7 @@ private:
     ~AnalysisWindowManager() override = default;
     
     QList<QPointer<QMainWindow>> m_windows;
+    bool m_closingAll = false;  // Guard flag to prevent re-entrancy issues
     static AnalysisWindowManager* s_instance;
 };
 

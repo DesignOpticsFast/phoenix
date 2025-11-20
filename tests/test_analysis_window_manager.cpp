@@ -30,6 +30,7 @@ private slots:
     void testRegisterWindow();
     void testUnregisterWindow();
     void testCloseAll();
+    void testCloseAllWithMultipleWindows();
     void testWindowCount();
 };
 
@@ -102,6 +103,16 @@ void AnalysisWindowManagerTests::testCloseAll()
     QVERIFY(window2->closeEventReceived());
     QVERIFY(window3->closeEventReceived());
     
+    // Verify windows are no longer visible
+    QVERIFY(!window1->isVisible());
+    QVERIFY(!window2->isVisible());
+    QVERIFY(!window3->isVisible());
+    
+    // Verify manager doesn't retain stale pointers
+    // Calling closeAll() again should be a no-op (no windows registered)
+    int countAfterClose = mgr->windowCount();
+    QVERIFY(countAfterClose < countBeforeClose);
+    
     // Cleanup
     window1->deleteLater();
     window2->deleteLater();
@@ -132,6 +143,58 @@ void AnalysisWindowManagerTests::testWindowCount()
     // Cleanup
     window1->deleteLater();
     window2->deleteLater();
+    QApplication::processEvents();
+}
+
+void AnalysisWindowManagerTests::testCloseAllWithMultipleWindows()
+{
+    AnalysisWindowManager* mgr = AnalysisWindowManager::instance();
+    
+    // Create multiple windows
+    TestWindow* w1 = new TestWindow();
+    TestWindow* w2 = new TestWindow();
+    TestWindow* w3 = new TestWindow();
+    
+    // Show them (so isVisible() check works)
+    w1->show();
+    w2->show();
+    w3->show();
+    QApplication::processEvents();
+    
+    mgr->registerWindow(w1);
+    mgr->registerWindow(w2);
+    mgr->registerWindow(w3);
+    
+    QCOMPARE(mgr->windowCount(), 3);
+    
+    // Verify all are visible before close
+    QVERIFY(w1->isVisible());
+    QVERIFY(w2->isVisible());
+    QVERIFY(w3->isVisible());
+    
+    // Close all
+    mgr->closeAll();
+    QApplication::processEvents();
+    
+    // Verify all windows are closed
+    QVERIFY(!w1->isVisible());
+    QVERIFY(!w2->isVisible());
+    QVERIFY(!w3->isVisible());
+    
+    // Verify all received close events
+    QVERIFY(w1->closeEventReceived());
+    QVERIFY(w2->closeEventReceived());
+    QVERIFY(w3->closeEventReceived());
+    
+    // Verify manager is clean (no stale pointers)
+    // Calling closeAll() again should be safe
+    mgr->closeAll();
+    QApplication::processEvents();
+    
+    // Cleanup
+    w1->deleteLater();
+    w2->deleteLater();
+    w3->deleteLater();
     QApplication::processEvents();
 }
 

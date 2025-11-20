@@ -1206,6 +1206,8 @@ void MainWindow::showSystemViewer()
 void MainWindow::showXYPlot()
 {
     // Create XYAnalysisWindow as a top-level window (parent is nullptr for standalone)
+    // Note: nullptr parent required for proper macOS Z-order (see commit 6988d57)
+    // License checking removed (transport-dependent, Phase 3+)
     auto* win = new XYAnalysisWindow(nullptr);
     
     // Generate a simple test dataset: 1000-point sine wave
@@ -1223,7 +1225,7 @@ void MainWindow::showXYPlot()
     
     // Note: setFeature() not called - parameter panel requires transport dependencies (Phase 3+)
     
-    // Show and bring to front
+    // Show and bring to front (above MainWindow, but tool windows will stay on top)
     win->show();
     win->raise();
     win->activateWindow();
