@@ -356,6 +356,28 @@ if(BUILD_TESTING)
   add_test(NAME test_analysiswindow_autorun COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysiswindow_autorun>)
 endif()
 
+# XY plot autoscaling tests
+if(BUILD_TESTING)
+  add_executable(test_xyplot_autoscale
+    test_xyplot_autoscale.cpp
+  )
+
+  target_link_libraries(test_xyplot_autoscale PRIVATE
+    phoenix_analysis
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Test
+    Qt6::QuickWidgets
+  )
+
+  target_include_directories(test_xyplot_autoscale
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME test_xyplot_autoscale COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_xyplot_autoscale>)
+endif()
+
 # analysis run mode settings tests
 if(BUILD_TESTING)
   add_executable(test_analysis_runmode_settings

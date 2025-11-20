@@ -9,6 +9,8 @@
 #include <QDebug>
 #include <QObject>
 #include <QList>
+#include <algorithm>
+#include <cmath>
 
 // Initialize QML resource
 void initQmlResources() {
@@ -20,6 +22,8 @@ XYPlotViewGraphs::XYPlotViewGraphs()
     , m_quickWidget(nullptr)
     , m_rootItem(nullptr)
     , m_mainSeries(nullptr)
+    , m_axisX(nullptr)
+    , m_axisY(nullptr)
 {
     // Ensure QML resources are initialized
     static bool resourcesInitialized = false;
@@ -81,6 +85,17 @@ XYPlotViewGraphs::XYPlotViewGraphs()
         } else {
             qDebug() << "XYPlotViewGraphs: mainSeries found successfully";
         }
+        
+        // Find and cache axis objects for autoscaling
+        m_axisX = m_rootItem->findChild<QObject*>("axisX", Qt::FindChildrenRecursively);
+        m_axisY = m_rootItem->findChild<QObject*>("axisY", Qt::FindChildrenRecursively);
+        
+        if (!m_axisX) {
+            qWarning() << "XYPlotViewGraphs: axisX not found in QML - autoscaling will be disabled";
+        }
+        if (!m_axisY) {
+            qWarning() << "XYPlotViewGraphs: axisY not found in QML - autoscaling will be disabled";
+        }
     }
     
     layout->addWidget(m_quickWidget);
@@ -128,5 +143,84 @@ void XYPlotViewGraphs::setData(const std::vector<QPointF>& points) {
     // Use replace() for bulk update (more efficient than individual appends)
     QMetaObject::invokeMethod(m_mainSeries, "replace", 
                                Q_ARG(QList<QPointF>, pointList));
+    
+    // Update axis ranges to fit the data
+    updateAxisRanges(points);
+}
+
+void XYPlotViewGraphs::updateAxisRanges(const std::vector<QPointF>& points) {
+    // If no data, leave axes as-is (don't reset)
+    if (points.empty()) {
+        return;
+    }
+    
+    // If axes aren't available, skip autoscaling
+    if (!m_axisX || !m_axisY) {
+        return;
+    }
+    
+    // Compute min/max X and Y from data
+    double minX = points[0].x();
+    double maxX = points[0].x();
+    double minY = points[0].y();
+    double maxY = points[0].y();
+    
+    for (const QPointF& point : points) {
+        minX = std::min(minX, point.x());
+        maxX = std::max(maxX, point.x());
+        minY = std::min(minY, point.y());
+        maxY = std::max(maxY, point.y());
+    }
+    
+    // Handle single point or constant X case
+    if (minX == maxX) {
+        const double dx = (minX == 0.0 ? 1.0 : std::abs(minX) * 0.1);
+        minX -= dx;
+        maxX += dx;
+    }
+    
+    // Apply 10% padding to Y-axis
+    double rangeY = maxY - minY;
+    if (rangeY <= 0.0) {
+        // Constant Y values - use 10% of absolute value or default to 1.0
+        rangeY = (maxY == 0.0 ? 1.0 : std::abs(maxY) * 0.1);
+    }
+    
+    const double pad = rangeY * 0.1;  // 10% padding
+    const double newMinY = minY - pad;
+    const double newMaxY = maxY + pad;
+    
+    // Set axis ranges using QObject property system
+    // Try both "min"/"max" and "minimum"/"maximum" property names
+    bool xSet = false;
+    bool ySet = false;
+    
+    // Try "min"/"max" first (most common in Qt Graphs)
+    if (m_axisX->property("min").isValid()) {
+        m_axisX->setProperty("min", minX);
+        m_axisX->setProperty("max", maxX);
+        xSet = true;
+    } else if (m_axisX->property("minimum").isValid()) {
+        m_axisX->setProperty("minimum", minX);
+        m_axisX->setProperty("maximum", maxX);
+        xSet = true;
+    }
+    
+    if (m_axisY->property("min").isValid()) {
+        m_axisY->setProperty("min", newMinY);
+        m_axisY->setProperty("max", newMaxY);
+        ySet = true;
+    } else if (m_axisY->property("minimum").isValid()) {
+        m_axisY->setProperty("minimum", newMinY);
+        m_axisY->setProperty("maximum", newMaxY);
+        ySet = true;
+    }
+    
+    if (!xSet) {
+        qWarning() << "XYPlotViewGraphs: Could not set X axis range - property 'min'/'max' or 'minimum'/'maximum' not found";
+    }
+    if (!ySet) {
+        qWarning() << "XYPlotViewGraphs: Could not set Y axis range - property 'min'/'max' or 'minimum'/'maximum' not found";
+    }
 }
 
