@@ -50,6 +50,8 @@ XYPlotViewGraphs::XYPlotViewGraphs()
         qWarning() << "XYPlotViewGraphs: QML load failed. Status: Error";
         qWarning() << "XYPlotViewGraphs: QML errors:" << m_quickWidget->errors();
         qWarning() << "XYPlotViewGraphs: QML URL was:" << qmlUrl;
+    } else if (status == QQuickWidget::Ready) {
+        qInfo() << "XYPlotViewGraphs: QML load succeeded";
     }
     
     // Get root item for accessing QML properties
