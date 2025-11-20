@@ -1,5 +1,6 @@
 #include "FeatureParameterPanel.hpp"
 #include "features/ParamSpec.hpp"
+#include "features/FeatureDescriptor.hpp"
 #include <QFormLayout>
 #include <QLabel>
 #include <QSpinBox>
@@ -23,12 +24,19 @@ void FeatureParameterPanel::setupUI()
     m_formLayout->setSpacing(8);
     
     // Create editor for each parameter
+    // Use findParam() to get stable pointers to ParamSpecs stored in m_descriptor
     for (const ParamSpec& param : m_descriptor.params()) {
         QWidget* editor = createEditorForParam(param);
         if (editor) {
             m_formLayout->addRow(new QLabel(param.label() + ":", this), editor);
             m_editors.insert(param.name(), editor);
-            m_paramSpecs.insert(param.name(), &param);
+            // Use findParam() to get a stable pointer to the ParamSpec stored in m_descriptor
+            const ParamSpec* stableSpec = m_descriptor.findParam(param.name());
+            if (stableSpec) {
+                m_paramSpecs.insert(param.name(), stableSpec);
+            } else {
+                qWarning() << "FeatureParameterPanel::setupUI: ParamSpec not found for" << param.name();
+            }
         }
     }
     
@@ -270,13 +278,25 @@ QStringList FeatureParameterPanel::validationErrors() const
     for (auto it = params.begin(); it != params.end(); ++it) {
         const QString& paramName = it.key();
         const QVariant& value = it.value();
+        
+        // Try to find spec from m_paramSpecs first (for params with widgets)
         const ParamSpec* spec = m_paramSpecs.value(paramName);
         
-        if (spec && !spec->isValid(value)) {
-            QString error = spec->validationError(value);
-            if (!error.isEmpty()) {
-                errors.append(error);
+        // If not found in m_paramSpecs, search descriptor params (for params without widgets)
+        // Use findParam() to get a stable pointer to the ParamSpec stored in m_descriptor
+        if (!spec) {
+            spec = m_descriptor.findParam(paramName);
+        }
+        
+        if (spec) {
+            if (!spec->isValid(value)) {
+                QString error = spec->validationError(value);
+                if (!error.isEmpty()) {
+                    errors.append(error);
+                }
             }
+        } else {
+            qWarning() << "FeatureParameterPanel::validationErrors: No spec found for param" << paramName;
         }
     }
     
