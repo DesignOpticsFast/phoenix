@@ -1783,15 +1783,3 @@ void MainWindow::logRibbonAction(const QString& action)
         logUIAction(QString("ribbon_%1").arg(action), elapsed);
     });
 }
-
-
-
-void MainWindow::focusInEvent(QFocusEvent* event)
-{
-    // When MainWindow gets focus, ensure analysis windows stay above it
-    // The parenting + raise() in showXYPlot() should maintain Z-order,
-    // but we ensure analysis windows are re-raised if needed.
-    // Tool windows (Qt::Tool) will naturally stay on top.
-    
-    QMainWindow::focusInEvent(event);
-}
