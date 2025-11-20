@@ -44,6 +44,7 @@
 #include <cmath>
 #include "ui/analysis/AnalysisWindow.hpp"
 #include "plot/XYPlotViewGraphs.hpp"
+#include "ui/analysis/XYAnalysisWindow.hpp"
 #include <QPointF>
 #include <vector>
 #include <memory>
@@ -1200,9 +1201,8 @@ void MainWindow::showSystemViewer()
 // Analysis menu actions
 void MainWindow::showXYPlot()
 {
-    // Create AnalysisWindow with main window as parent
-    auto* win = new AnalysisWindow(this);
-    win->setWindowTitle(tr("XY Plot – Qt Graphs"));
+    // Create XYAnalysisWindow as a top-level window (parent is nullptr for standalone)
+    auto* win = new XYAnalysisWindow(nullptr);
     
     // Generate a simple test dataset: 1000-point sine wave
     std::vector<QPointF> points;
@@ -1213,18 +1213,16 @@ void MainWindow::showXYPlot()
         points.emplace_back(x, y);
     }
     
-    // Create XYPlotViewGraphs instance and set the data
-    auto view = std::make_unique<XYPlotViewGraphs>();
-    view->setTitle(tr("Sine Wave Test"));
-    view->setData(points);
+    // Set data on the plot view
+    win->plotView()->setData(points);
+    win->plotView()->setTitle(tr("XY Sine"));
     
-    // Install the view into AnalysisWindow
-    win->setView(std::move(view));
+    // Note: setFeature() not called - parameter panel requires transport dependencies (Phase 3+)
     
-    // Configure and show the window
-    win->resize(900, 600);
-    win->setAttribute(Qt::WA_DeleteOnClose);  // Clean up when closed
+    // Show and bring to front
     win->show();
+    win->raise();
+    win->activateWindow();
 }
 
 void MainWindow::show2DPlot()
