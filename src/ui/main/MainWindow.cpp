@@ -216,14 +216,14 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::focusInEvent(QFocusEvent* event)
 {
-    // When MainWindow gets focus, ensure analysis windows stay above it
-    // Re-raise all visible analysis windows to maintain Z-order
-    AnalysisWindowManager* mgr = AnalysisWindowManager::instance();
-    // Note: We can't directly access the windows list, but we can rely on
-    // the window manager's closeAllWindows() to handle cleanup.
-    // For Z-order, the parenting + raise() in showXYPlot() should be sufficient.
-    
+    // Call base class first to preserve normal focus behavior
     QMainWindow::focusInEvent(event);
+    
+    // When MainWindow gets focus, raise all visible analysis windows above it
+    // This ensures analysis windows stay above MainWindow but below tool windows
+    if (AnalysisWindowManager* mgr = AnalysisWindowManager::instance()) {
+        mgr->raiseAllAnalysisWindows();
+    }
 }
 
 bool MainWindow::event(QEvent* e)

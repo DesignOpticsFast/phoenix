@@ -30,6 +30,9 @@ public:
     // Close everything (analysis + tool windows)
     void closeAllWindows();
     
+    // Raise all visible analysis windows above MainWindow (Z-order enforcement)
+    void raiseAllAnalysisWindows();
+    
     // Get count of registered windows
     int windowCount() const { return m_windows.size(); }
     int toolWindowCount() const { return m_toolWindows.size(); }

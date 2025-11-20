@@ -23,6 +23,23 @@ private:
     bool m_closeEventReceived;
 };
 
+class RaiseSpyWindow : public QMainWindow {
+    Q_OBJECT
+public:
+    explicit RaiseSpyWindow(QWidget* parent = nullptr) : QMainWindow(parent), m_raised(false) {}
+    
+    bool raised() const { return m_raised; }
+    void reset() { m_raised = false; }
+    
+    void raise() override {
+        m_raised = true;
+        QMainWindow::raise();
+    }
+
+private:
+    bool m_raised;
+};
+
 class AnalysisWindowManagerTests : public QObject {
     Q_OBJECT
 
@@ -36,6 +53,7 @@ private slots:
     void testToolWindowRegistration();
     void testCloseAllTools();
     void testCloseAllWindows();
+    void testRaiseAllAnalysisWindows();
 };
 
 void AnalysisWindowManagerTests::testSingleton()
