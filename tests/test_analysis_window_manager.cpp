@@ -31,7 +31,7 @@ public:
     bool raised() const { return m_raised; }
     void reset() { m_raised = false; }
     
-    void raise() override {
+    void raise() {
         m_raised = true;
         QMainWindow::raise();
     }
