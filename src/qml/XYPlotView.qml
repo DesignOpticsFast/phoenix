@@ -21,8 +21,8 @@ Item {
             gridVisible: true
             minorGridVisible: false
             
-            // Label font: readable size
-            labelFont.pointSize: 10
+            // Note: labelFont property not available in Qt 6.10 ValueAxis
+            // Using default font styling
         }
         
         ValueAxis {
@@ -35,8 +35,8 @@ Item {
             gridVisible: true
             minorGridVisible: false
             
-            // Label font: readable size
-            labelFont.pointSize: 10
+            // Note: labelFont property not available in Qt 6.10 ValueAxis
+            // Using default font styling
         }
         
         // LineSeries with axes assigned directly (not in Component.onCompleted)
