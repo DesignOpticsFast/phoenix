@@ -60,6 +60,27 @@ jobs:
           
           echo "✅ All QRC entries validated"
       
+      - name: QML validation (policy & lint)
+        run: |
+          set -e
+          # Find qmllint (Qt 6.10 should be available in CI)
+          QML_LINT=""
+          if [ -f "/opt/Qt/6.10.0/gcc_64/bin/qmllint" ]; then
+            QML_LINT="/opt/Qt/6.10.0/gcc_64/bin/qmllint"
+          elif command -v qmllint >/dev/null 2>&1; then
+            QML_LINT="qmllint"
+          else
+            echo "⚠️  qmllint not found - skipping QML validation"
+            exit 0
+          fi
+          
+          # Run QML validation script
+          if [ -f "scripts/validate_qml.sh" ]; then
+            bash scripts/validate_qml.sh
+          else
+            echo "⚠️  QML validation script not found - skipping"
+          fi
+      
       - name: Check SVG currentColor usage
         run: |
           set -e

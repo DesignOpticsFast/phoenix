@@ -374,6 +374,27 @@ if [ "$stale_found" = false ]; then
     echo "[daily] ✅ No stale QML cache artifacts detected"
 fi
 
+# ============================================================================
+# STEP 5.6: QML VALIDATION (POLICY & LINT)
+# ============================================================================
+echo ""
+echo "[daily] QML validation (policy & lint)"
+validation_script="$root/scripts/validate_qml.sh"
+if [ -f "$validation_script" ]; then
+    if bash "$validation_script"; then
+        echo "[daily] ✅ QML validation passed"
+    else
+        echo ""
+        echo "❌ QML VALIDATION FAILED"
+        echo "[daily] QML validation script failed - see output above"
+        echo "[daily] Fix QML issues before proceeding"
+        exit 1
+    fi
+else
+    echo "[daily] ⚠️  WARNING: QML validation script not found: $validation_script"
+    echo "[daily] Skipping QML validation (script missing)"
+fi
+
 # Stop-the-line reminder
 echo ""
 echo "🔧 UnderLord Stop-The-Line Reminder"
