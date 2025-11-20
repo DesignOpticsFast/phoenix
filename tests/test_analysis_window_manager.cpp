@@ -1,6 +1,7 @@
 #include <QtTest/QtTest>
 #include "ui/analysis/AnalysisWindowManager.hpp"
 #include <QMainWindow>
+#include <QDockWidget>
 #include <QApplication>
 #include <QSignalSpy>
 #include <QCloseEvent>
@@ -32,6 +33,9 @@ private slots:
     void testCloseAll();
     void testCloseAllWithMultipleWindows();
     void testWindowCount();
+    void testToolWindowRegistration();
+    void testCloseAllTools();
+    void testCloseAllWindows();
 };
 
 void AnalysisWindowManagerTests::testSingleton()
@@ -195,6 +199,104 @@ void AnalysisWindowManagerTests::testCloseAllWithMultipleWindows()
     w1->deleteLater();
     w2->deleteLater();
     w3->deleteLater();
+    QApplication::processEvents();
+}
+
+void AnalysisWindowManagerTests::testToolWindowRegistration()
+{
+    AnalysisWindowManager* mgr = AnalysisWindowManager::instance();
+    int initialCount = mgr->toolWindowCount();
+    
+    QMainWindow* parent = new QMainWindow();
+    QDockWidget* dock1 = new QDockWidget("Test Dock 1", parent);
+    QDockWidget* dock2 = new QDockWidget("Test Dock 2", parent);
+    
+    mgr->registerToolWindow(dock1);
+    QCOMPARE(mgr->toolWindowCount(), initialCount + 1);
+    
+    mgr->registerToolWindow(dock2);
+    QCOMPARE(mgr->toolWindowCount(), initialCount + 2);
+    
+    mgr->unregisterToolWindow(dock1);
+    QCOMPARE(mgr->toolWindowCount(), initialCount + 1);
+    
+    mgr->unregisterToolWindow(dock2);
+    QCOMPARE(mgr->toolWindowCount(), initialCount);
+    
+    // Cleanup
+    parent->deleteLater();
+    QApplication::processEvents();
+}
+
+void AnalysisWindowManagerTests::testCloseAllTools()
+{
+    AnalysisWindowManager* mgr = AnalysisWindowManager::instance();
+    
+    QMainWindow* parent = new QMainWindow();
+    QDockWidget* dock1 = new QDockWidget("Test Dock 1", parent);
+    QDockWidget* dock2 = new QDockWidget("Test Dock 2", parent);
+    
+    dock1->show();
+    dock2->show();
+    QApplication::processEvents();
+    
+    mgr->registerToolWindow(dock1);
+    mgr->registerToolWindow(dock2);
+    
+    QVERIFY(dock1->isVisible());
+    QVERIFY(dock2->isVisible());
+    
+    mgr->closeAllTools();
+    QApplication::processEvents();
+    
+    QVERIFY(!dock1->isVisible());
+    QVERIFY(!dock2->isVisible());
+    
+    // Cleanup
+    parent->deleteLater();
+    QApplication::processEvents();
+}
+
+void AnalysisWindowManagerTests::testCloseAllWindows()
+{
+    AnalysisWindowManager* mgr = AnalysisWindowManager::instance();
+    
+    // Create analysis windows
+    TestWindow* w1 = new TestWindow();
+    TestWindow* w2 = new TestWindow();
+    
+    // Create tool windows
+    QMainWindow* parent = new QMainWindow();
+    QDockWidget* dock1 = new QDockWidget("Test Dock", parent);
+    
+    // Show all
+    w1->show();
+    w2->show();
+    dock1->show();
+    QApplication::processEvents();
+    
+    // Register all
+    mgr->registerWindow(w1);
+    mgr->registerWindow(w2);
+    mgr->registerToolWindow(dock1);
+    
+    QVERIFY(w1->isVisible());
+    QVERIFY(w2->isVisible());
+    QVERIFY(dock1->isVisible());
+    
+    // Close everything
+    mgr->closeAllWindows();
+    QApplication::processEvents();
+    
+    // Verify all closed
+    QVERIFY(!w1->isVisible());
+    QVERIFY(!w2->isVisible());
+    QVERIFY(!dock1->isVisible());
+    
+    // Cleanup
+    w1->deleteLater();
+    w2->deleteLater();
+    parent->deleteLater();
     QApplication::processEvents();
 }
 
