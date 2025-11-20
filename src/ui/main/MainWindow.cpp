@@ -1228,15 +1228,11 @@ void MainWindow::saveAsFile()
 
 void MainWindow::showPreferences()
 {
-    if (!m_preferencesDialog) {
-        if (!m_settingsProvider) return;
-        m_preferencesDialog = new PreferencesDialog(this, this);
-        m_preferencesDialog->setAttribute(Qt::WA_DeleteOnClose, true);  // auto-delete on close
-    } else {
-        m_preferencesDialog->raise();
-        m_preferencesDialog->activateWindow();
-    }
-    m_preferencesDialog->show();  // non-modal
+    if (!m_settingsProvider) return;
+    
+    // Use stack-allocated modal dialog (consistent across platforms)
+    PreferencesDialog dlg(this, this);
+    dlg.exec();
 }
 
 void MainWindow::exitApplication()
@@ -1269,7 +1265,7 @@ void MainWindow::showXYPlot()
     constexpr int cascadeDelta = 20;
     constexpr int maxCascadeOffset = 100;
     
-    const QPoint baseOffset(50, 50);  // Base offset from MainWindow's top-left
+    const QPoint baseOffset(80, 120);  // Base offset from MainWindow's top-left (clears ribbon area)
     const QPoint mainPos = pos();
     const QPoint cascadePos = mainPos + baseOffset + QPoint(cascadeOffset, cascadeOffset);
     
