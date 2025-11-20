@@ -4,12 +4,14 @@
 #include "ui/icons/IconProvider.h"
 #include "ui/icons/PhxLogging.h"
 #include "ui/themes/ThemeManager.h"
+#include "ui/analysis/AnalysisWindowManager.hpp"
 #include "app/LocaleInit.hpp"
 #include "app/SettingsProvider.h"
 #include "app/LicenseManager.h"
 #include "features/FeatureRegistry.hpp"
 #include "version.h"
 #include <QApplication>
+#include <QCoreApplication>
 #include <QTimer>
 #include <QIcon>
 #include <QSplashScreen>
@@ -128,6 +130,11 @@ int main(int argc, char** argv) {
     
     // Register default features
     FeatureRegistry::instance().registerDefaultFeatures();
+    
+    // Connect application quit signal to close all analysis windows
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, []() {
+        AnalysisWindowManager::instance()->closeAll();
+    });
     
     // Create main window (but don't show it yet)
     MainWindow mainWindow(settingsProvider);

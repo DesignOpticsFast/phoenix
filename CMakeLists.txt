@@ -710,6 +710,8 @@ add_library(phoenix_analysis STATIC
   src/ui/analysis/IAnalysisView.hpp
   src/ui/analysis/AnalysisWindow.cpp
   src/ui/analysis/AnalysisWindow.hpp
+  src/ui/analysis/AnalysisWindowManager.cpp
+  src/ui/analysis/AnalysisWindowManager.hpp
   src/ui/analysis/XYAnalysisWindow.cpp
   src/ui/analysis/XYAnalysisWindow.hpp
   src/ui/widgets/FeatureParameterPanel.cpp

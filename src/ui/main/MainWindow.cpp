@@ -46,6 +46,7 @@
 #include <functional>
 #include <cmath>
 #include "ui/analysis/AnalysisWindow.hpp"
+#include "ui/analysis/AnalysisWindowManager.hpp"
 #include "plot/XYPlotViewGraphs.hpp"
 #include "ui/analysis/XYAnalysisWindow.hpp"
 #include <QPointF>
@@ -204,6 +205,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    // Close all analysis windows before closing main window
+    AnalysisWindowManager::instance()->closeAll();
+    
     saveSettings();
     QMainWindow::closeEvent(event);
 }
