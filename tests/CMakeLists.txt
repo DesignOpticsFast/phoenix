@@ -378,6 +378,28 @@ if(BUILD_TESTING)
   add_test(NAME test_xyplot_autoscale COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_xyplot_autoscale>)
 endif()
 
+# XY analysis window creation tests
+if(BUILD_TESTING)
+  add_executable(test_analysis_window_creation
+    test_analysis_window_creation.cpp
+  )
+
+  target_link_libraries(test_analysis_window_creation PRIVATE
+    phoenix_analysis
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Test
+    Qt6::QuickWidgets
+  )
+
+  target_include_directories(test_analysis_window_creation
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME test_analysis_window_creation COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysis_window_creation>)
+endif()
+
 # analysis run mode settings tests
 if(BUILD_TESTING)
   add_executable(test_analysis_runmode_settings
