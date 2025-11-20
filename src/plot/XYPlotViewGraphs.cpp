@@ -83,38 +83,133 @@ XYPlotViewGraphs::XYPlotViewGraphs()
     }
     
     if (!m_rootItem) {
-        qWarning() << "XYPlotViewGraphs: Failed to load QML root object.";
-        qWarning() << "XYPlotViewGraphs: Status:" << status;
-        qWarning() << "XYPlotViewGraphs: QML URL:" << qmlUrl;
-        qWarning() << "XYPlotViewGraphs: QML errors:" << m_quickWidget->errors();
-    } else {
-        qDebug() << "XYPlotViewGraphs: QML root object loaded successfully";
-        
-        // Find and store the mainSeries LineSeries object
-        m_mainSeries = m_rootItem->findChild<QObject*>("mainSeries", Qt::FindChildrenRecursively);
-        
-        if (!m_mainSeries) {
-            qWarning() << "XYPlotViewGraphs: mainSeries not found in QML";
-            qWarning() << "XYPlotViewGraphs: Root object type:" << m_rootItem->metaObject()->className();
-            qWarning() << "XYPlotViewGraphs: This may indicate a QML structure issue";
-#ifndef NDEBUG
-            Q_ASSERT(false);
-#endif
-        } else {
-            qDebug() << "XYPlotViewGraphs: mainSeries found successfully";
-        }
-        
-        // Find and cache axis objects for autoscaling
-        m_axisX = m_rootItem->findChild<QObject*>("axisX", Qt::FindChildrenRecursively);
-        m_axisY = m_rootItem->findChild<QObject*>("axisY", Qt::FindChildrenRecursively);
-        
-        if (!m_axisX) {
-            qWarning() << "XYPlotViewGraphs: axisX not found in QML - autoscaling will be disabled";
-        }
-        if (!m_axisY) {
-            qWarning() << "XYPlotViewGraphs: axisY not found in QML - autoscaling will be disabled";
+        qCritical() << "XYPlotViewGraphs: FATAL - Failed to load QML root object.";
+        qCritical() << "XYPlotViewGraphs: Status:" << status;
+        qCritical() << "XYPlotViewGraphs: QML URL:" << qmlUrl;
+        qCritical() << "XYPlotViewGraphs: QML errors:" << m_quickWidget->errors();
+        qCritical() << "XYPlotViewGraphs: Cannot proceed without QML root object - aborting initialization";
+        return; // Abort initialization - widget will be unusable
+    }
+    
+    if (status != QQuickWidget::Ready) {
+        qCritical() << "XYPlotViewGraphs: FATAL - QML not in Ready state, status:" << status;
+        qCritical() << "XYPlotViewGraphs: Cannot proceed - aborting initialization";
+        return; // Abort initialization
+    }
+    
+    qInfo() << "XYPlotViewGraphs: QML root object loaded successfully, type:" << m_rootItem->metaObject()->className();
+    
+    // ============================================================================
+    // BINDING VERIFICATION: Verify QML structure matches C++ expectations
+    // ============================================================================
+    // Find GraphsView (should exist as child of root Item)
+    QObject* graphsView = m_rootItem->findChild<QObject*>("graphsView", Qt::FindChildrenRecursively);
+    if (!graphsView) {
+        qCritical() << "XYPlotViewGraphs: FATAL - QML binding mismatch: graphsView not found";
+        qCritical() << "XYPlotViewGraphs: Expected QML structure: Item { GraphsView { objectName: \"graphsView\" ... } }";
+        qCritical() << "XYPlotViewGraphs: Root object type:" << m_rootItem->metaObject()->className();
+        qCritical() << "XYPlotViewGraphs: Aborting initialization - QML structure does not match C++ expectations";
+        return; // Abort initialization
+    }
+    qDebug() << "XYPlotViewGraphs: graphsView found, type:" << graphsView->metaObject()->className();
+    
+    // Find and verify mainSeries LineSeries object
+    m_mainSeries = m_rootItem->findChild<QObject*>("mainSeries", Qt::FindChildrenRecursively);
+    if (!m_mainSeries) {
+        qCritical() << "XYPlotViewGraphs: FATAL - QML binding mismatch: mainSeries not found";
+        qCritical() << "XYPlotViewGraphs: Expected QML: LineSeries { objectName: \"mainSeries\" ... }";
+        qCritical() << "XYPlotViewGraphs: Root object type:" << m_rootItem->metaObject()->className();
+        qCritical() << "XYPlotViewGraphs: Aborting initialization - cannot bind to series";
+        return; // Abort initialization
+    }
+    
+    // Verify mainSeries is a LineSeries (check metaObject className)
+    QString seriesType = m_mainSeries->metaObject()->className();
+    if (!seriesType.contains("LineSeries") && !seriesType.contains("QXYSeries")) {
+        qCritical() << "XYPlotViewGraphs: FATAL - QML binding type mismatch: mainSeries is not LineSeries";
+        qCritical() << "XYPlotViewGraphs: Found type:" << seriesType;
+        qCritical() << "XYPlotViewGraphs: Expected: QLineSeries or QXYSeries";
+        qCritical() << "XYPlotViewGraphs: Aborting initialization - incorrect QML type";
+        return; // Abort initialization
+    }
+    qInfo() << "XYPlotViewGraphs: mainSeries verified, type:" << seriesType;
+    
+    // Verify mainSeries has required methods
+    const QMetaObject* seriesMeta = m_mainSeries->metaObject();
+    bool hasClear = false;
+    bool hasReplace = false;
+    for (int i = 0; i < seriesMeta->methodCount(); ++i) {
+        QMetaMethod method = seriesMeta->method(i);
+        if (method.name() == QByteArray("clear")) {
+            hasClear = true;
+        } else if (method.name() == QByteArray("replace")) {
+            hasReplace = true;
         }
     }
+    if (!hasClear) {
+        qCritical() << "XYPlotViewGraphs: FATAL - mainSeries missing required method: clear()";
+        qCritical() << "XYPlotViewGraphs: Aborting initialization - QML binding incomplete";
+        return;
+    }
+    if (!hasReplace) {
+        qCritical() << "XYPlotViewGraphs: FATAL - mainSeries missing required method: replace(QList<QPointF>)";
+        qCritical() << "XYPlotViewGraphs: Aborting initialization - QML binding incomplete";
+        return;
+    }
+    qDebug() << "XYPlotViewGraphs: mainSeries methods verified (clear, replace)";
+    
+    // Find and verify axis objects
+    m_axisX = m_rootItem->findChild<QObject*>("axisX", Qt::FindChildrenRecursively);
+    m_axisY = m_rootItem->findChild<QObject*>("axisY", Qt::FindChildrenRecursively);
+    
+    if (!m_axisX) {
+        qCritical() << "XYPlotViewGraphs: FATAL - QML binding mismatch: axisX not found";
+        qCritical() << "XYPlotViewGraphs: Expected QML: ValueAxis { objectName: \"axisX\" ... }";
+        qCritical() << "XYPlotViewGraphs: Aborting initialization - cannot bind to X axis";
+        return; // Abort initialization
+    }
+    
+    if (!m_axisY) {
+        qCritical() << "XYPlotViewGraphs: FATAL - QML binding mismatch: axisY not found";
+        qCritical() << "XYPlotViewGraphs: Expected QML: ValueAxis { objectName: \"axisY\" ... }";
+        qCritical() << "XYPlotViewGraphs: Aborting initialization - cannot bind to Y axis";
+        return; // Abort initialization
+    }
+    
+    // Verify axes are ValueAxis types (check metaObject className)
+    QString axisXType = m_axisX->metaObject()->className();
+    QString axisYType = m_axisY->metaObject()->className();
+    if (!axisXType.contains("ValueAxis") && !axisXType.contains("AbstractAxis")) {
+        qCritical() << "XYPlotViewGraphs: FATAL - QML binding type mismatch: axisX is not ValueAxis";
+        qCritical() << "XYPlotViewGraphs: Found type:" << axisXType;
+        qCritical() << "XYPlotViewGraphs: Expected: QValueAxis or QAbstractAxis";
+        qCritical() << "XYPlotViewGraphs: Aborting initialization - incorrect QML type";
+        return;
+    }
+    if (!axisYType.contains("ValueAxis") && !axisYType.contains("AbstractAxis")) {
+        qCritical() << "XYPlotViewGraphs: FATAL - QML binding type mismatch: axisY is not ValueAxis";
+        qCritical() << "XYPlotViewGraphs: Found type:" << axisYType;
+        qCritical() << "XYPlotViewGraphs: Expected: QValueAxis or QAbstractAxis";
+        qCritical() << "XYPlotViewGraphs: Aborting initialization - incorrect QML type";
+        return;
+    }
+    qInfo() << "XYPlotViewGraphs: axisX verified, type:" << axisXType;
+    qInfo() << "XYPlotViewGraphs: axisY verified, type:" << axisYType;
+    
+    // Verify axes have required properties (min/max)
+    if (!m_axisX->property("min").isValid() && !m_axisX->property("minimum").isValid()) {
+        qCritical() << "XYPlotViewGraphs: FATAL - axisX missing required properties: min/max or minimum/maximum";
+        qCritical() << "XYPlotViewGraphs: Aborting initialization - cannot set axis ranges";
+        return;
+    }
+    if (!m_axisY->property("min").isValid() && !m_axisY->property("minimum").isValid()) {
+        qCritical() << "XYPlotViewGraphs: FATAL - axisY missing required properties: min/max or minimum/maximum";
+        qCritical() << "XYPlotViewGraphs: Aborting initialization - cannot set axis ranges";
+        return;
+    }
+    qDebug() << "XYPlotViewGraphs: Axis properties verified (min/max available)";
+    
+    qInfo() << "XYPlotViewGraphs: QML binding verification complete - all required objects found and verified";
     
     layout->addWidget(m_quickWidget);
     m_container->setLayout(layout);
@@ -137,19 +232,30 @@ QString XYPlotViewGraphs::title() const {
 }
 
 void XYPlotViewGraphs::clear() {
-    // Guard clauses: check QML status and object availability
+    // Runtime binding gates: fail fast if QML binding is broken
     if (m_quickWidget->status() != QQuickWidget::Ready) {
-        qWarning() << "XYPlotViewGraphs::clear - QML not ready, status=" << m_quickWidget->status();
+        qCritical() << "XYPlotViewGraphs::clear - FATAL: QML not ready, status=" << m_quickWidget->status();
+        qCritical() << "XYPlotViewGraphs::clear - Cannot clear - QML binding broken";
         return;
     }
     
     if (!m_quickWidget->rootObject()) {
-        qWarning() << "XYPlotViewGraphs::clear - rootObject is null";
+        qCritical() << "XYPlotViewGraphs::clear - FATAL: rootObject is null";
+        qCritical() << "XYPlotViewGraphs::clear - Cannot clear - QML root missing";
         return;
     }
     
     if (!m_mainSeries) {
-        qWarning() << "XYPlotViewGraphs::clear - mainSeries not available";
+        qCritical() << "XYPlotViewGraphs::clear - FATAL: mainSeries binding is null";
+        qCritical() << "XYPlotViewGraphs::clear - QML binding mismatch - mainSeries not found during initialization";
+        qCritical() << "XYPlotViewGraphs::clear - Cannot clear - aborting operation";
+        return;
+    }
+    
+    // Verify mainSeries still exists and is valid
+    if (!m_mainSeries->metaObject()) {
+        qCritical() << "XYPlotViewGraphs::clear - FATAL: mainSeries metaObject is null";
+        qCritical() << "XYPlotViewGraphs::clear - QML object destroyed - aborting operation";
         return;
     }
     
@@ -157,19 +263,30 @@ void XYPlotViewGraphs::clear() {
 }
 
 void XYPlotViewGraphs::setData(const std::vector<QPointF>& points) {
-    // Guard clauses: check QML status and object availability
+    // Runtime binding gates: fail fast if QML binding is broken
     if (m_quickWidget->status() != QQuickWidget::Ready) {
-        qWarning() << "XYPlotViewGraphs::setData - QML not ready, status=" << m_quickWidget->status();
+        qCritical() << "XYPlotViewGraphs::setData - FATAL: QML not ready, status=" << m_quickWidget->status();
+        qCritical() << "XYPlotViewGraphs::setData - Cannot set data - QML binding broken";
         return;
     }
     
     if (!m_quickWidget->rootObject()) {
-        qWarning() << "XYPlotViewGraphs::setData - rootObject is null";
+        qCritical() << "XYPlotViewGraphs::setData - FATAL: rootObject is null";
+        qCritical() << "XYPlotViewGraphs::setData - Cannot set data - QML root missing";
         return;
     }
     
     if (!m_mainSeries) {
-        qWarning() << "XYPlotViewGraphs::setData - mainSeries not available";
+        qCritical() << "XYPlotViewGraphs::setData - FATAL: mainSeries binding is null";
+        qCritical() << "XYPlotViewGraphs::setData - QML binding mismatch - mainSeries not found during initialization";
+        qCritical() << "XYPlotViewGraphs::setData - Cannot set data - aborting operation";
+        return;
+    }
+    
+    // Verify mainSeries still exists and is valid
+    if (!m_mainSeries->metaObject()) {
+        qCritical() << "XYPlotViewGraphs::setData - FATAL: mainSeries metaObject is null";
+        qCritical() << "XYPlotViewGraphs::setData - QML object destroyed - aborting operation";
         return;
     }
     
@@ -203,8 +320,16 @@ void XYPlotViewGraphs::updateAxisRanges(const std::vector<QPointF>& points) {
         return;
     }
     
-    // If axes aren't available, skip autoscaling
+    // Runtime binding gates: verify axes are available
     if (!m_axisX || !m_axisY) {
+        // Silent return - autoscaling is optional, but log at debug level
+        qDebug() << "XYPlotViewGraphs::updateAxisRanges - Axes not available, skipping autoscaling";
+        return;
+    }
+    
+    // Verify axes are still valid
+    if (!m_axisX->metaObject() || !m_axisY->metaObject()) {
+        qDebug() << "XYPlotViewGraphs::updateAxisRanges - Axis objects invalid, skipping autoscaling";
         return;
     }
     
