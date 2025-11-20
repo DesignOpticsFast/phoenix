@@ -1239,8 +1239,9 @@ void MainWindow::showXYPlot()
         return;
     }
     
-    // Create XYAnalysisWindow as a top-level window (parent is nullptr for standalone)
-    auto* win = new XYAnalysisWindow(nullptr);
+    // Create XYAnalysisWindow parented to MainWindow for proper Z-order
+    // This ensures analysis windows stay above MainWindow but below tool windows
+    auto* win = new XYAnalysisWindow(this);
     
     // Generate a simple test dataset: 1000-point sine wave
     std::vector<QPointF> points;
@@ -1258,7 +1259,7 @@ void MainWindow::showXYPlot()
     // Set XY Sine feature to show parameter panel
     win->setFeature("xy_sine");
     
-    // Show and bring to front
+    // Show and bring to front (above MainWindow, but tool windows will stay on top)
     win->show();
     win->raise();
     win->activateWindow();
