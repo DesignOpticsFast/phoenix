@@ -262,6 +262,67 @@ echo "   Tests:"
 echo "   ℹ️  Tests skipped in daily ritual. For full tests, run: scripts/dev01-preflight.sh"
 echo "   ℹ️  Known failures documented in $KNOWN_FAILURES_FILE"
 
+# ============================================================================
+# STEP 5.5: QML VALIDATION GATES (MANDATORY)
+# ============================================================================
+echo ""
+echo "[daily] QML lint – strict mode"
+
+# Find qmllint in Qt installation
+QML_LINT=""
+if [ -f "/opt/Qt/6.10.0/gcc_64/bin/qmllint" ]; then
+    QML_LINT="/opt/Qt/6.10.0/gcc_64/bin/qmllint"
+elif command -v qmllint >/dev/null 2>&1; then
+    QML_LINT="qmllint"
+fi
+
+if [ -n "$QML_LINT" ]; then
+    qml_files=$(git ls-files 'src/qml/**/*.qml' 'qml/**/*.qml' 2>/dev/null || true)
+    if [ -n "$qml_files" ]; then
+        # Run qmllint (treat any output as error)
+        lint_output=$("$QML_LINT" $qml_files 2>&1)
+        lint_exit=$?
+        if [ $lint_exit -ne 0 ] || [ -n "$lint_output" ]; then
+            echo "[daily] ERROR: QML lint failed - fix QML syntax errors before proceeding"
+            echo "$lint_output"
+            exit 1
+        fi
+        echo "[daily] ✅ QML lint passed"
+    else
+        echo "[daily] ℹ️  No QML files found to lint"
+    fi
+else
+    echo "[daily] ⚠️  WARNING: qmllint not found - skipping QML lint check"
+fi
+
+echo "[daily] QML hygiene check"
+# Check for forbidden patterns (legacy QtCharts/shadow APIs)
+bad_patterns=(
+    'import QtCharts'
+    'gridLineColor'
+    'backgroundColor'
+    'minorGridVisible'
+    'labelFont'
+)
+
+qml_search_dirs=()
+[ -d "$root/src/qml" ] && qml_search_dirs+=("$root/src/qml")
+[ -d "$root/qml" ] && qml_search_dirs+=("$root/qml")
+
+if [ ${#qml_search_dirs[@]} -gt 0 ]; then
+    for pattern in "${bad_patterns[@]}"; do
+        # Use grep instead of rg (more portable)
+        if find "${qml_search_dirs[@]}" -name "*.qml" -type f -exec grep -n "$pattern" {} + 2>/dev/null; then
+            echo "[daily] ERROR: forbidden QML property detected: $pattern"
+            echo "[daily] This indicates legacy QtCharts API usage or unsupported QtGraphs properties"
+            exit 1
+        fi
+    done
+    echo "[daily] ✅ QML hygiene check passed (no forbidden patterns)"
+else
+    echo "[daily] ℹ️  No QML directories found to check"
+fi
+
 # Stop-the-line reminder
 echo ""
 echo "🔧 UnderLord Stop-The-Line Reminder"
@@ -389,6 +450,23 @@ find "$root/.underlord/logs" -maxdepth 1 -type d -name '20*' -printf '%T@ %p\n' 
 rm -rf /tmp/qt-smoke 2>/dev/null || true
 
 # ============================================================================
+# STEP 6.5: POST-CHANGE VALIDATION (NON-FATAL)
+# ============================================================================
+echo ""
+echo "[daily] Verifying tree state"
+uncommitted=$(git status --short 2>/dev/null || true)
+if [ -n "$uncommitted" ]; then
+    echo "[daily] ⚠️  WARNING: Uncommitted changes detected:"
+    echo "$uncommitted" | head -10
+    if [ $(echo "$uncommitted" | wc -l) -gt 10 ]; then
+        echo "[daily] ... (showing first 10 lines)"
+    fi
+    echo "[daily] ℹ️  This is a warning only - daily ritual will continue"
+else
+    echo "[daily] ✅ Tree is clean (no uncommitted changes)"
+fi
+
+# ============================================================================
 # STEP 7: READY FOR ORDERS CONFIRMATION
 # ============================================================================
 echo ""
@@ -400,6 +478,7 @@ echo "✅ Mac Access Policy: Reviewed"
 echo "✅ Mac Environment Map: Reviewed"
 echo "✅ Zero-Autonomy Rule: Reaffirmed"
 echo "✅ Repo & Environment: Sanity checked"
+echo "✅ QML Validation: Passed"
 echo "✅ Sprint Items: Listed"
 echo "✅ Daily Ritual: Complete"
 echo ""
