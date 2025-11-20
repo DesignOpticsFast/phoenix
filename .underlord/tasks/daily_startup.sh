@@ -108,7 +108,7 @@ echo "   ✅ I only take actions explicitly requested by the Capo."
 echo ""
 
 # Clean previous temp artifacts (they will be recreated)
-rm -rf /tmp/qt-smoke /tmp/preflight.log 2>/dev/null || true
+rm -rf /tmp/qt-smoke 2>/dev/null || true
 
 sha_file="$root/.underlord/state/docs.sha256"
 meta_file="$root/.underlord/state/docs.meta"
@@ -235,35 +235,32 @@ if [[ $env_error -ne 0 ]]; then
   exit 1
 fi
 
-echo "[preflight] Qt smoke check…"
-smoke_status=0
-if "$root/scripts/dev/qt6_smoke.sh" /tmp/qt-smoke; then
-  echo "[preflight] Qt smoke: OK"
+# Toolchain sanity checks (lightweight, no builds)
+echo ""
+echo "   Toolchain:"
+if command -v cmake >/dev/null 2>&1; then
+    cmake_ver=$(cmake --version | head -1 | awk '{print $3}')
+    echo "   ✅ cmake=$(command -v cmake) ; version=$cmake_ver"
 else
-  echo "[preflight] Qt smoke: FAILED (continuing); see /tmp/qt-smoke/configure.log"
-  smoke_status=1
+    echo "   ❌ FATAL: cmake not found on PATH"
+    exit 1
 fi
 
-set +e
-"$root/.underlord/preflight.sh" |& tee /tmp/preflight.log
-preflight_rc=${PIPESTATUS[0]}
-set -e
-
-failures=0
-[[ $smoke_status -ne 0 ]] && failures=1
-[[ $preflight_rc -ne 0 ]] && failures=1
-
-if [[ $failures -ne 0 ]]; then
-  stamp="$(date +%Y%m%d-%H%M%S)"
-  log_dir="$root/.underlord/logs/$stamp"
-  mkdir -p "$log_dir"
-  [[ -f /tmp/preflight.log ]] && cp /tmp/preflight.log "$log_dir/"
-  [[ -f /tmp/qt-smoke/configure.log ]] && cp /tmp/qt-smoke/configure.log "$log_dir/" || true
-  [[ -f "$root/build/CMakeCache.txt" ]] && cp "$root/build/CMakeCache.txt" "$log_dir/" || true
-  echo "$(date -Iseconds) | $(git rev-parse --abbrev-ref HEAD)@$(git rev-parse --short HEAD) | PRELIGHT FAIL | logs=$log_dir" >> "$root/.underlord/logs/stop_the_line.log"
-  echo "[STOP-THE-LINE] See $log_dir and /tmp/preflight.log"
-  exit 1
+if command -v ninja >/dev/null 2>&1; then
+    ninja_ver=$(ninja --version)
+    echo "   ✅ ninja=$(command -v ninja) ; version=$ninja_ver"
+elif command -v make >/dev/null 2>&1; then
+    make_ver=$(make --version | head -1 | awk '{print $3}')
+    echo "   ✅ make=$(command -v make) ; version=$make_ver"
+else
+    echo "   ⚠️  Neither ninja nor make found (optional)"
 fi
+
+# Tests: skipped in daily ritual
+echo ""
+echo "   Tests:"
+echo "   ℹ️  Tests skipped in daily ritual. For full tests, run: scripts/dev01-preflight.sh"
+echo "   ℹ️  Known failures documented in $KNOWN_FAILURES_FILE"
 
 # --- Robust Qt version detection (non-fatal) ---
 set +e
@@ -367,19 +364,22 @@ if [ -f "$SPRINT_TASKS_FILE" ]; then
 fi
 echo ""
 
-# Existing preflight summary
-echo "✅ Phoenix Preflight Complete
-Qt6: ${qtver} @ ${qt_prefix}
-CMake: $(cmake --version | head -1 | awk '{print $3}')
-Build/Test: PASS
-Docs: $([[ "$current_sha" != "$prev_sha" ]] && echo "updated (${files_count} files)" || echo "no changes (${files_count} files)")
-Timestamp: $(date -Iseconds)"
+# Daily ritual summary (lightweight check only)
+echo ""
+echo "✅ Phoenix Daily Ritual Complete"
+echo "Qt6: ${qtver} @ ${qt_prefix}"
+echo "CMake: $(cmake --version | head -1 | awk '{print $3}')"
+echo "Docs: $([[ "$current_sha" != "$prev_sha" ]] && echo "updated (${files_count} files)" || echo "no changes (${files_count} files)")"
+echo "Timestamp: $(date -Iseconds)"
+echo ""
+echo "ℹ️  For full preflight (clean build + tests), run: scripts/dev01-preflight.sh"
 
 # Rotate logs (keep last 30 entries)
 find "$root/.underlord/logs" -maxdepth 1 -type d -name '20*' -printf '%T@ %p\n' 2>/dev/null \
   | sort -nr | awk 'NR>30 {print $2}' | xargs -r rm -rf
 
-rm -rf /tmp/qt-smoke /tmp/preflight.log 2>/dev/null || true
+# Cleanup temp files (no preflight logs to clean anymore)
+rm -rf /tmp/qt-smoke 2>/dev/null || true
 
 # ============================================================================
 # STEP 7: READY FOR ORDERS CONFIRMATION
@@ -394,7 +394,7 @@ echo "✅ Mac Environment Map: Reviewed"
 echo "✅ Zero-Autonomy Rule: Reaffirmed"
 echo "✅ Repo & Environment: Sanity checked"
 echo "✅ Sprint Items: Listed"
-echo "✅ Preflight: Complete"
+echo "✅ Daily Ritual: Complete"
 echo ""
 echo "Timestamp: $(date -Iseconds)"
 echo "Branch: $(git rev-parse --abbrev-ref HEAD)@$(git rev-parse --short HEAD)"

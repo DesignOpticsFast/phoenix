@@ -86,6 +86,32 @@ The active sprint is determined by:
 
 ---
 
+## 6. Daily Ritual vs. Preflight
+
+### `make daily` (Lightweight)
+- **Purpose:** Quick connectivity and hygiene check
+- **Runtime:** Seconds (not minutes)
+- **What it does:**
+  - Verifies sprint branch and clean tree
+  - Checks toolchain availability (cmake, ninja/make)
+  - Confirms environment paths are set
+  - **Does NOT run builds or tests**
+- **When to use:** Every day, before starting work
+
+### Preflight Scripts (Heavy)
+- **Purpose:** Full build and test validation
+- **Runtime:** ~4 minutes (configure + build + tests)
+- **What it does:**
+  - Full clean build from scratch
+  - Runs complete test suite (21 tests)
+  - Validates build artifacts
+- **When to use:** Before major changes, merges, or when explicitly needed
+- **How to run:** `scripts/dev01-preflight.sh` or `.underlord/preflight.sh`
+
+**Important:** `make daily` no longer invokes preflight. Preflight must be run explicitly when needed.
+
+---
+
 _End of Sprint Hygiene Rules_
 
 ---

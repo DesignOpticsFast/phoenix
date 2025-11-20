@@ -1,6 +1,11 @@
 #!/bin/bash
 # UnderLord Pre-Flight Check
 # Run before any coding session to validate environment
+#
+# NOTE: This script performs a full clean build and test suite.
+# It is intended for explicit preflight checks, not the daily ritual.
+# The daily ritual (make daily) does NOT invoke this script.
+# To run preflight explicitly: scripts/dev01-preflight.sh or .underlord/preflight.sh
 
 set -euo pipefail
 
