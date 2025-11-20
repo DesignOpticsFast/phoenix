@@ -14,7 +14,7 @@
 #include <QDebug>
 
 XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
-    : QMainWindow(parent)
+    : QMainWindow(nullptr)  // Force nullptr parent to create top-level window (macOS Z-order requirement)
     , m_plotView(nullptr)
     , m_toolbar(nullptr)
     , m_runAction(nullptr)
@@ -24,6 +24,9 @@ XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
 {
     setWindowTitle(tr("XY Plot Analysis"));
     resize(900, 600);
+    
+    // Set window flags for top-level window (not Qt::Tool to allow tool windows to stay on top)
+    setWindowFlags(Qt::Window);
     
     // Create XYPlotViewGraphs
     m_plotView = new XYPlotViewGraphs();

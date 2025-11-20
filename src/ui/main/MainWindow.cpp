@@ -1259,12 +1259,10 @@ void MainWindow::showXYPlot()
         return;
     }
     
-    // Create XYAnalysisWindow parented to MainWindow for proper Z-order
-    // This ensures analysis windows stay above MainWindow but below tool windows
-    auto* win = new XYAnalysisWindow(this);
-    // Ensure window flags are Qt::Window (not Qt::Tool) so tool windows stay on top
-    // Tool windows (QDockWidget with Qt::Tool) will naturally float above normal windows
-    win->setWindowFlags(Qt::Window);
+    // Create XYAnalysisWindow as top-level window (no parent)
+    // This ensures macOS allows it to appear above MainWindow
+    // Tool windows (Qt::Tool) will naturally stay on top of both
+    auto* win = new XYAnalysisWindow(nullptr);
     
     // Generate a simple test dataset: 1000-point sine wave
     std::vector<QPointF> points;
@@ -1282,7 +1280,7 @@ void MainWindow::showXYPlot()
     // Set XY Sine feature to show parameter panel
     win->setFeature("xy_sine");
     
-    // Show and bring to front (above MainWindow, but tool windows will stay on top)
+    // Show and bring to front (tool windows will stay on top)
     win->show();
     win->raise();
     win->activateWindow();
