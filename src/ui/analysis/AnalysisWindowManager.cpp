@@ -172,3 +172,21 @@ void AnalysisWindowManager::closeAllWindows()
     closeAllTools();
 }
 
+void AnalysisWindowManager::raiseAllAnalysisWindows()
+{
+    // Take snapshot to avoid iterator invalidation
+    const QList<QPointer<QMainWindow>> snapshot = m_windows;
+    
+    // Raise all visible analysis windows
+    for (const QPointer<QMainWindow>& ptr : snapshot) {
+        if (!ptr) {
+            continue;
+        }
+        if (!ptr->isVisible()) {
+            continue;
+        }
+        ptr->raise();
+        // Do NOT call activateWindow() to avoid stealing focus from MainWindow
+    }
+}
+
