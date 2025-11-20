@@ -190,3 +190,14 @@ void AnalysisWindowManager::raiseAllAnalysisWindows()
     }
 }
 
+QList<QMainWindow*> AnalysisWindowManager::windows() const
+{
+    QList<QMainWindow*> result;
+    for (const QPointer<QMainWindow>& ptr : m_windows) {
+        if (ptr) {
+            result.append(ptr.data());
+        }
+    }
+    return result;
+}
+
