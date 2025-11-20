@@ -318,6 +318,54 @@ void AnalysisWindowManagerTests::testCloseAllWindows()
     QApplication::processEvents();
 }
 
+void AnalysisWindowManagerTests::testRaiseAllAnalysisWindows()
+{
+    AnalysisWindowManager* mgr = AnalysisWindowManager::instance();
+    
+    // Create spy windows that track raise() calls
+    RaiseSpyWindow w1;
+    RaiseSpyWindow w2;
+    RaiseSpyWindow w3;
+    
+    // Show windows (only visible windows should be raised)
+    w1.show();
+    w2.show();
+    // w3 is not shown, so it should not be raised
+    
+    QApplication::processEvents();
+    
+    // Register windows
+    mgr->registerWindow(&w1);
+    mgr->registerWindow(&w2);
+    mgr->registerWindow(&w3);
+    
+    // Reset raised flags
+    w1.reset();
+    w2.reset();
+    w3.reset();
+    
+    // Call raiseAllAnalysisWindows()
+    mgr->raiseAllAnalysisWindows();
+    QApplication::processEvents();
+    
+    // Verify visible windows were raised
+    QVERIFY(w1.raised());
+    QVERIFY(w2.raised());
+    // w3 was not visible, so it should not have been raised
+    QVERIFY(!w3.raised());
+    
+    // Unregister
+    mgr->unregisterWindow(&w1);
+    mgr->unregisterWindow(&w2);
+    mgr->unregisterWindow(&w3);
+    
+    // Cleanup
+    w1.close();
+    w2.close();
+    w3.close();
+    QApplication::processEvents();
+}
+
 QTEST_MAIN(AnalysisWindowManagerTests)
 #include "test_analysis_window_manager.moc"
 
