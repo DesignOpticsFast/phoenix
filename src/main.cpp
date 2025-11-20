@@ -47,6 +47,9 @@ int main(int argc, char** argv) {
 
     QApplication app(argc, argv);
     
+    // Register QMainWindow* metatype for use in QVariant (Window menu)
+    qRegisterMetaType<QMainWindow*>("QMainWindow*");
+    
     // Disable verbose logs by default (still toggleable via QT_LOGGING_RULES)
     QLoggingCategory::setFilterRules(QStringLiteral(
         "phx.icons.debug=false\n"

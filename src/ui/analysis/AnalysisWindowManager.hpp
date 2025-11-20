@@ -36,6 +36,9 @@ public:
     // Get count of registered windows
     int windowCount() const { return m_windows.size(); }
     int toolWindowCount() const { return m_toolWindows.size(); }
+    
+    // Get list of all currently registered analysis windows (non-null only)
+    QList<QMainWindow*> windows() const;
 
 private:
     AnalysisWindowManager(QObject* parent = nullptr);
