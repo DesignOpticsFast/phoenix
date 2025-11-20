@@ -47,11 +47,13 @@ XYPlotViewGraphs::XYPlotViewGraphs()
     // Check for QML errors immediately after setSource
     QQuickWidget::Status status = m_quickWidget->status();
     if (status == QQuickWidget::Error) {
-        qWarning() << "XYPlotViewGraphs: QML load failed. Status: Error";
-        qWarning() << "XYPlotViewGraphs: QML errors:" << m_quickWidget->errors();
-        qWarning() << "XYPlotViewGraphs: QML URL was:" << qmlUrl;
+        qCritical() << "XYPlotViewGraphs: QML load failed, url=" << qmlUrl;
+        const auto errors = m_quickWidget->errors();
+        for (const auto &err : errors) {
+            qCritical() << "  QML error:" << err.toString();
+        }
     } else if (status == QQuickWidget::Ready) {
-        qInfo() << "XYPlotViewGraphs: QML load succeeded";
+        qInfo() << "XYPlotViewGraphs: QML loaded successfully";
     }
     
     // Get root item for accessing QML properties
@@ -121,8 +123,19 @@ QString XYPlotViewGraphs::title() const {
 }
 
 void XYPlotViewGraphs::clear() {
+    // Guard clauses: check QML status and object availability
+    if (m_quickWidget->status() != QQuickWidget::Ready) {
+        qWarning() << "XYPlotViewGraphs::clear - QML not ready, status=" << m_quickWidget->status();
+        return;
+    }
+    
+    if (!m_quickWidget->rootObject()) {
+        qWarning() << "XYPlotViewGraphs::clear - rootObject is null";
+        return;
+    }
+    
     if (!m_mainSeries) {
-        qWarning() << "Cannot clear: mainSeries not available";
+        qWarning() << "XYPlotViewGraphs::clear - mainSeries not available";
         return;
     }
     
@@ -130,8 +143,19 @@ void XYPlotViewGraphs::clear() {
 }
 
 void XYPlotViewGraphs::setData(const std::vector<QPointF>& points) {
+    // Guard clauses: check QML status and object availability
+    if (m_quickWidget->status() != QQuickWidget::Ready) {
+        qWarning() << "XYPlotViewGraphs::setData - QML not ready, status=" << m_quickWidget->status();
+        return;
+    }
+    
+    if (!m_quickWidget->rootObject()) {
+        qWarning() << "XYPlotViewGraphs::setData - rootObject is null";
+        return;
+    }
+    
     if (!m_mainSeries) {
-        qWarning() << "Cannot set data: mainSeries not available";
+        qWarning() << "XYPlotViewGraphs::setData - mainSeries not available";
         return;
     }
     
@@ -151,6 +175,15 @@ void XYPlotViewGraphs::setData(const std::vector<QPointF>& points) {
 }
 
 void XYPlotViewGraphs::updateAxisRanges(const std::vector<QPointF>& points) {
+    // Lightweight guards: silent returns if QML not ready (no logging to avoid noise)
+    if (m_quickWidget->status() != QQuickWidget::Ready) {
+        return;
+    }
+    
+    if (!m_quickWidget->rootObject()) {
+        return;
+    }
+    
     // If no data, leave axes as-is (don't reset)
     if (points.empty()) {
         return;
