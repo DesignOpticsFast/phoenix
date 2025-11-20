@@ -24,6 +24,8 @@ private slots:
     void testMissingParams();
     void testParameterChangedSignal();
     void testWidgetTypes();
+    void testIsValidAfterConstruction();
+    void testValidationErrorUsesLabel();
 };
 
 void FeatureParameterPanelTests::testPanelCreation()
@@ -228,6 +230,48 @@ void FeatureParameterPanelTests::testWidgetTypes()
     
     // samples should be Int
     QVERIFY(params.value("samples").canConvert<int>());
+}
+
+void FeatureParameterPanelTests::testIsValidAfterConstruction()
+{
+    FeatureRegistry& reg = FeatureRegistry::instance();
+    reg.registerDefaultFeatures();
+    
+    const FeatureDescriptor* xySine = reg.getFeature("xy_sine");
+    QVERIFY(xySine != nullptr);
+    
+    FeatureParameterPanel panel(*xySine);
+    
+    // Panel should be valid immediately after construction with defaults
+    QVERIFY(panel.isValid());
+    QVERIFY(panel.validationErrors().isEmpty());
+}
+
+void FeatureParameterPanelTests::testValidationErrorUsesLabel()
+{
+    // Create a ParamSpec with label
+    ParamSpec spec("frequency", "Frequency", ParamSpec::Type::Double);
+    spec.setMinValue(0.1).setMaxValue(100.0);
+    
+    // Test with invalid value (out of range)
+    QVariant invalidValue(-1.0);
+    QString error = spec.validationError(invalidValue);
+    
+    // Error message should contain the label "Frequency", not empty string
+    QVERIFY(!error.isEmpty());
+    QVERIFY(error.contains("Frequency"));
+    
+    // Test with another invalid value (wrong type)
+    QVariant wrongType("not a number");
+    QString error2 = spec.validationError(wrongType);
+    QVERIFY(!error2.isEmpty());
+    QVERIFY(error2.contains("Frequency"));
+    
+    // Test with ParamSpec that has no label (should use name)
+    ParamSpec specNoLabel("test_param", "", ParamSpec::Type::Int);
+    QString error3 = specNoLabel.validationError(QVariant());
+    QVERIFY(!error3.isEmpty());
+    QVERIFY(error3.contains("test_param"));
 }
 
 QTEST_MAIN(FeatureParameterPanelTests)

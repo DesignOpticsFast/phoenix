@@ -105,32 +105,34 @@ QWidget* FeatureParameterPanel::createEditorForParam(const ParamSpec& spec)
 
 QVariant FeatureParameterPanel::getValueFromWidget(QWidget* widget, const ParamSpec& spec) const
 {
+    QVariant widgetValue;
+    
     switch (spec.type()) {
         case ParamSpec::Type::Int: {
             QSpinBox* spinBox = qobject_cast<QSpinBox*>(widget);
             if (spinBox) {
-                return QVariant(spinBox->value());
+                widgetValue = QVariant(spinBox->value());
             }
             break;
         }
         case ParamSpec::Type::Double: {
             QDoubleSpinBox* spinBox = qobject_cast<QDoubleSpinBox*>(widget);
             if (spinBox) {
-                return QVariant(spinBox->value());
+                widgetValue = QVariant(spinBox->value());
             }
             break;
         }
         case ParamSpec::Type::Bool: {
             QCheckBox* checkBox = qobject_cast<QCheckBox*>(widget);
             if (checkBox) {
-                return QVariant(checkBox->isChecked());
+                widgetValue = QVariant(checkBox->isChecked());
             }
             break;
         }
         case ParamSpec::Type::String: {
             QLineEdit* lineEdit = qobject_cast<QLineEdit*>(widget);
             if (lineEdit) {
-                return QVariant(lineEdit->text());
+                widgetValue = QVariant(lineEdit->text());
             }
             break;
         }
@@ -138,7 +140,13 @@ QVariant FeatureParameterPanel::getValueFromWidget(QWidget* widget, const ParamS
             // Enum support deferred
             break;
     }
-    return QVariant();
+    
+    // If widget value is invalid (widget missing or cast failed), fall back to default
+    if (!widgetValue.isValid() && spec.defaultValue().isValid()) {
+        return spec.defaultValue();
+    }
+    
+    return widgetValue;
 }
 
 void FeatureParameterPanel::setValueToWidget(QWidget* widget, const ParamSpec& spec, const QVariant& value) const
@@ -190,14 +198,29 @@ QMap<QString, QVariant> FeatureParameterPanel::parameters() const
 {
     QMap<QString, QVariant> result;
     
+    // First, collect values from widgets (with fallback to defaults)
     for (auto it = m_editors.begin(); it != m_editors.end(); ++it) {
         const QString& paramName = it.key();
         QWidget* widget = it.value();
         const ParamSpec* spec = m_paramSpecs.value(paramName);
         
-        if (widget && spec) {
+        if (spec) {
             QVariant value = getValueFromWidget(widget, *spec);
-            result.insert(paramName, value);
+            // getValueFromWidget already falls back to default if widget value is invalid
+            // But ensure we always have a value if a default exists
+            if (!value.isValid() && spec->defaultValue().isValid()) {
+                value = spec->defaultValue();
+            }
+            if (value.isValid()) {
+                result.insert(paramName, value);
+            }
+        }
+    }
+    
+    // Ensure all params from descriptor are included (use defaults for any missing)
+    for (const ParamSpec& param : m_descriptor.params()) {
+        if (!result.contains(param.name()) && param.defaultValue().isValid()) {
+            result.insert(param.name(), param.defaultValue());
         }
     }
     

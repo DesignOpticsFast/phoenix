@@ -3,9 +3,10 @@
 #include "analysis/AnalysisWorker.hpp"
 #include "analysis/AnalysisProgress.hpp"
 #include "transport/LocalSocketChannel.hpp"
+#include "app/LicenseManager.h"
 #include <QSignalSpy>
-#include <QProcessEnvironment>
 #include <QThread>
+#include <QCoreApplication>
 #include <cmath>
 
 class LocalXYSineTests : public QObject {
@@ -120,10 +121,9 @@ void LocalXYSineTests::testLocalXYSineSampleClamping()
 
 void LocalXYSineTests::testDemoModeBypassesBedrock()
 {
-    // Set demo mode environment variable
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    env.insert("PHOENIX_DEMO_MODE", "1");
-    QProcessEnvironment::setSystemEnvironment(env);
+    // Set demo mode environment variable (Qt 6.10 compatible)
+    // Must be set before creating worker so isDemoModeEnabled() sees it
+    qputenv("PHOENIX_DEMO_MODE", "1");
     
     // Create AnalysisWorker
     AnalysisWorker* worker = new AnalysisWorker();
@@ -175,9 +175,8 @@ void LocalXYSineTests::testDemoModeBypassesBedrock()
     QCOMPARE(result.x.size(), result.y.size());
     QCOMPARE(result.x.size(), 100u);  // Should match samples parameter
     
-    // Clean up environment
-    env.remove("PHOENIX_DEMO_MODE");
-    QProcessEnvironment::setSystemEnvironment(env);
+    // Clean up environment (Qt 6.10 compatible)
+    qunsetenv("PHOENIX_DEMO_MODE");
 }
 
 QTEST_MAIN(LocalXYSineTests)

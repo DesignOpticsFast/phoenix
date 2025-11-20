@@ -65,8 +65,8 @@ void AnalysisWorker::requestCancel()
 // Check if demo mode is enabled (PHOENIX_DEMO_MODE=1)
 static bool isDemoModeEnabled()
 {
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    return env.value("PHOENIX_DEMO_MODE") == "1";
+    // Use qgetenv for immediate visibility of qputenv() changes
+    return qgetenv("PHOENIX_DEMO_MODE") == "1";
 }
 
 void AnalysisWorker::executeCompute()

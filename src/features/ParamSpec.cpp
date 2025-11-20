@@ -106,37 +106,50 @@ bool ParamSpec::isValid(const QVariant& value) const
     return true;
 }
 
+QString ParamSpec::displayName() const
+{
+    if (!m_label.isEmpty()) {
+        return m_label;
+    }
+    if (!m_name.isEmpty()) {
+        return m_name;
+    }
+    return QString("parameter");
+}
+
 QString ParamSpec::validationError(const QVariant& value) const
 {
+    const QString display = displayName();
+    
     if (!value.isValid()) {
-        return QString("Invalid value for parameter '%1'").arg(m_name);
+        return QString("Invalid value for parameter '%1'").arg(display);
     }
     
     // Type checking
     switch (m_type) {
         case Type::Int:
             if (!value.canConvert<int>()) {
-                return QString("Parameter '%1' must be an integer").arg(m_name);
+                return QString("Parameter '%1' must be an integer").arg(display);
             }
             break;
         case Type::Double:
             if (!value.canConvert<double>()) {
-                return QString("Parameter '%1' must be a number").arg(m_name);
+                return QString("Parameter '%1' must be a number").arg(display);
             }
             break;
         case Type::Bool:
             if (!value.canConvert<bool>()) {
-                return QString("Parameter '%1' must be a boolean").arg(m_name);
+                return QString("Parameter '%1' must be a boolean").arg(display);
             }
             break;
         case Type::String:
             if (!value.canConvert<QString>()) {
-                return QString("Parameter '%1' must be a string").arg(m_name);
+                return QString("Parameter '%1' must be a string").arg(display);
             }
             break;
         case Type::Enum:
             if (!value.canConvert<QString>()) {
-                return QString("Parameter '%1' must be a string").arg(m_name);
+                return QString("Parameter '%1' must be a string").arg(display);
             }
             break;
     }
@@ -146,20 +159,20 @@ QString ParamSpec::validationError(const QVariant& value) const
         bool ok = false;
         double numValue = value.toDouble(&ok);
         if (!ok) {
-            return QString("Parameter '%1' must be a number").arg(m_name);
+            return QString("Parameter '%1' must be a number").arg(display);
         }
         
         if (m_minValue.isValid()) {
             double min = m_minValue.toDouble(&ok);
             if (ok && numValue < min) {
-                return QString("Parameter '%1' must be >= %2").arg(m_name).arg(min);
+                return QString("Parameter '%1' must be >= %2").arg(display).arg(min);
             }
         }
         
         if (m_maxValue.isValid()) {
             double max = m_maxValue.toDouble(&ok);
             if (ok && numValue > max) {
-                return QString("Parameter '%1' must be <= %2").arg(m_name).arg(max);
+                return QString("Parameter '%1' must be <= %2").arg(display).arg(max);
             }
         }
     }
@@ -169,7 +182,7 @@ QString ParamSpec::validationError(const QVariant& value) const
         QString strValue = value.toString();
         if (!m_enumValues.contains(strValue)) {
             return QString("Parameter '%1' must be one of: %2")
-                .arg(m_name)
+                .arg(display)
                 .arg(m_enumValues.join(", "));
         }
     }
