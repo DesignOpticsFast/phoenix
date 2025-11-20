@@ -893,17 +893,25 @@ void MainWindow::setupFloatingToolbarsAndDocks()
         if (auto* tb = qobject_cast<QToolBar*>(w)) {
             connect(tb, &QToolBar::topLevelChanged, this, [w](bool floating) {
                 if (floating) {
-                    w->show();
-                    // Removed w->raise() - on Wayland this triggers popup-only mouse grab
-                    // Qt's default z-ordering is sufficient on all platforms
+                    // When the toolbar is floating, make it a top-level always-on-top window
+                    w->setWindowFlag(Qt::WindowStaysOnTopHint, true);
+                    w->show(); // Re-polish with new flags
+                } else {
+                    // When re-docked, clear the always-on-top hint
+                    w->setWindowFlag(Qt::WindowStaysOnTopHint, false);
+                    w->show(); // Re-apply normal docking behavior
                 }
             });
         } else if (auto* dw = qobject_cast<QDockWidget*>(w)) {
             connect(dw, &QDockWidget::topLevelChanged, this, [w](bool floating) {
                 if (floating) {
+                    // When the dock widget is floating, keep it above MainWindow
+                    w->setWindowFlag(Qt::WindowStaysOnTopHint, true);
                     w->show();
-                    // Removed w->raise() - on Wayland this triggers popup-only mouse grab
-                    // Qt's default z-ordering is sufficient on all platforms
+                } else {
+                    // When docked back into MainWindow, remove the always-on-top hint
+                    w->setWindowFlag(Qt::WindowStaysOnTopHint, false);
+                    w->show();
                 }
             });
         }

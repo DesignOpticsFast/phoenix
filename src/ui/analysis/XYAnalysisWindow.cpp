@@ -25,8 +25,9 @@ XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
     setWindowTitle(tr("XY Plot Analysis"));
     resize(900, 600);
     
-    // Set window flags for top-level window (not Qt::Tool to allow tool windows to stay on top)
-    setWindowFlags(Qt::Window);
+    // Ensure this is a top-level window and always stays above MainWindow.
+    // QMainWindow already has Qt::Window by default; we just add the stays-on-top hint.
+    setWindowFlag(Qt::WindowStaysOnTopHint, true);
     
     // Create XYPlotViewGraphs
     m_plotView = new XYPlotViewGraphs();
