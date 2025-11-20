@@ -323,6 +323,57 @@ else
     echo "[daily] ℹ️  No QML directories found to check"
 fi
 
+echo "[daily] QML resource consistency check"
+# Verify that QML files referenced in .qrc match files on disk
+qrc_file="$root/src/qml/phoenix_qml.qrc"
+if [ -f "$qrc_file" ]; then
+    # Extract QML file references from .qrc
+    qrc_qml_files=$(grep -oP '<file[^>]*>.*?\.qml</file>' "$qrc_file" | sed -E 's/.*>(.*)<.*/\1/' || true)
+    if [ -n "$qrc_qml_files" ]; then
+        qrc_dir=$(dirname "$qrc_file")
+        all_match=true
+        for qml_file in $qrc_qml_files; do
+            disk_path="$qrc_dir/$qml_file"
+            if [ ! -f "$disk_path" ]; then
+                echo "[daily] ERROR: QML file referenced in .qrc not found on disk: $qml_file"
+                all_match=false
+            fi
+        done
+        if [ "$all_match" = true ]; then
+            echo "[daily] ✅ QML resource consistency check passed (.qrc matches disk)"
+        else
+            echo "[daily] ERROR: QML resource consistency check failed"
+            exit 1
+        fi
+    else
+        echo "[daily] ℹ️  No QML files found in .qrc to verify"
+    fi
+else
+    echo "[daily] ⚠️  WARNING: phoenix_qml.qrc not found - skipping resource consistency check"
+fi
+
+# Check for stale QML cache artifacts in build directories
+echo "[daily] Checking for stale QML cache artifacts"
+stale_found=false
+for build_dir in "$root/build"*; do
+    if [ -d "$build_dir" ]; then
+        # Check for .qmlc files (compiled QML cache)
+        if find "$build_dir" -name "*.qmlc" -type f 2>/dev/null | grep -q .; then
+            echo "[daily] ⚠️  WARNING: Found .qmlc cache files in $build_dir"
+            echo "[daily]    Consider cleaning build directory to force QML recompilation"
+            stale_found=true
+        fi
+        # Check for qmlcache directories
+        if find "$build_dir" -type d -name "qmlcache" 2>/dev/null | grep -q .; then
+            echo "[daily] ⚠️  WARNING: Found qmlcache directories in $build_dir"
+            stale_found=true
+        fi
+    fi
+done
+if [ "$stale_found" = false ]; then
+    echo "[daily] ✅ No stale QML cache artifacts detected"
+fi
+
 # Stop-the-line reminder
 echo ""
 echo "🔧 UnderLord Stop-The-Line Reminder"

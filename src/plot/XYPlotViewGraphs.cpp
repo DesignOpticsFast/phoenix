@@ -9,6 +9,8 @@
 #include <QDebug>
 #include <QObject>
 #include <QList>
+#include <QFile>
+#include <QFileInfo>
 #include <algorithm>
 #include <cmath>
 
@@ -41,6 +43,18 @@ XYPlotViewGraphs::XYPlotViewGraphs()
     
     // Check QML file availability
     QUrl qmlUrl("qrc:/qml/XYPlotView.qml");
+    qInfo() << "XYPlotViewGraphs: QML resource URL:" << qmlUrl;
+    qInfo() << "XYPlotViewGraphs: QML engine search paths:" << m_quickWidget->engine()->importPathList();
+    qInfo() << "XYPlotViewGraphs: QML engine base URL:" << m_quickWidget->engine()->baseUrl();
+    
+    // Verify resource exists before loading
+    if (QFile::exists(":/qml/XYPlotView.qml")) {
+        QFileInfo fileInfo(":/qml/XYPlotView.qml");
+        qInfo() << "XYPlotViewGraphs: QML resource file exists, size:" << fileInfo.size() << "bytes";
+    } else {
+        qWarning() << "XYPlotViewGraphs: QML resource file NOT found at :/qml/XYPlotView.qml";
+    }
+    
     qDebug() << "XYPlotViewGraphs: Loading QML from:" << qmlUrl;
     m_quickWidget->setSource(qmlUrl);
     
