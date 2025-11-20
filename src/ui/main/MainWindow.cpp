@@ -1225,9 +1225,25 @@ void MainWindow::showSystemViewer()
 // Analysis menu actions
 void MainWindow::showXYPlot()
 {
+<<<<<<< HEAD
     // Create XYAnalysisWindow as a top-level window (parent is nullptr for standalone)
     // Note: nullptr parent required for proper macOS Z-order (see commit 6988d57)
     // License checking removed (transport-dependent, Phase 3+)
+=======
+    // Check license before opening XY Plot
+    LicenseManager* mgr = LicenseManager::instance();
+    if (mgr->currentState() != LicenseManager::LicenseState::NotConfigured &&
+        !mgr->hasFeature("feature_xy_plot")) {
+        QMessageBox::warning(this, tr("Feature Unavailable"),
+            tr("XY Plot requires a valid license with the 'feature_xy_plot' feature.\n\n"
+               "Please check your license status via Help → License..."));
+        return;
+    }
+    
+    // Create XYAnalysisWindow as top-level window (no parent)
+    // This ensures macOS allows it to appear above MainWindow
+    // Tool windows (Qt::Tool) will naturally stay on top of both
+>>>>>>> 6988d57 (S4.3-Windowing-3c: Make XYAnalysisWindow true top-level window for macOS Z-order)
     auto* win = new XYAnalysisWindow(nullptr);
     
     // Generate a simple test dataset: 1000-point sine wave
@@ -1245,7 +1261,7 @@ void MainWindow::showXYPlot()
     
     // Note: setFeature() not called - parameter panel requires transport dependencies (Phase 3+)
     
-    // Show and bring to front (above MainWindow, but tool windows will stay on top)
+    // Show and bring to front (tool windows will stay on top)
     win->show();
     win->raise();
     win->activateWindow();
