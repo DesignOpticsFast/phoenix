@@ -20,7 +20,7 @@ Item {
             // Grid styling: subtle gray gridlines
             gridLineColor: "#E0E0E0"
             gridVisible: true
-            minorGridVisible: false
+            // minorGridVisible is not supported on all Qt Graphs builds; using default minor grid settings
             
             // Note: labelFont property not available in Qt 6.10 ValueAxis
             // Using default font styling
@@ -34,7 +34,7 @@ Item {
             // Grid styling: subtle gray gridlines
             gridLineColor: "#E0E0E0"
             gridVisible: true
-            minorGridVisible: false
+            // minorGridVisible is not supported on all Qt Graphs builds; using default minor grid settings
             
             // Note: labelFont property not available in Qt 6.10 ValueAxis
             // Using default font styling
