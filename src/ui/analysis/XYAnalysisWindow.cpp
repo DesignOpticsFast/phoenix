@@ -3,6 +3,8 @@
 #include "plot/XYPlotViewGraphs.hpp"
 #include "ui/widgets/FeatureParameterPanel.hpp"
 #include "features/FeatureRegistry.hpp"
+#include "analysis/AnalysisWorker.hpp"
+#include "analysis/AnalysisResults.hpp"  // For XYSineResult
 #include "app/LicenseManager.h"
 #include <QToolBar>
 #include <QVBoxLayout>
@@ -11,6 +13,7 @@
 #include <QSplitter>
 #include <QMessageBox>
 #include <QCloseEvent>
+#include <QThread>
 #include <QDebug>
 
 XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
@@ -21,6 +24,8 @@ XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
     , m_cancelAction(nullptr)
     , m_closeAction(nullptr)
     , m_parameterPanel(nullptr)
+    , m_workerThread(nullptr)
+    , m_worker(nullptr)
 {
     setWindowTitle(tr("XY Plot Analysis"));
     resize(900, 600);
@@ -45,7 +50,11 @@ XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
     AnalysisWindowManager::instance()->registerWindow(this);
 }
 
-XYAnalysisWindow::~XYAnalysisWindow() = default;
+XYAnalysisWindow::~XYAnalysisWindow()
+{
+    // Clean up worker thread if still running
+    cleanupWorker();
+}
 
 void XYAnalysisWindow::setupToolbar()
 {
@@ -130,6 +139,11 @@ void XYAnalysisWindow::onRunClicked()
         return;
     }
     
+    // Prevent double-click spam
+    if (m_workerThread && m_workerThread->isRunning()) {
+        return;
+    }
+    
     // Validate parameters
     if (!m_parameterPanel->isValid()) {
         QStringList errors = m_parameterPanel->validationErrors();
@@ -139,16 +153,60 @@ void XYAnalysisWindow::onRunClicked()
         return;
     }
     
-    // For now, just show a message (analysis execution will be added later)
-    QMessageBox::information(this, tr("Run Analysis"),
-        tr("Analysis execution will be implemented in a future chunk."));
+    // Get parameters
+    QMap<QString, QVariant> params = m_parameterPanel->parameters();
+    
+    // Validate Number of Samples parameter
+    if (params.contains("num_samples")) {
+        bool ok;
+        int numSamples = params.value("num_samples").toInt(&ok);
+        if (!ok || numSamples <= 0) {
+            QMessageBox::warning(this, tr("Invalid Parameters"),
+                tr("Number of Samples must be a positive integer."));
+            return;
+        }
+    }
+    
+    // Clean up any existing worker
+    cleanupWorker();
+    
+    // Create worker thread
+    m_workerThread = new QThread(this);
+    m_worker = new AnalysisWorker();
+    
+    // Move worker to thread
+    m_worker->moveToThread(m_workerThread);
+    
+    // Set parameters
+    m_worker->setParameters(m_currentFeatureId, params);
+    
+    // Connect signals (use QueuedConnection for cross-thread safety)
+    connect(m_workerThread, &QThread::started, m_worker, &AnalysisWorker::run);
+    connect(m_worker, &AnalysisWorker::finished, this, &XYAnalysisWindow::onWorkerFinished, Qt::QueuedConnection);
+    connect(m_worker, &AnalysisWorker::cancelled, this, &XYAnalysisWindow::onWorkerCancelled, Qt::QueuedConnection);
+    
+    // Cleanup connections
+    connect(m_workerThread, &QThread::finished, m_worker, &QObject::deleteLater);
+    connect(m_workerThread, &QThread::finished, m_workerThread, &QObject::deleteLater);
+    
+    // Disable Run button, show Cancel button
+    if (m_runAction) {
+        m_runAction->setEnabled(false);
+    }
+    if (m_cancelAction) {
+        m_cancelAction->setEnabled(true);
+        m_cancelAction->setVisible(true);
+    }
+    
+    // Start thread
+    m_workerThread->start();
 }
 
 void XYAnalysisWindow::onCancelClicked()
 {
-    // Cancel action (will be implemented when analysis execution is added)
-    QMessageBox::information(this, tr("Cancel"),
-        tr("Cancel functionality will be implemented when analysis execution is added."));
+    if (m_worker) {
+        m_worker->requestCancel();
+    }
 }
 
 void XYAnalysisWindow::onCloseClicked()
@@ -157,8 +215,90 @@ void XYAnalysisWindow::onCloseClicked()
 }
 
 
+void XYAnalysisWindow::onWorkerFinished(bool success, const QVariant& result, const QString& error)
+{
+    // Re-enable Run button, hide Cancel button
+    if (m_runAction) {
+        m_runAction->setEnabled(true);
+    }
+    if (m_cancelAction) {
+        m_cancelAction->setVisible(false);
+        m_cancelAction->setEnabled(true);  // Re-enable for next run
+    }
+    
+    // Handle error
+    if (!success) {
+        if (!error.isEmpty()) {
+            QMessageBox::warning(this, tr("Computation Failed"), error);
+        }
+        cleanupWorker();
+        return;
+    }
+    
+    // Handle success - update plot
+    if (m_currentFeatureId == "xy_sine") {
+        XYSineResult xyResult = result.value<XYSineResult>();
+        
+        // Convert to QPointF vector
+        std::vector<QPointF> points;
+        points.reserve(xyResult.x.size());
+        for (size_t i = 0; i < xyResult.x.size(); ++i) {
+            points.emplace_back(xyResult.x[i], xyResult.y[i]);
+        }
+        
+        // Update XYPlotViewGraphs
+        if (m_plotView) {
+            m_plotView->setData(points);
+            qDebug() << "XYAnalysisWindow::onWorkerFinished: Updated plot with" << points.size() << "points";
+        } else {
+            qWarning() << "XYAnalysisWindow::onWorkerFinished: Plot view is null";
+        }
+    }
+    
+    cleanupWorker();
+}
+
+void XYAnalysisWindow::onWorkerCancelled()
+{
+    // Re-enable Run button, hide Cancel button
+    if (m_runAction) {
+        m_runAction->setEnabled(true);
+    }
+    if (m_cancelAction) {
+        m_cancelAction->setVisible(false);
+        m_cancelAction->setEnabled(true);
+    }
+    
+    cleanupWorker();
+}
+
+void XYAnalysisWindow::cleanupWorker()
+{
+    if (m_workerThread) {
+        if (m_workerThread->isRunning()) {
+            m_workerThread->quit();
+            m_workerThread->wait(1000);  // Wait up to 1 second
+        }
+        if (m_workerThread->isRunning()) {
+            qWarning() << "XYAnalysisWindow::cleanupWorker: Thread did not stop, terminating";
+            m_workerThread->terminate();
+            m_workerThread->wait(1000);
+        }
+        m_workerThread = nullptr;
+    }
+    m_worker = nullptr;  // Will be deleted by deleteLater() connection
+}
+
 void XYAnalysisWindow::closeEvent(QCloseEvent* event)
 {
+    // Cancel any running analysis before closing
+    if (m_worker) {
+        m_worker->requestCancel();
+    }
+    
+    // Clean up worker thread
+    cleanupWorker();
+    
     // Unregister from window manager before closing
     AnalysisWindowManager::instance()->unregisterWindow(this);
     

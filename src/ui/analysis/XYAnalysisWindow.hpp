@@ -9,6 +9,8 @@ class QAction;
 class QWidget;
 class FeatureParameterPanel;
 class QCloseEvent;
+class QThread;
+class AnalysisWorker;
 
 class XYAnalysisWindow : public QMainWindow {
     Q_OBJECT
@@ -29,10 +31,13 @@ private slots:
     void onRunClicked();
     void onCancelClicked();
     void onCloseClicked();
+    void onWorkerFinished(bool success, const QVariant& result, const QString& error);
+    void onWorkerCancelled();
 
 private:
     void setupToolbar();
     void setupParameterPanel(const QString& featureId);
+    void cleanupWorker();
     
     XYPlotViewGraphs* m_plotView;
     QToolBar* m_toolbar;
@@ -41,5 +46,9 @@ private:
     QAction* m_closeAction;
     FeatureParameterPanel* m_parameterPanel;
     QString m_currentFeatureId;
+    
+    // Worker thread infrastructure
+    QThread* m_workerThread;
+    AnalysisWorker* m_worker;
 };
 
