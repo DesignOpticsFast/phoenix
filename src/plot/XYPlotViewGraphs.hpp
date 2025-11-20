@@ -26,10 +26,14 @@ public:
     void setData(const std::vector<QPointF>& points);
 
 private:
+    void updateAxisRanges(const std::vector<QPointF>& points);
+    
     QString m_title;
     QWidget* m_container;   // parent widget container
     QQuickWidget* m_quickWidget;  // QML container for Qt Graphs
     QQuickItem* m_rootItem;  // Root QML item
     QObject* m_mainSeries;  // QML LineSeries object for data updates
+    QObject* m_axisX;        // QML ValueAxis object for X axis
+    QObject* m_axisY;        // QML ValueAxis object for Y axis
 };
 
