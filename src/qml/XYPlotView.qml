@@ -8,7 +8,8 @@ Item {
         id: graphView
         objectName: "graphsView"
         anchors.fill: parent
-        backgroundColor: "#FFFFFF"  // Pure white background for high contrast
+        // Note: backgroundColor property not available in Qt Graphs 2D GraphsView
+        // Using default background for now
         
         // Value axes for X and Y
         ValueAxis {
