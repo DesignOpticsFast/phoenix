@@ -52,6 +52,7 @@ signals:
 protected:
     void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent* ev) override;
+    void focusInEvent(QFocusEvent* event) override;
     bool event(QEvent* e) override;
 
 private slots:

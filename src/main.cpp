@@ -131,9 +131,9 @@ int main(int argc, char** argv) {
     // Register default features
     FeatureRegistry::instance().registerDefaultFeatures();
     
-    // Connect application quit signal to close all analysis windows
+    // Connect application quit signal to close all analysis and tool windows
     QObject::connect(&app, &QCoreApplication::aboutToQuit, []() {
-        AnalysisWindowManager::instance()->closeAll();
+        AnalysisWindowManager::instance()->closeAllWindows();
     });
     
     // Create main window (but don't show it yet)

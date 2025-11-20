@@ -1,5 +1,6 @@
 #include "ui/analysis/AnalysisWindowManager.hpp"
 #include <QMainWindow>
+#include <QDockWidget>
 #include <QCoreApplication>
 #include <QDebug>
 
@@ -92,5 +93,82 @@ void AnalysisWindowManager::closeAll()
     m_windows.removeAll(QPointer<QMainWindow>());
     
     qDebug() << "AnalysisWindowManager: Closed all windows, remaining count:" << m_windows.size();
+}
+
+void AnalysisWindowManager::registerToolWindow(QDockWidget* dock)
+{
+    if (!dock) {
+        qWarning() << "AnalysisWindowManager: Attempted to register null tool window";
+        return;
+    }
+    
+    // Check if already registered
+    for (const QPointer<QDockWidget>& ptr : m_toolWindows) {
+        if (ptr.data() == dock) {
+            qDebug() << "AnalysisWindowManager: Tool window already registered";
+            return;
+        }
+    }
+    
+    m_toolWindows.append(QPointer<QDockWidget>(dock));
+    qDebug() << "AnalysisWindowManager: Registered tool window, total count:" << m_toolWindows.size();
+}
+
+void AnalysisWindowManager::unregisterToolWindow(QDockWidget* dock)
+{
+    if (!dock) {
+        return;
+    }
+    
+    // If we're in the middle of closeAllTools(), just mark the pointer as null
+    if (m_closingTools) {
+        for (QPointer<QDockWidget>& ptr : m_toolWindows) {
+            if (ptr.data() == dock) {
+                ptr.clear();
+                break;
+            }
+        }
+        return;
+    }
+    
+    // Normal unregistration: remove from list
+    m_toolWindows.removeAll(QPointer<QDockWidget>(dock));
+    m_toolWindows.removeAll(QPointer<QDockWidget>());
+    
+    qDebug() << "AnalysisWindowManager: Unregistered tool window, total count:" << m_toolWindows.size();
+}
+
+void AnalysisWindowManager::closeAllTools()
+{
+    qDebug() << "AnalysisWindowManager: Closing all" << m_toolWindows.size() << "tool windows";
+    
+    m_closingTools = true;
+    
+    // Take snapshot to prevent iterator invalidation
+    const QList<QPointer<QDockWidget>> toolsSnapshot = m_toolWindows;
+    
+    // Close all tool windows
+    for (const QPointer<QDockWidget>& ptr : toolsSnapshot) {
+        if (ptr) {
+            ptr->close();
+        }
+    }
+    
+    // Process events
+    QCoreApplication::processEvents();
+    
+    m_closingTools = false;
+    
+    // Clean up null pointers
+    m_toolWindows.removeAll(QPointer<QDockWidget>());
+    
+    qDebug() << "AnalysisWindowManager: Closed all tool windows, remaining count:" << m_toolWindows.size();
+}
+
+void AnalysisWindowManager::closeAllWindows()
+{
+    // Close analysis windows first, then tool windows
+    closeAll();
+    closeAllTools();
 }
 
