@@ -262,6 +262,13 @@ echo "   Tests:"
 echo "   ℹ️  Tests skipped in daily ritual. For full tests, run: scripts/dev01-preflight.sh"
 echo "   ℹ️  Known failures documented in $KNOWN_FAILURES_FILE"
 
+# Stop-the-line reminder
+echo ""
+echo "🔧 UnderLord Stop-The-Line Reminder"
+echo "   You may attempt up to 3 safe workarounds. After 3 failures, STOP THE LINE."
+echo "   Do not proceed. Notify the Capo immediately."
+echo ""
+
 # --- Robust Qt version detection (non-fatal) ---
 set +e
 qtver=""
