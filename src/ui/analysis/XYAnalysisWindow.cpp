@@ -15,6 +15,7 @@
 #include <QCloseEvent>
 #include <QThread>
 #include <QDebug>
+#include <QStatusBar>
 
 XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
     : QMainWindow(nullptr)  // Force nullptr parent to create top-level window (macOS Z-order requirement)
@@ -226,10 +227,51 @@ void XYAnalysisWindow::onWorkerFinished(bool success, const QVariant& result, co
         m_cancelAction->setEnabled(true);  // Re-enable for next run
     }
     
-    // Handle error
+    // Handle error with error-type-specific display strategies
     if (!success) {
         if (!error.isEmpty()) {
-            QMessageBox::warning(this, tr("Computation Failed"), error);
+            // TODO(Sprint 4.3): Replace string matching with structured error codes.
+            // AnalysisWorker should pass TransportError enum along with error message,
+            // allowing UI to use switch statement instead of brittle string.contains() checks.
+            // Current implementation works but is fragile and hard to maintain.
+            
+            // Determine error type from error message content
+            bool isInvalidArgument = error.contains("out of range") || 
+                                     error.contains("Parameter") ||
+                                     error.contains("too small") ||
+                                     error.contains("not a valid");
+            bool isUnavailable = error.contains("not available") || 
+                                 error.contains("not running") ||
+                                 error.contains("Connection");
+            bool isPermissionDenied = error.contains("license") || 
+                                      error.contains("License") ||
+                                      error.contains("PERMISSION_DENIED");
+            bool isInternal = error.contains("failed") && !isInvalidArgument && !isUnavailable;
+            
+            if (isInvalidArgument) {
+                // INVALID_ARGUMENT → inline error in AnalysisWindow (status bar or parameter panel)
+                statusBar()->showMessage(error, 10000);  // Show for 10 seconds
+                // Also show in parameter panel if possible
+                if (m_parameterPanel) {
+                    // Parameter panel can display validation errors
+                    // For now, status bar is sufficient
+                }
+            } else if (isUnavailable) {
+                // UNAVAILABLE → toast with guidance
+                QMessageBox::information(this, tr("Server Unavailable"), 
+                    tr("%1\n\nPlease ensure Bedrock is running and try again.").arg(error));
+            } else if (isPermissionDenied) {
+                // PERMISSION_DENIED → toast → LicensingPanel
+                QMessageBox::warning(this, tr("License Required"), 
+                    tr("%1\n\nPlease check your license settings.").arg(error));
+                // TODO: Open LicensingPanel (future enhancement)
+            } else if (isInternal) {
+                // INTERNAL → toast with technical detail
+                QMessageBox::critical(this, tr("Computation Error"), error);
+            } else {
+                // Fallback: generic error dialog
+                QMessageBox::warning(this, tr("Computation Failed"), error);
+            }
         }
         cleanupWorker();
         return;
@@ -268,6 +310,9 @@ void XYAnalysisWindow::onWorkerCancelled()
         m_cancelAction->setVisible(false);
         m_cancelAction->setEnabled(true);
     }
+    
+    // CANCELLED → inline "Cancelled" message
+    statusBar()->showMessage(tr("Computation cancelled."), 5000);  // Show for 5 seconds
     
     cleanupWorker();
 }

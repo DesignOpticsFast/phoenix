@@ -8,6 +8,7 @@
 #endif
 #include <QDebug>
 #include <QThread>
+#include <QElapsedTimer>
 #include <QProcessEnvironment>
 #include <QVariant>
 #include <QMap>
@@ -202,8 +203,12 @@ void AnalysisWorker::executeCompute()
         // Emit progress before compute
         emit progressChanged(AnalysisProgress(25.0, tr("Computing...")));
         
-        // Set up progress callback (check for CANCELLED status)
-        auto progressCallback = [this](double percent, const QString& status) {
+        // Set up progress callback (check for CANCELLED status, throttle to ~2 Hz)
+        QElapsedTimer progressThrottleTimer;
+        progressThrottleTimer.start();
+        const qint64 progressThrottleIntervalMs = 500;  // ~2 Hz (every 500ms)
+        
+        auto progressCallback = [this, &progressThrottleTimer, progressThrottleIntervalMs](double percent, const QString& status) {
             // Check if Bedrock sent CANCELLED status
             if (status == "CANCELLED") {
                 m_cancelRequested.store(true);
@@ -211,8 +216,12 @@ void AnalysisWorker::executeCompute()
                 return;
             }
             
-            AnalysisProgress progress(percent, status);
-            emit progressChanged(progress);
+            // Throttle UI updates to ~2 Hz (Bedrock emits ≤5 Hz)
+            if (progressThrottleTimer.elapsed() >= progressThrottleIntervalMs) {
+                AnalysisProgress progress(percent, status);
+                emit progressChanged(progress);
+                progressThrottleTimer.restart();
+            }
         };
         
         // Compute XY Sine
@@ -230,9 +239,52 @@ void AnalysisWorker::executeCompute()
                 return;
             }
             
-            emit finished(false, QVariant(),
-                tr("XY Sine computation failed.\n\n"
-                   "Please check the server logs for details."));
+            // Get error details from transport client
+            TransportError errorCode = client->lastError();
+            QString errorString = client->lastErrorString();
+            
+            // Map error codes to user-friendly messages using switch (no string matching)
+            QString errorMessage;
+            switch (errorCode) {
+                case TransportError::ConnectionFailed:
+                case TransportError::ConnectionTimeout:
+                    // UNAVAILABLE - Bedrock not running
+                    errorMessage = tr("Bedrock server is not available.\n\n"
+                                     "Please ensure Bedrock is running and try again.");
+                    break;
+                    
+                case TransportError::InvalidArgument:
+                    // INVALID_ARGUMENT - pass through parameter validation error
+                    errorMessage = errorString;  // Already user-friendly from Bedrock
+                    break;
+                    
+                case TransportError::Unimplemented:
+                    errorMessage = tr("Feature not supported: %1").arg(errorString);
+                    break;
+                    
+                case TransportError::ResourceExhausted:
+                    errorMessage = tr("Server at capacity: %1").arg(errorString);
+                    break;
+                    
+                case TransportError::PermissionDenied:
+                    errorMessage = tr("License required: %1").arg(errorString);
+                    break;
+                    
+                case TransportError::Cancelled:
+                    errorMessage = tr("Computation cancelled.");
+                    break;
+                    
+                case TransportError::ServerError:
+                case TransportError::ProtocolError:
+                case TransportError::NetworkError:
+                default:
+                    // INTERNAL or other errors
+                    errorMessage = tr("Computation failed: %1").arg(
+                        errorString.isEmpty() ? tr("Unknown error") : errorString);
+                    break;
+            }
+            
+            emit finished(false, QVariant(), errorMessage);
             return;
         }
         

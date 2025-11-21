@@ -22,6 +22,7 @@ GrpcUdsChannel::GrpcUdsChannel(const QString& endpoint)
     , channel_(nullptr)
     , stub_(nullptr, deleteStub)
     , connected_(false)
+    , m_lastError(TransportError::NoError)
 {
 }
 
@@ -87,6 +88,10 @@ bool GrpcUdsChannel::isConnected() const {
 
 QString GrpcUdsChannel::backendName() const {
     return QStringLiteral("gRPC (TCP)");
+}
+
+QString GrpcUdsChannel::lastErrorString() const {
+    return transportErrorString(m_lastError);
 }
 
 bool GrpcUdsChannel::echo(const QString& message, QString& reply) {

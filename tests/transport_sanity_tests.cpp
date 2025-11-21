@@ -5,6 +5,7 @@
 #include "transport/TransportFactory.hpp"
 #include <QCoreApplication>
 #include <QProcessEnvironment>
+#include <QThread>
 
 class TransportSanity : public QObject {
     Q_OBJECT
@@ -135,6 +136,72 @@ private slots:
         
         channel.disconnect();
         QVERIFY(!channel.isConnected());
+    }
+    
+    void testLocalSocketPing() {
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        QString socketName = env.value("PHOENIX_LOCALSOCKET_NAME", "palantir_bedrock");
+        
+        LocalSocketChannel channel(socketName);
+        
+        // Try to connect
+        if (!channel.connect()) {
+            QSKIP("Bedrock PalantirServer not available - skipping Ping test");
+        }
+        
+        // Verify connection and initial error state
+        QVERIFY(channel.isConnected());
+        QVERIFY(channel.lastError() == TransportError::NoError);
+        
+        // Send Ping (non-blocking, async)
+        channel.pingHealthCheck();
+        
+        // Wait for async Pong response (200-300ms delay)
+        QThread::msleep(250);
+        
+        // Process any incoming data (parseIncomingData() is called automatically via Qt signals)
+        // Give Qt event loop a chance to process signals
+        QCoreApplication::processEvents();
+        
+        // Verify still connected and no errors
+        QVERIFY(channel.isConnected());
+        QVERIFY(channel.lastError() == TransportError::NoError);
+        
+        // Verify error string is empty or indicates success
+        QString errorStr = channel.lastErrorString();
+        QVERIFY(errorStr.isEmpty() || channel.lastError() == TransportError::NoError);
+        
+        channel.disconnect();
+        QVERIFY(!channel.isConnected());
+        QVERIFY(channel.lastError() == TransportError::NoError);  // Disconnect clears error
+    }
+    
+    void testLocalSocketPingConnectionFailure() {
+        // Test with invalid socket name (Bedrock not running on this socket)
+        LocalSocketChannel channel("nonexistent_socket_12345");
+        
+        QVERIFY(!channel.isConnected());
+        QVERIFY(channel.lastError() == TransportError::NoError);  // No error until connect attempt
+        
+        // Attempt connection (should fail)
+        bool connected = channel.connect();
+        
+        // Verify connection failed
+        QVERIFY(!connected);
+        QVERIFY(!channel.isConnected());
+        
+        // Verify error code is set appropriately
+        TransportError error = channel.lastError();
+        QVERIFY(error == TransportError::ConnectionFailed || 
+               error == TransportError::ConnectionTimeout);
+        
+        // Verify error string is not empty
+        QString errorStr = channel.lastErrorString();
+        QVERIFY(!errorStr.isEmpty());
+        
+        // Verify error string is user-friendly
+        QVERIFY(errorStr.contains("Bedrock") || errorStr.contains("connect") || 
+               errorStr.contains("timeout"));
     }
     
     void testTransportSelectionGrpc() {

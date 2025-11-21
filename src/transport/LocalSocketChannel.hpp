@@ -23,6 +23,14 @@ public:
     bool isConnected() const override;
     QString backendName() const override;
     
+    TransportError lastError() const override { return m_lastError; }
+    QString lastErrorString() const override;
+    
+    // Health check ping (non-blocking, logging only)
+    // Sends Ping message and logs Pong response if successful
+    // Does not block or fail operations - purely for diagnostic logging
+    void pingHealthCheck();
+    
     // Request server capabilities (round-trip test for WP2.B)
     // Returns true on success, false on failure. Logs errors internally.
     bool requestCapabilities(QStringList& features);
@@ -48,10 +56,19 @@ private:
     QByteArray readBuffer_;
     bool connected_;
     QString m_currentJobId;  // Job ID from last computeXYSine() call
+    TransportError m_lastError;  // Last error code
+    QString m_lastErrorContext;  // Detailed error message from server (e.g., Bedrock error_message)
     
     // Helper methods for message framing
     bool sendMessage(const QByteArray& message);
     QByteArray readMessage();
     void parseIncomingData();
+    
+    // Set error and log using Qt logging category
+    void setError(TransportError error, const QString& context = QString());
+    
+    // Connection management for async readyRead handler
+    QMetaObject::Connection readyReadConnection_;  // Store connection for disconnection during compute
+    void reconnectReadyRead();  // Reconnect readyRead handler after compute
 };
 

@@ -225,6 +225,7 @@ endif()
 if(BUILD_TESTING AND PHX_WITH_TRANSPORT_DEPS)
   add_executable(test_xysine_transport
     test_xysine_transport.cpp
+    helpers/BedrockProcessHelper.cpp
   )
 
   target_link_libraries(test_xysine_transport PRIVATE
@@ -237,6 +238,7 @@ if(BUILD_TESTING AND PHX_WITH_TRANSPORT_DEPS)
   target_include_directories(test_xysine_transport
     PRIVATE
       ${CMAKE_SOURCE_DIR}/src
+      ${CMAKE_SOURCE_DIR}/tests
   )
 
   # Link Protobuf libraries (needed for transport)

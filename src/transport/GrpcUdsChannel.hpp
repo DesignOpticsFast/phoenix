@@ -24,6 +24,9 @@ public:
     bool isConnected() const override;
     QString backendName() const override;
     
+    TransportError lastError() const override { return m_lastError; }
+    QString lastErrorString() const override;
+    
     // Echo RPC method (for WP2.A sanity test)
     // Returns true on success, false on failure. Logs errors internally.
     bool echo(const QString& message, QString& reply);
@@ -35,5 +38,6 @@ private:
     std::shared_ptr<void> channel_;
     std::unique_ptr<void, void(*)(void*)> stub_;
     bool connected_;
+    TransportError m_lastError;
 };
 
