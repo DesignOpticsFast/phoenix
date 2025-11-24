@@ -1,5 +1,7 @@
 #include "AnalysisWorker.hpp"
 #include "analysis/demo/XYSineDemo.hpp"
+#include "analysis/LocalExecutor.hpp"
+#include "analysis/RemoteExecutor.hpp"
 // TODO(Phase 3+): Re-enable license checks when LicenseManager is available
 // #include "app/LicenseManager.h"
 #include <QDebug>
@@ -7,6 +9,9 @@
 AnalysisWorker::AnalysisWorker(QObject* parent)
     : QObject(parent)
     , m_cancelRequested(false)
+    , m_runMode(AnalysisRunMode::LocalOnly)
+    , m_localExecutor(std::make_unique<LocalExecutor>())
+    , m_remoteExecutor(std::make_unique<RemoteExecutor>())
 {
     // Register XYSineResult meta-type for signal/slot passing
     qRegisterMetaType<XYSineResult>("XYSineResult");
@@ -21,6 +26,11 @@ void AnalysisWorker::setParameters(const QString& featureId, const QMap<QString,
     m_params = params;
 }
 
+void AnalysisWorker::setRunMode(AnalysisRunMode mode)
+{
+    m_runMode = mode;
+}
+
 void AnalysisWorker::run()
 {
     emit started();
@@ -32,13 +42,62 @@ void AnalysisWorker::run()
         return;
     }
     
-    executeCompute();
+    // WP1: Use executor pattern if enabled, otherwise fall back to legacy path
+    if (m_runMode == AnalysisRunMode::LocalOnly || m_runMode == AnalysisRunMode::RemoteOnly) {
+        executeWithExecutor();
+    } else {
+        // Fallback to legacy executeCompute (should not happen with current enum)
+        executeCompute();
+    }
 }
 
 void AnalysisWorker::requestCancel()
 {
     m_cancelRequested.store(true);
+    // Cancel executors
+    if (m_localExecutor) {
+        m_localExecutor->cancel();
+    }
+    if (m_remoteExecutor) {
+        m_remoteExecutor->cancel();
+    }
     // Actual cancellation logic will be implemented in WP3.5.2
+}
+
+void AnalysisWorker::executeWithExecutor()
+{
+    // Select executor based on run mode
+    IAnalysisExecutor* executor = nullptr;
+    if (m_runMode == AnalysisRunMode::LocalOnly) {
+        executor = m_localExecutor.get();
+    } else if (m_runMode == AnalysisRunMode::RemoteOnly) {
+        executor = m_remoteExecutor.get();
+    }
+    
+    if (!executor) {
+        emit finished(false, QVariant(), QString("No executor available"));
+        return;
+    }
+    
+    // Execute with callbacks
+    executor->execute(
+        m_featureId,
+        m_params,
+        // Progress callback
+        [this](double progress) {
+            // WP1: No progress reporting yet
+            // Future: emit progress signal
+            Q_UNUSED(progress);
+        },
+        // Result callback
+        [this](const XYSineResult& result) {
+            emit finished(true, QVariant::fromValue(result), QString());
+        },
+        // Error callback
+        [this](const QString& error) {
+            emit finished(false, QVariant(), error);
+        }
+    );
 }
 
 void AnalysisWorker::executeCompute()

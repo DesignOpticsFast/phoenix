@@ -274,9 +274,30 @@ target_link_libraries(phoenix_canonical_json PUBLIC
 )
 
 # ---- transport library ----------------------------------------------------
-# NOTE: Transport library removed for Phase 2A (Phoenix-only XY Plot)
-# Will be restored in Phase 3 (transport scaffolding)
-# add_library(phoenix_transport STATIC ...)
+# WP1: Transport library restored with minimal skeleton
+if(PHX_WITH_TRANSPORT_DEPS)
+  add_library(phoenix_transport STATIC
+    src/transport/TransportClient.hpp
+    src/transport/LocalSocketChannel.cpp
+    src/transport/LocalSocketChannel.hpp
+    src/transport/TransportFactory.cpp
+    src/transport/TransportFactory.hpp
+  )
+
+  target_include_directories(phoenix_transport PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+  )
+
+  target_link_libraries(phoenix_transport
+    PRIVATE
+      Qt6::Core
+      Qt6::Network
+      phoenix_palantir_proto
+  )
+
+  # Add compile definition so code can check for transport deps
+  target_compile_definitions(phoenix_transport PRIVATE PHX_WITH_TRANSPORT_DEPS)
+endif()
 
 # ---- feature registry library --------------------------------------------
 add_library(phoenix_feature_registry STATIC
@@ -310,6 +331,12 @@ add_library(phoenix_analysis STATIC
   src/qml/phoenix_qml.qrc
   src/analysis/demo/XYSineDemo.cpp
   src/analysis/AnalysisWorker.cpp
+  # WP1: Executor pattern (compile regardless of transport flag)
+  src/analysis/IAnalysisExecutor.hpp
+  src/analysis/LocalExecutor.cpp
+  src/analysis/LocalExecutor.hpp
+  src/analysis/RemoteExecutor.cpp
+  src/analysis/RemoteExecutor.hpp
 )
 
 target_include_directories(phoenix_analysis PUBLIC
@@ -323,6 +350,13 @@ target_link_libraries(phoenix_analysis PUBLIC
   Qt6::GraphsWidgets
   Qt6::QuickWidgets
 )
+
+# Add compile definition and link transport library when transport deps are enabled
+# (Must be after phoenix_analysis target is defined)
+if(PHX_WITH_TRANSPORT_DEPS)
+  target_compile_definitions(phoenix_analysis PRIVATE PHX_WITH_TRANSPORT_DEPS)
+  target_link_libraries(phoenix_analysis PRIVATE phoenix_transport)
+endif()
 
 # ---- Palantir contracts proto generation scaffolding ---------------------------
 if(PHX_WITH_PALANTIR_CONTRACTS)
