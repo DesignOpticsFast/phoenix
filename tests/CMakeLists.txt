@@ -53,26 +53,11 @@ if(BUILD_TESTING)
   add_test(NAME canonical_json_tests COMMAND canonical_json_tests)
 endif()
 
-# transport sanity tests
-if(BUILD_TESTING)
-  add_executable(transport_sanity_tests
-    transport_sanity_tests.cpp
-  )
-
-  target_link_libraries(transport_sanity_tests
-    PRIVATE
-      phoenix_transport
-      Qt6::Test
-      Qt6::Core
-  )
-
-  target_include_directories(transport_sanity_tests
-    PRIVATE
-      ${CMAKE_SOURCE_DIR}/src
-  )
-
-  add_test(NAME transport_sanity_tests COMMAND transport_sanity_tests)
-endif()
+# transport sanity tests (removed for Phase 2A - Phoenix-only phase)
+# Will be restored in Phase 3 (transport scaffolding)
+# if(BUILD_TESTING AND PHX_WITH_TRANSPORT_DEPS)
+#   add_executable(transport_sanity_tests ...)
+# endif()
 
 # XY plot autoscaling tests (Phoenix-only, no transport dependencies)
 if(BUILD_TESTING)
