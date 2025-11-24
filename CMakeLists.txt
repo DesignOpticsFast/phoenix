@@ -26,6 +26,9 @@ option(PHX_WITH_PALANTIR_CONTRACTS "Enable Palantir contract stub generation" ON
 
 # (Note: real/stub source selection will be added in a later chunk)
 
+# === Transport dependencies (protobuf, Palantir proto) ===
+option(PHX_WITH_TRANSPORT_DEPS "Enable Palantir/transport deps" OFF)
+
 # ---- Version header (generated at configure time)
 # Generates ${CMAKE_BINARY_DIR}/generated/version.h containing PHOENIX_VERSION
 configure_file(${CMAKE_SOURCE_DIR}/src/version.h.in
@@ -353,6 +356,58 @@ if(PHX_WITH_PALANTIR_CONTRACTS)
     endif()
   else()
     message(STATUS "No Palantir .proto files found under contracts/. Skipping stub generation.")
+  endif()
+endif()
+
+# ---- Palantir protobuf code generation (WP1) ------------------------------------
+if(PHX_WITH_TRANSPORT_DEPS)
+  # Find protoc executable
+  find_program(PROTOC_EXECUTABLE protoc)
+  if(NOT PROTOC_EXECUTABLE)
+    message(FATAL_ERROR "protoc not found but PHX_WITH_TRANSPORT_DEPS=ON. Install protobuf (e.g., brew install protobuf)")
+  endif()
+
+  # Set up proto directories
+  set(PALANTIR_PROTO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/contracts/proto")
+  set(PALANTIR_PROTO_OUT_DIR "${CMAKE_BINARY_DIR}/generated/contracts")
+  file(MAKE_DIRECTORY "${PALANTIR_PROTO_OUT_DIR}")
+
+  # Define input proto file (WP1: Capabilities only)
+  set(CAPABILITIES_PROTO "${PALANTIR_PROTO_DIR}/palantir/capabilities.proto")
+
+  # Check if proto file exists
+  if(NOT EXISTS "${CAPABILITIES_PROTO}")
+    message(WARNING "Capabilities.proto not found at ${CAPABILITIES_PROTO}")
+  else()
+    # Generate C++ code from Capabilities.proto
+    add_custom_command(
+      OUTPUT
+        "${PALANTIR_PROTO_OUT_DIR}/palantir/capabilities.pb.cc"
+        "${PALANTIR_PROTO_OUT_DIR}/palantir/capabilities.pb.h"
+      COMMAND "${PROTOC_EXECUTABLE}"
+        --proto_path="${PALANTIR_PROTO_DIR}"
+        --cpp_out="${PALANTIR_PROTO_OUT_DIR}"
+        "${CAPABILITIES_PROTO}"
+      DEPENDS "${CAPABILITIES_PROTO}"
+      COMMENT "Generating C++ from Capabilities.proto"
+    )
+
+    # Create phoenix_palantir_proto library
+    add_library(phoenix_palantir_proto STATIC
+      "${PALANTIR_PROTO_OUT_DIR}/palantir/capabilities.pb.cc"
+    )
+
+    target_include_directories(phoenix_palantir_proto PUBLIC
+      "${PALANTIR_PROTO_OUT_DIR}"
+    )
+
+    # Find and link protobuf library
+    find_package(Protobuf REQUIRED)
+    target_link_libraries(phoenix_palantir_proto PUBLIC
+      protobuf::libprotobuf
+    )
+
+    message(STATUS "Palantir proto codegen enabled: Capabilities.proto -> phoenix_palantir_proto")
   endif()
 endif()
 
