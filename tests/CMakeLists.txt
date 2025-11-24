@@ -88,6 +88,7 @@ if(BUILD_TESTING)
 
   target_link_libraries(test_analysis_window_creation PRIVATE
     phoenix_analysis
+    phoenix_feature_registry
     Qt6::Core
     Qt6::Widgets
     Qt6::Test
