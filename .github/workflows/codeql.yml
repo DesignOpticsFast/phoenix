@@ -2,7 +2,9 @@ name: CodeQL
 
 on:
   push:
-    branches: [ main ]    # only run CodeQL when we merge to main
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   schedule:
     - cron: '0 6 * * 1'   # weekly security scan
 
@@ -14,7 +16,7 @@ permissions:
 jobs:
   analyze:
     name: CodeQL Analysis
-    runs-on: [self-hosted, linux, x64, dev01, fastpath]
+    runs-on: ubuntu-latest
     timeout-minutes: 90
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
@@ -33,9 +35,9 @@ jobs:
       
       - name: Install tools (basic toolchain for CodeQL)
         run: |
-          sudo dnf update -y
-          sudo dnf install -y cmake ninja-build
-          # Note: Qt6 not available in AL2023 - CodeQL will analyze basic structure
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++
+          # Note: Qt6 not needed for CodeQL - will analyze basic structure
       
       - name: Setup build environment
         run: |
