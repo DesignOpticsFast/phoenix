@@ -176,8 +176,8 @@ void XYAnalysisWindow::setupParameterPanel(const QString& featureId)
     }
 #endif
     
-    // Set sizes (70% plot, 30% params)
-    splitter->setSizes({700, 300});
+    // Set sizes will be applied in showEvent() after window is shown
+    // (splitter needs final size before setSizes() can work correctly)
     splitter->setChildrenCollapsible(false);
     m_parameterPanel->setMinimumWidth(200);
     
@@ -379,6 +379,19 @@ void XYAnalysisWindow::showEvent(QShowEvent* event)
 #endif
     
     QMainWindow::showEvent(event);
+    
+    // Set splitter sizes after window is shown (splitter now has final size)
+    // This ensures correct sizing when the splitter has its actual dimensions
+    if (QSplitter* splitter = qobject_cast<QSplitter*>(centralWidget())) {
+        if (splitter->count() == 2) {
+            splitter->setSizes({700, 300});
+#ifndef NDEBUG
+            if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+                qInfo() << "[XYWIN] Applied splitter sizes in showEvent():" << splitter->sizes();
+            }
+#endif
+        }
+    }
     
 #ifndef NDEBUG
     if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
