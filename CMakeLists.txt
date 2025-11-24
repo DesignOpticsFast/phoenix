@@ -306,6 +306,7 @@ add_library(phoenix_analysis STATIC
   src/plot/XYPlotViewGraphs.hpp
   src/qml/phoenix_qml.qrc
   src/analysis/demo/XYSineDemo.cpp
+  src/analysis/AnalysisWorker.cpp
 )
 
 target_include_directories(phoenix_analysis PUBLIC
