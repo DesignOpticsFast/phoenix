@@ -14,9 +14,12 @@
 #include <QSplitter>
 #include <QMessageBox>
 #include <QCloseEvent>
+#include <QShowEvent>
 #include <QThread>
 #include <QPointF>
 #include <QDebug>
+#include <QLayout>
+#include <QLayoutItem>
 
 XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
     : QMainWindow(nullptr)  // Force nullptr parent to create top-level window (macOS Z-order requirement)
@@ -90,7 +93,19 @@ void XYAnalysisWindow::setFeature(const QString& featureId)
 
 void XYAnalysisWindow::setupParameterPanel(const QString& featureId)
 {
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[XYWIN] setupParameterPanel() called with featureId:" << featureId;
+    }
+#endif
     const FeatureDescriptor* desc = FeatureRegistry::instance().getFeature(featureId);
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[XYWIN] FeatureRegistry lookup result:" 
+                << (desc ? "FOUND" : "NOT FOUND")
+                << (desc ? QString("(id: %1, params: %2)").arg(desc->id()).arg(desc->params().size()) : "");
+    }
+#endif
     if (!desc) {
         qWarning() << "XYAnalysisWindow: Feature not found:" << featureId;
         return;
@@ -102,6 +117,13 @@ void XYAnalysisWindow::setupParameterPanel(const QString& featureId)
         m_parameterPanel->deleteLater();
         m_parameterPanel = nullptr;
     }
+    
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[XYWIN] Current centralWidget:" 
+                << (centralWidget() ? centralWidget()->metaObject()->className() : "nullptr");
+    }
+#endif
     
     // Get the plot widget (may be in a splitter or directly as central widget)
     QWidget* plotWidget = nullptr;
@@ -117,21 +139,66 @@ void XYAnalysisWindow::setupParameterPanel(const QString& featureId)
         plotWidget->setParent(nullptr);
     }
     
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[XYWIN] Plot widget extracted - visible:" << (plotWidget ? plotWidget->isVisible() : false)
+                << "size:" << (plotWidget ? plotWidget->size() : QSize());
+    }
+#endif
+    
     // Create new splitter with plot view and parameter panel
     QSplitter* splitter = new QSplitter(Qt::Horizontal, this);
     splitter->addWidget(plotWidget);
     
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[XYWIN] Splitter created - orientation: Horizontal"
+                << "widgetCount:" << splitter->count();
+        qInfo() << "[XYWIN] Plot widget added to splitter at index 0"
+                << "plotWidget visible:" << (plotWidget ? plotWidget->isVisible() : false)
+                << "plotWidget size:" << (plotWidget ? plotWidget->size() : QSize());
+    }
+#endif
+    
     // Create parameter panel with feature descriptor
     m_parameterPanel = new FeatureParameterPanel(*desc, splitter);
     splitter->addWidget(m_parameterPanel);
+    
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[XYWIN] FeatureParameterPanel created - pointer:" << (void*)m_parameterPanel
+                << "panel visible:" << (m_parameterPanel ? m_parameterPanel->isVisible() : false)
+                << "panel size:" << (m_parameterPanel ? m_parameterPanel->size() : QSize())
+                << "panel minSize:" << (m_parameterPanel ? m_parameterPanel->minimumSize() : QSize());
+        qInfo() << "[XYWIN] Panel added to splitter at index" << splitter->count() - 1
+                << "splitter widgetCount:" << splitter->count()
+                << "panel visible:" << (m_parameterPanel ? m_parameterPanel->isVisible() : false);
+    }
+#endif
     
     // Set sizes (70% plot, 30% params)
     splitter->setSizes({700, 300});
     splitter->setChildrenCollapsible(false);
     m_parameterPanel->setMinimumWidth(200);
     
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[XYWIN] Splitter sizes set:" << splitter->sizes()
+                << "splitter size:" << splitter->size()
+                << "splitter visible:" << splitter->isVisible();
+    }
+#endif
+    
     // Replace central widget with splitter
     setCentralWidget(splitter);
+    
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[XYWIN] Splitter set as centralWidget"
+                << "centralWidget visible:" << (centralWidget() ? centralWidget()->isVisible() : false)
+                << "centralWidget size:" << (centralWidget() ? centralWidget()->size() : QSize());
+    }
+#endif
 }
 
 void XYAnalysisWindow::onRunClicked()
@@ -292,6 +359,35 @@ void XYAnalysisWindow::cleanupWorker()
     m_worker = nullptr;  // Will be deleted by deleteLater() connection
 }
 
+void XYAnalysisWindow::showEvent(QShowEvent* event)
+{
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[XYWIN] showEvent() - window visible:" << isVisible()
+                << "window size:" << size()
+                << "parameterPanel exists:" << (m_parameterPanel != nullptr)
+                << "parameterPanel visible:" << (m_parameterPanel ? m_parameterPanel->isVisible() : false);
+        
+        if (m_parameterPanel) {
+            qInfo() << "[XYWIN] Panel state in showEvent -"
+                    << "size:" << m_parameterPanel->size()
+                    << "minSize:" << m_parameterPanel->minimumSize()
+                    << "parent:" << (m_parameterPanel->parent() ? m_parameterPanel->parent()->metaObject()->className() : "nullptr")
+                    << "geometry:" << m_parameterPanel->geometry();
+        }
+    }
+#endif
+    
+    QMainWindow::showEvent(event);
+    
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[XYWIN] Dumping widget tree in showEvent():";
+        dumpWidgetTree();
+    }
+#endif
+}
+
 void XYAnalysisWindow::closeEvent(QCloseEvent* event)
 {
     // Cancel any running analysis before closing
@@ -308,3 +404,67 @@ void XYAnalysisWindow::closeEvent(QCloseEvent* event)
     // Call base class implementation
     QMainWindow::closeEvent(event);
 }
+
+#ifndef NDEBUG
+void XYAnalysisWindow::dumpWidgetTree(QWidget* widget, int depth) const
+{
+    if (!qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        return;
+    }
+    
+    if (!widget) {
+        widget = const_cast<XYAnalysisWindow*>(this);
+    }
+    
+    QString indent = QString("  ").repeated(depth);
+    QString className = widget->metaObject()->className();
+    QString objectName = widget->objectName().isEmpty() ? "<unnamed>" : widget->objectName();
+    QRect geometry = widget->geometry();
+    bool visible = widget->isVisible();
+    bool hidden = widget->isHidden();
+    QSize size = widget->size();
+    QSize minSize = widget->minimumSize();
+    QSize maxSize = widget->maximumSize();
+    QWidget* parent = widget->parentWidget();
+    
+    qInfo() << QString("[TREE%1] %2%3 (class: %4)")
+               .arg(depth)
+               .arg(indent)
+               .arg(objectName)
+               .arg(className)
+            << "visible:" << visible
+            << "hidden:" << hidden
+            << "geometry:" << geometry
+            << "size:" << size
+            << "minSize:" << minSize
+            << "maxSize:" << maxSize
+            << "parent:" << (parent ? parent->metaObject()->className() : "nullptr");
+    
+    // Special handling for QSplitter
+    if (QSplitter* splitter = qobject_cast<QSplitter*>(widget)) {
+        qInfo() << QString("[TREE%1] %2  SPLITTER: count=%3 sizes=%4 orientation=%5")
+                   .arg(depth)
+                   .arg(indent)
+                   .arg(splitter->count())
+                   .arg(splitter->sizes())
+                   .arg(splitter->orientation() == Qt::Horizontal ? "Horizontal" : "Vertical");
+    }
+    
+    // Recurse into children
+    for (QObject* child : widget->children()) {
+        if (QWidget* childWidget = qobject_cast<QWidget*>(child)) {
+            dumpWidgetTree(childWidget, depth + 1);
+        }
+    }
+    
+    // Also check layout children
+    if (QLayout* layout = widget->layout()) {
+        for (int i = 0; i < layout->count(); ++i) {
+            QLayoutItem* item = layout->itemAt(i);
+            if (item && item->widget()) {
+                dumpWidgetTree(item->widget(), depth + 1);
+            }
+        }
+    }
+}
+#endif

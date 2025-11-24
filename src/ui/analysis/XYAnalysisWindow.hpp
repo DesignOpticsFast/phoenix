@@ -24,6 +24,7 @@ public:
 
 protected:
     void closeEvent(QCloseEvent* event) override;
+    void showEvent(QShowEvent* event) override;
 
 private slots:
     void onRunClicked();
@@ -36,6 +37,11 @@ private:
     void setupToolbar();
     void setupParameterPanel(const QString& featureId);
     void cleanupWorker();
+    
+#ifndef NDEBUG
+public:
+    void dumpWidgetTree(QWidget* widget = nullptr, int depth = 0) const;
+#endif
     
     XYPlotViewGraphs* m_plotView;
     QToolBar* m_toolbar;

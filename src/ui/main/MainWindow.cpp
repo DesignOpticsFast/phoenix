@@ -1254,11 +1254,22 @@ void MainWindow::showSystemViewer()
 // Analysis menu actions
 void MainWindow::showXYPlot()
 {
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[MAIN] showXYPlot() called";
+    }
+#endif
     // Create XYAnalysisWindow as top-level window (no parent)
     // This ensures macOS allows it to appear above MainWindow
     // Tool windows (Qt::Tool) will naturally stay on top of both
     // License checking removed (transport-dependent, Phase 3+)
     auto* win = new XYAnalysisWindow(nullptr);
+    
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[MAIN] XYAnalysisWindow created - pointer:" << (void*)win;
+    }
+#endif
     
     // Cascade positioning: offset each new window by a small amount
     static int cascadeOffset = 0;
@@ -1291,12 +1302,31 @@ void MainWindow::showXYPlot()
     win->plotView()->setTitle(tr("XY Sine"));
     
     // Wire FeatureParameterPanel for XY Sine feature (Phase 2C)
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[MAIN] Calling setFeature(\"xy_sine\")";
+    }
+#endif
     win->setFeature("xy_sine");
+    
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[MAIN] Dumping widget tree after setFeature():";
+        win->dumpWidgetTree();
+    }
+#endif
     
     // Show and bring to front (tool windows will stay on top)
     win->show();
     win->raise();
     win->activateWindow();
+    
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[MAIN] Window shown - calling dumpWidgetTree() again:";
+        win->dumpWidgetTree();
+    }
+#endif
 }
 
 void MainWindow::show2DPlot()

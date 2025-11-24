@@ -14,7 +14,22 @@ FeatureParameterPanel::FeatureParameterPanel(const FeatureDescriptor& descriptor
     , m_descriptor(descriptor)
     , m_formLayout(nullptr)
 {
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[PANEL] Creating FeatureParameterPanel for feature:" << descriptor.id()
+                << "displayName:" << descriptor.displayName()
+                << "paramCount:" << descriptor.params().size();
+    }
+#endif
     setupUI();
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[PANEL] FeatureParameterPanel created - visible:" << isVisible()
+                << "size:" << size()
+                << "minSize:" << minimumSize()
+                << "parent:" << (parent() ? parent()->metaObject()->className() : "nullptr");
+    }
+#endif
 }
 
 void FeatureParameterPanel::setupUI()

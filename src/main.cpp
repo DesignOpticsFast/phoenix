@@ -46,6 +46,23 @@ int main(int argc, char** argv) {
 
     QApplication app(argc, argv);
     
+    // Parse command-line arguments for debug UI logging
+#ifndef NDEBUG
+    const QStringList args = QCoreApplication::arguments();
+    const bool debugUILog = args.contains(QStringLiteral("--debug-ui-log"));
+    
+    if (debugUILog) {
+        qputenv("PHOENIX_DEBUG_UI_LOG", "1");
+        QLoggingCategory::setFilterRules(QStringLiteral(
+            "phx.icons.debug=false\n"
+            "phx.fonts.debug=false\n"
+            "phx.ui.debug=true\n"
+            "*.debug=true\n"
+        ));
+        qInfo() << "[MAIN] Debug UI logging enabled via --debug-ui-log";
+    }
+#endif
+    
     // Register QMainWindow* metatype for use in QVariant (Window menu)
     qRegisterMetaType<QMainWindow*>("QMainWindow*");
     

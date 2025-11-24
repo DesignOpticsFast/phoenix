@@ -21,10 +21,28 @@ void FeatureRegistry::registerFeature(const FeatureDescriptor& descriptor)
 
 const FeatureDescriptor* FeatureRegistry::getFeature(const QString& id) const
 {
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[REGISTRY] getFeature() called with id:" << id
+                << "registeredFeatures:" << m_features.keys();
+    }
+#endif
     auto it = m_features.find(id);
     if (it == m_features.end()) {
+#ifndef NDEBUG
+        if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+            qWarning() << "[REGISTRY] Feature NOT FOUND:" << id;
+        }
+#endif
         return nullptr;
     }
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[REGISTRY] Feature FOUND:" << id
+                << "displayName:" << it.value().displayName()
+                << "params:" << it.value().params().size();
+    }
+#endif
     return &it.value();
 }
 
