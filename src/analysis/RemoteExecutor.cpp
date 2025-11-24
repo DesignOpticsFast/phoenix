@@ -58,7 +58,7 @@ void RemoteExecutor::execute(
         return;
     }
     
-    // Fetch capabilities (WP1: stub implementation, no real IPC yet)
+    // Fetch capabilities from remote server
     QString errorMsg;
     auto capabilities = m_transport->getCapabilities(&errorMsg);
     
@@ -69,16 +69,32 @@ void RemoteExecutor::execute(
         return;
     }
     
-    // WP1: For now, just log that capabilities were fetched successfully
-    // Future: Use capabilities to determine available features, then execute remote computation
+    // Log capabilities for debugging
     qDebug() << "Capabilities fetched: server_version=" 
              << QString::fromStdString(capabilities->capabilities().server_version())
              << "features=" << capabilities->capabilities().supported_features_size();
     
-    // For this chunk, return a message indicating capabilities were fetched
-    // (In future chunks, we'll actually execute remote computation)
+    // Check if requested feature is supported
+    QString requestedFeature = featureId;
+    bool featureSupported = false;
+    for (int i = 0; i < capabilities->capabilities().supported_features_size(); ++i) {
+        if (QString::fromStdString(capabilities->capabilities().supported_features(i)) == requestedFeature) {
+            featureSupported = true;
+            break;
+        }
+    }
+    
+    if (!featureSupported) {
+        if (onError) {
+            onError(QString("Feature '%1' not supported by server").arg(requestedFeature));
+        }
+        return;
+    }
+    
+    // WP1: Capabilities verified, but remote computation not yet implemented
+    // Future: Execute actual remote computation based on featureId and params
     if (onError) {
-        onError(QString("Remote execution stubbed (capabilities fetched successfully)"));
+        onError(QString("Remote execution for '%1' not yet implemented (capabilities verified)").arg(requestedFeature));
     }
 #else
     // Transport deps not available
