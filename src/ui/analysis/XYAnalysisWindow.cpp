@@ -217,8 +217,96 @@ void XYAnalysisWindow::onCloseClicked()
     close();
 }
 
+void XYAnalysisWindow::onWorkerFinished(bool success, const QVariant& result, const QString& error)
+{
+    // Re-enable Run button, hide Cancel button
+    if (m_runAction) {
+        m_runAction->setEnabled(true);
+    }
+    if (m_cancelAction) {
+        m_cancelAction->setVisible(false);
+        m_cancelAction->setEnabled(true);  // Re-enable for next run
+    }
+    
+    // Handle error
+    if (!success) {
+        if (!error.isEmpty()) {
+            QMessageBox::warning(this, tr("Computation Failed"), error);
+        }
+        cleanupWorker();
+        return;
+    }
+    
+    // Handle success - update plot
+    if (m_currentFeatureId == "xy_sine") {
+        XYSineResult xyResult = result.value<XYSineResult>();
+        
+        // Convert to QPointF vector
+        std::vector<QPointF> points;
+        points.reserve(xyResult.x.size());
+        for (size_t i = 0; i < xyResult.x.size(); ++i) {
+            points.emplace_back(xyResult.x[i], xyResult.y[i]);
+        }
+        
+        // Update XYPlotViewGraphs
+        if (m_plotView) {
+            m_plotView->setData(points);
+            qDebug() << "XYAnalysisWindow::onWorkerFinished: Updated plot with" << points.size() << "points";
+        } else {
+            qWarning() << "XYAnalysisWindow::onWorkerFinished: Plot view is null";
+        }
+    }
+    
+    cleanupWorker();
+}
+
+void XYAnalysisWindow::onWorkerCancelled()
+{
+    // Re-enable Run button, hide Cancel button
+    if (m_runAction) {
+        m_runAction->setEnabled(true);
+    }
+    if (m_cancelAction) {
+        m_cancelAction->setVisible(false);
+        m_cancelAction->setEnabled(true);
+    }
+    
+    cleanupWorker();
+}
+
+void XYAnalysisWindow::cleanupWorker()
+{
+    if (m_workerThread) {
+        if (m_workerThread->isRunning()) {
+            m_workerThread->quit();
+            m_workerThread->wait(1000);  // Wait up to 1 second
+        }
+        if (m_workerThread->isRunning()) {
+            qWarning() << "XYAnalysisWindow::cleanupWorker: Thread did not stop, terminating";
+            m_workerThread->terminate();
+            m_workerThread->wait(1000);
+        }
+        m_workerThread = nullptr;
+    }
+    m_worker = nullptr;  // Will be deleted by deleteLater() connection
+}
 
 void XYAnalysisWindow::closeEvent(QCloseEvent* event)
+{
+    // Cancel any running analysis before closing
+    if (m_worker) {
+        m_worker->requestCancel();
+    }
+    
+    // Clean up worker thread
+    cleanupWorker();
+    
+    // Unregister from window manager before closing
+    AnalysisWindowManager::instance()->unregisterWindow(this);
+    
+    // Call base class implementation
+    QMainWindow::closeEvent(event);
+}
 {
     // Unregister from window manager before closing
     AnalysisWindowManager::instance()->unregisterWindow(this);
