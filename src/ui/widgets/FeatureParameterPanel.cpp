@@ -24,10 +24,11 @@ FeatureParameterPanel::FeatureParameterPanel(const FeatureDescriptor& descriptor
     setupUI();
 #ifndef NDEBUG
     if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        QWidget* parentWidget = QWidget::parentWidget();
         qInfo() << "[PANEL] FeatureParameterPanel created - visible:" << isVisible()
                 << "size:" << size()
                 << "minSize:" << minimumSize()
-                << "parent:" << (parent() ? parent()->metaObject()->className() : "nullptr");
+                << "parent:" << (parentWidget ? parentWidget->metaObject()->className() : "nullptr");
     }
 #endif
 }
