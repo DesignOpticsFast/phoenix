@@ -29,10 +29,13 @@ private slots:
     void onRunClicked();
     void onCancelClicked();
     void onCloseClicked();
+    void onWorkerFinished(bool success, const QVariant& result, const QString& error);
+    void onWorkerCancelled();
 
 private:
     void setupToolbar();
     void setupParameterPanel(const QString& featureId);
+    void cleanupWorker();
     
     XYPlotViewGraphs* m_plotView;
     QToolBar* m_toolbar;
@@ -41,5 +44,9 @@ private:
     QAction* m_closeAction;
     FeatureParameterPanel* m_parameterPanel;
     QString m_currentFeatureId;
+    
+    // Worker thread infrastructure
+    QThread* m_workerThread;
+    class AnalysisWorker* m_worker;
 };
 

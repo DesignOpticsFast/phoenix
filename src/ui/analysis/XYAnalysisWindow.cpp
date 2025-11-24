@@ -1,9 +1,11 @@
 #include "ui/analysis/XYAnalysisWindow.hpp"
 #include "ui/analysis/AnalysisWindowManager.hpp"
 #include "plot/XYPlotViewGraphs.hpp"
-// TODO: Re-enable when FeatureParameterPanel is available (Phase 3+)
-// #include "ui/widgets/FeatureParameterPanel.hpp"
-// #include "features/FeatureRegistry.hpp"
+#include "ui/widgets/FeatureParameterPanel.hpp"
+#include "features/FeatureRegistry.hpp"
+#include "analysis/AnalysisWorker.hpp"
+#include "analysis/demo/XYSineDemo.hpp"
+// TODO(Phase 3+): Re-enable license checks when LicenseManager is available
 // #include "app/LicenseManager.h"
 #include <QToolBar>
 #include <QVBoxLayout>
@@ -12,6 +14,7 @@
 #include <QSplitter>
 #include <QMessageBox>
 #include <QCloseEvent>
+#include <QThread>
 #include <QDebug>
 
 XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
@@ -22,6 +25,8 @@ XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
     , m_cancelAction(nullptr)
     , m_closeAction(nullptr)
     , m_parameterPanel(nullptr)
+    , m_workerThread(nullptr)
+    , m_worker(nullptr)
 {
     setWindowTitle(tr("XY Plot Analysis"));
     resize(900, 600);
@@ -46,7 +51,11 @@ XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
     AnalysisWindowManager::instance()->registerWindow(this);
 }
 
-XYAnalysisWindow::~XYAnalysisWindow() = default;
+XYAnalysisWindow::~XYAnalysisWindow()
+{
+    // Clean up worker thread if still running
+    cleanupWorker();
+}
 
 void XYAnalysisWindow::setupToolbar()
 {
@@ -75,16 +84,11 @@ void XYAnalysisWindow::setupToolbar()
 void XYAnalysisWindow::setFeature(const QString& featureId)
 {
     m_currentFeatureId = featureId;
-    // TODO: Re-enable when FeatureParameterPanel is available (Phase 3+)
-    // setupParameterPanel(featureId);
-    qDebug() << "XYAnalysisWindow::setFeature: Feature parameter panel not yet available, featureId:" << featureId;
+    setupParameterPanel(featureId);
 }
 
 void XYAnalysisWindow::setupParameterPanel(const QString& featureId)
 {
-    // TODO: Re-enable when FeatureParameterPanel is available (Phase 3+)
-    qDebug() << "XYAnalysisWindow::setupParameterPanel: Feature parameter panel not yet available, featureId:" << featureId;
-    /*
     const FeatureDescriptor* desc = FeatureRegistry::instance().getFeature(featureId);
     if (!desc) {
         qWarning() << "XYAnalysisWindow: Feature not found:" << featureId;
@@ -93,6 +97,7 @@ void XYAnalysisWindow::setupParameterPanel(const QString& featureId)
     
     // If we already have a parameter panel, clean it up
     if (m_parameterPanel) {
+        m_parameterPanel->setParent(nullptr);
         m_parameterPanel->deleteLater();
         m_parameterPanel = nullptr;
     }
@@ -126,18 +131,18 @@ void XYAnalysisWindow::setupParameterPanel(const QString& featureId)
     
     // Replace central widget with splitter
     setCentralWidget(splitter);
-    */
 }
 
 void XYAnalysisWindow::onRunClicked()
 {
-    // TODO: Re-enable when FeatureParameterPanel and AnalysisWorker are available (Phase 3+)
-    QMessageBox::information(this, tr("Run Analysis"),
-        tr("Analysis execution requires FeatureParameterPanel and AnalysisWorker, which are not yet available in this build."));
-    /*
     if (!m_parameterPanel) {
         QMessageBox::information(this, tr("No Parameters"),
             tr("No parameter panel is configured. This is a display-only view."));
+        return;
+    }
+    
+    // Prevent double-click spam
+    if (m_workerThread && m_workerThread->isRunning()) {
         return;
     }
     
@@ -150,21 +155,61 @@ void XYAnalysisWindow::onRunClicked()
         return;
     }
     
-    // For now, just show a message (analysis execution will be added later)
-    QMessageBox::information(this, tr("Run Analysis"),
-        tr("Analysis execution will be implemented in a future chunk."));
-    */
+    // Get parameters
+    QMap<QString, QVariant> params = m_parameterPanel->parameters();
+    
+    // Validate Number of Samples parameter (handle both "samples" and "num_samples")
+    QString samplesKey = params.contains("samples") ? "samples" : "num_samples";
+    if (params.contains(samplesKey)) {
+        bool ok;
+        int numSamples = params.value(samplesKey).toInt(&ok);
+        if (!ok || numSamples <= 0) {
+            QMessageBox::warning(this, tr("Invalid Parameters"),
+                tr("Number of Samples must be a positive integer."));
+            return;
+        }
+    }
+    
+    // Clean up any existing worker
+    cleanupWorker();
+    
+    // Create worker thread
+    m_workerThread = new QThread(this);
+    m_worker = new AnalysisWorker();
+    
+    // Move worker to thread
+    m_worker->moveToThread(m_workerThread);
+    
+    // Set parameters
+    m_worker->setParameters(m_currentFeatureId, params);
+    
+    // Connect signals (use QueuedConnection for cross-thread safety)
+    connect(m_workerThread, &QThread::started, m_worker, &AnalysisWorker::run);
+    connect(m_worker, &AnalysisWorker::finished, this, &XYAnalysisWindow::onWorkerFinished, Qt::QueuedConnection);
+    connect(m_worker, &AnalysisWorker::cancelled, this, &XYAnalysisWindow::onWorkerCancelled, Qt::QueuedConnection);
+    
+    // Cleanup connections
+    connect(m_workerThread, &QThread::finished, m_worker, &QObject::deleteLater);
+    connect(m_workerThread, &QThread::finished, m_workerThread, &QObject::deleteLater);
+    
+    // Disable Run button, show Cancel button
+    if (m_runAction) {
+        m_runAction->setEnabled(false);
+    }
+    if (m_cancelAction) {
+        m_cancelAction->setEnabled(true);
+        m_cancelAction->setVisible(true);
+    }
+    
+    // Start thread
+    m_workerThread->start();
 }
 
 void XYAnalysisWindow::onCancelClicked()
 {
-    // TODO: Re-enable when AnalysisWorker is available (Phase 3+)
-    qDebug() << "XYAnalysisWindow::onCancelClicked: AnalysisWorker not yet available";
-    /*
-    // Cancel action (will be implemented when analysis execution is added)
-    QMessageBox::information(this, tr("Cancel"),
-        tr("Cancel functionality will be implemented when analysis execution is added."));
-    */
+    if (m_worker) {
+        m_worker->requestCancel();
+    }
 }
 
 void XYAnalysisWindow::onCloseClicked()
