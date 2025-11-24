@@ -46,9 +46,11 @@ int main(int argc, char** argv) {
 
     QApplication app(argc, argv);
     
+    // Parse command-line arguments
+    const QStringList args = QCoreApplication::arguments();
+    
     // Parse command-line arguments for debug UI logging
 #ifndef NDEBUG
-    const QStringList args = QCoreApplication::arguments();
     const bool debugUILog = args.contains(QStringLiteral("--debug-ui-log"));
     
     if (debugUILog) {
@@ -78,8 +80,6 @@ int main(int argc, char** argv) {
     QCoreApplication::setApplicationVersion(QStringLiteral(PHOENIX_VERSION));
     QCoreApplication::setOrganizationName("Phoenix");
     QCoreApplication::setOrganizationDomain("phoenix.dev");
-    
-    const QStringList args = QCoreApplication::arguments();
     const bool testI18n = args.contains(QStringLiteral("--test-i18n"));
     QString optLang;
     for (int i = 0; i < args.size(); ++i) {

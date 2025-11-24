@@ -32,6 +32,7 @@ private slots:
     void onCloseClicked();
     void onWorkerFinished(bool success, const QVariant& result, const QString& error);
     void onWorkerCancelled();
+    void onThemeChanged(); // Theme sync handler
 
 private:
     void setupToolbar();

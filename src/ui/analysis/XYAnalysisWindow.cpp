@@ -5,6 +5,7 @@
 #include "features/FeatureRegistry.hpp"
 #include "analysis/AnalysisWorker.hpp"
 #include "analysis/demo/XYSineDemo.hpp"
+#include "ui/themes/ThemeManager.h"
 // TODO(Phase 3+): Re-enable license checks when LicenseManager is available
 // #include "app/LicenseManager.h"
 #include <QToolBar>
@@ -53,6 +54,13 @@ XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
     
     // Register with window manager
     AnalysisWindowManager::instance()->registerWindow(this);
+    
+    // Connect to theme changes for theme sync
+    ThemeManager* themeManager = ThemeManager::instance();
+    if (themeManager) {
+        connect(themeManager, QOverload<ThemeManager::Theme>::of(&ThemeManager::themeChanged),
+                this, &XYAnalysisWindow::onThemeChanged);
+    }
 }
 
 XYAnalysisWindow::~XYAnalysisWindow()
@@ -416,6 +424,35 @@ void XYAnalysisWindow::closeEvent(QCloseEvent* event)
     
     // Call base class implementation
     QMainWindow::closeEvent(event);
+}
+
+void XYAnalysisWindow::onThemeChanged()
+{
+    // ThemeManager has already applied the new palette via QApplication::setPalette(),
+    // which should propagate to all widgets automatically. However, we need to ensure
+    // this window and its children update their visuals.
+    
+    // Force a repaint/update of this window and all child widgets
+    update();
+    
+    // Update child widgets explicitly to ensure they pick up the new palette
+    if (m_parameterPanel) {
+        m_parameterPanel->update();
+    }
+    
+    if (m_plotView && m_plotView->widget()) {
+        m_plotView->widget()->update();
+    }
+    
+    if (m_toolbar) {
+        m_toolbar->update();
+    }
+    
+    // Note: QML/Qt Graphs colors are currently hardcoded in XYPlotView.qml.
+    // If theme-aware colors are needed for the plot, we would need to:
+    // 1. Pass theme info to QML via QQmlContext::setContextProperty()
+    // 2. Update QML to use theme-aware colors
+    // This is left as a future enhancement if needed.
 }
 
 #ifndef NDEBUG
