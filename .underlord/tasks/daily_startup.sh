@@ -34,13 +34,17 @@ echo "📋 Sprint Hygiene Review..."
 current_branch="$(git rev-parse --abbrev-ref HEAD)"
 echo "   Current branch: $current_branch"
 
-# Extract sprint ID from branch name (e.g., sprint/4.3 -> 4.3)
-if [[ "$current_branch" =~ ^sprint/([0-9]+\.[0-9]+)(-.*)?$ ]]; then
-    sprint_id="${BASH_REMATCH[1]}"
+# Extract sprint ID from branch name (e.g., sprint/4.3 -> 4.3, sprint4.2-bedrock-restart -> 4.2)
+if [[ "$current_branch" =~ ^sprint/([0-9]+\.[0-9]+)(-.*)?$ ]] || [[ "$current_branch" =~ ^sprint([0-9]+\.[0-9]+)(-.*)?$ ]]; then
+    if [[ "$current_branch" =~ ^sprint/([0-9]+\.[0-9]+) ]]; then
+        sprint_id="${BASH_REMATCH[1]}"
+    elif [[ "$current_branch" =~ ^sprint([0-9]+\.[0-9]+) ]]; then
+        sprint_id="${BASH_REMATCH[1]}"
+    fi
     echo "   Current sprint: $sprint_id (from branch $current_branch)"
 else
-    echo "❌ FATAL: Branch '$current_branch' does not match sprint/X.Y pattern"
-    echo "   All sprint work must occur on a sprint branch (e.g., sprint/4.3)"
+    echo "❌ FATAL: Branch '$current_branch' does not match sprint/X.Y or sprintX.Y-* pattern"
+    echo "   All sprint work must occur on a sprint branch (e.g., sprint/4.3 or sprint4.2-bedrock-restart)"
     exit 1
 fi
 
