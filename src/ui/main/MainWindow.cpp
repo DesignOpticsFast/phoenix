@@ -42,7 +42,8 @@
 #include <QStyle>
 #include <functional>
 #include <cmath>
-#include "ui/analysis/AnalysisWindow.hpp"
+#include "ui/analysis/XYAnalysisWindow.hpp"
+#include "ui/analysis/AnalysisWindowManager.hpp"
 #include "plot/XYPlotViewGraphs.hpp"
 #include <QPointF>
 #include <vector>
@@ -199,6 +200,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    // Close all analysis windows before closing main window
+    AnalysisWindowManager::instance()->closeAll();
+    
     saveSettings();
     QMainWindow::closeEvent(event);
 }
@@ -270,6 +274,10 @@ void MainWindow::setupMenuBar()
     // View menu
     QMenu* viewMenu = createViewMenu();
     m_menuBar->addMenu(viewMenu);
+    
+    // Window menu (before Help menu, standard convention)
+    QMenu* windowMenu = createWindowMenu();
+    m_menuBar->addMenu(windowMenu);
     
     // Help menu
     QMenu* helpMenu = createHelpMenu();
@@ -466,6 +474,105 @@ QMenu* MainWindow::createViewMenu()
     viewMenu->addAction(resetLayoutAction);
     
     return viewMenu;
+}
+
+QMenu* MainWindow::createWindowMenu()
+{
+    m_windowMenu = new QMenu(tr("&Window"), this);
+    
+    // "Bring All to Front" action
+    QAction* bringAllAction = new QAction(tr("Bring All to Front"), this);
+    bringAllAction->setStatusTip(tr("Bring all analysis windows to the front"));
+    connect(bringAllAction, &QAction::triggered, this, &MainWindow::onBringAllToFront);
+    m_windowMenu->addAction(bringAllAction);
+    
+    m_windowMenu->addSeparator();
+    
+    // Window list will be populated dynamically by updateWindowMenu()
+    // Connect aboutToShow signal to update menu contents when user opens it
+    connect(m_windowMenu, &QMenu::aboutToShow, this, &MainWindow::updateWindowMenu);
+    
+    return m_windowMenu;
+}
+
+void MainWindow::updateWindowMenu()
+{
+    if (!m_windowMenu) {
+        return;
+    }
+    
+    // Remove all window-specific actions (keep "Bring All to Front" and separator)
+    // Window actions always carry a non-null data(); static menu entries don't
+    QList<QAction*> actions = m_windowMenu->actions();
+    for (QAction* action : actions) {
+        if (action->data().isValid()) {
+            m_windowMenu->removeAction(action);
+            delete action;
+        }
+    }
+    
+    // Get current windows from manager
+    AnalysisWindowManager* mgr = AnalysisWindowManager::instance();
+    QList<QMainWindow*> windows = mgr->windows();
+    
+    // Add action for each window
+    int index = 1;
+    for (QMainWindow* window : windows) {
+        if (!window) {
+            continue;
+        }
+        
+        QString title = window->windowTitle();
+        if (title.isEmpty()) {
+            title = tr("XY Plot #%1").arg(index);
+        } else {
+            // Truncate long titles
+            if (title.length() > 50) {
+                title = title.left(47) + "...";
+            }
+        }
+        
+        QAction* windowAction = new QAction(title, this);
+        windowAction->setCheckable(true);
+        windowAction->setChecked(window->isActiveWindow());
+        windowAction->setData(QVariant::fromValue<QMainWindow*>(window));
+        connect(windowAction, &QAction::triggered, this, [this, windowAction]() {
+            onWindowMenuActionTriggered(windowAction);
+        });
+        m_windowMenu->addAction(windowAction);
+        index++;
+    }
+}
+
+void MainWindow::onWindowMenuActionTriggered(QAction* action)
+{
+    if (!action || !action->data().isValid()) {
+        return;
+    }
+    
+    QMainWindow* window = action->data().value<QMainWindow*>();
+    if (window) {
+        window->raise();
+        window->activateWindow();
+    }
+}
+
+void MainWindow::onBringAllToFront()
+{
+    AnalysisWindowManager* mgr = AnalysisWindowManager::instance();
+    QList<QMainWindow*> windows = mgr->windows();
+    
+    // Raise all windows
+    for (QMainWindow* window : windows) {
+        if (window && window->isVisible()) {
+            window->raise();
+        }
+    }
+    
+    // Activate the last window (most recently created)
+    if (!windows.isEmpty() && windows.last()) {
+        windows.last()->activateWindow();
+    }
 }
 
 QMenu* MainWindow::createHelpMenu()
@@ -1200,9 +1307,27 @@ void MainWindow::showSystemViewer()
 // Analysis menu actions
 void MainWindow::showXYPlot()
 {
-    // Create AnalysisWindow with main window as parent
-    auto* win = new AnalysisWindow(this);
-    win->setWindowTitle(tr("XY Plot – Qt Graphs"));
+    // Create XYAnalysisWindow as top-level window (no parent)
+    // This ensures macOS allows it to appear above MainWindow
+    // XYAnalysisWindow already sets Qt::WindowStaysOnTopHint in its constructor
+    auto* win = new XYAnalysisWindow(nullptr);
+    
+    // Cascade positioning: offset each new window by a small amount
+    static int cascadeOffset = 0;
+    constexpr int cascadeDelta = 20;
+    constexpr int maxCascadeOffset = 100;
+    
+    const QPoint baseOffset(50, 50);  // Base offset from MainWindow's top-left
+    const QPoint mainPos = pos();
+    const QPoint cascadePos = mainPos + baseOffset + QPoint(cascadeOffset, cascadeOffset);
+    
+    win->move(cascadePos);
+    
+    // Update cascade offset for next window (with wrap-around)
+    cascadeOffset += cascadeDelta;
+    if (cascadeOffset > maxCascadeOffset) {
+        cascadeOffset = 0;  // Wrap back to start
+    }
     
     // Generate a simple test dataset: 1000-point sine wave
     std::vector<QPointF> points;
@@ -1213,17 +1338,11 @@ void MainWindow::showXYPlot()
         points.emplace_back(x, y);
     }
     
-    // Create XYPlotViewGraphs instance and set the data
-    auto view = std::make_unique<XYPlotViewGraphs>();
-    view->setTitle(tr("Sine Wave Test"));
-    view->setData(points);
+    // Set data on the plot view
+    win->plotView()->setData(points);
+    win->plotView()->setTitle(tr("Sine Wave Test"));
     
-    // Install the view into AnalysisWindow
-    win->setView(std::move(view));
-    
-    // Configure and show the window
-    win->resize(900, 600);
-    win->setAttribute(Qt::WA_DeleteOnClose);  // Clean up when closed
+    // Show the window (XYAnalysisWindow constructor already sets up everything)
     win->show();
 }
 

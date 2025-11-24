@@ -6,6 +6,7 @@
 #include "ui/themes/ThemeManager.h"
 #include "app/LocaleInit.hpp"
 #include "app/SettingsProvider.h"
+#include "ui/analysis/AnalysisWindowManager.hpp"
 #include "version.h"
 #include <QApplication>
 #include <QTimer>
@@ -144,6 +145,12 @@ int main(int argc, char** argv) {
     mainWindow.show();
     mainWindow.raise();
     mainWindow.activateWindow();
+    
+    // Ensure all analysis windows are closed on application exit
+    // This is a safety net for cases where main window close doesn't trigger closeEvent
+    QObject::connect(&app, &QApplication::aboutToQuit, []() {
+        AnalysisWindowManager::instance()->closeAll();
+    });
     
     return app.exec();
 }

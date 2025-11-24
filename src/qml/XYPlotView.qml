@@ -10,7 +10,8 @@ Item {
         anchors.fill: parent
         
         // Enable interactions (pan/zoom/resize)
-        interactive: true
+        // Note: interactive property does not exist in Qt Graphs 6.10.1 GraphsView
+        // Interactivity is enabled by default or controlled via other properties
         
         // Value axes for X and Y
         ValueAxis {

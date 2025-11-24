@@ -116,7 +116,13 @@ private:
     QMenu* createAnalysisMenu();
     QMenu* createToolsMenu();
     QMenu* createViewMenu();
+    QMenu* createWindowMenu();
     QMenu* createHelpMenu();
+    
+    // Window menu management
+    void updateWindowMenu();
+    void onWindowMenuActionTriggered(QAction* action);
+    void onBringAllToFront();
     
     // Toolbar creation helpers
     QToolBar* createMainToolBar();
@@ -143,6 +149,7 @@ private:
     QToolBar* m_rightRibbon;
     QStatusBar* m_statusBar;
     QMenu* m_themeMenu;
+    QMenu* m_windowMenu;
     bool m_uiInitialized = false;
     
     // Dock widgets
