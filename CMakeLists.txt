@@ -265,21 +265,9 @@ target_link_libraries(phoenix_canonical_json PUBLIC
 )
 
 # ---- transport library ----------------------------------------------------
-add_library(phoenix_transport STATIC
-  src/transport/TransportClient.hpp
-  src/transport/GrpcUdsChannel.hpp
-  src/transport/GrpcUdsChannel.cpp
-  src/transport/LocalSocketChannel.hpp
-  src/transport/LocalSocketChannel.cpp
-)
-
-target_include_directories(phoenix_transport PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-
-target_link_libraries(phoenix_transport PUBLIC
-  Qt6::Core
-)
+# NOTE: Transport library removed for Phase 2A (Phoenix-only XY Plot)
+# Will be restored in Phase 3 (transport scaffolding)
+# add_library(phoenix_transport STATIC ...)
 
 # ---- analysis library ----------------------------------------------------
 add_library(phoenix_analysis STATIC
