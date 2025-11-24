@@ -15,9 +15,9 @@ This document provides context about the Mac development environment. **This is 
 
 ## Qt Installation
 
-- **Location**: `/Users/mark/Qt/6.10.0/macos`
+- **Location**: `/Users/underlord/Qt/6.10.1/macos`
 - **Access**: Read-only for build purposes only
-- **Version**: Qt 6.10.0
+- **Version**: Qt 6.10.1
 - **Purpose**: CMake build system references this path for Qt6_DIR
 
 ## Workspace Structure
@@ -32,13 +32,13 @@ This document provides context about the Mac development environment. **This is 
 ## Build Environment
 
 - **CMake**: Required for builds
-- **Qt6_DIR**: Points to `/Users/mark/Qt/6.10.0/macos/lib/cmake/Qt6`
-- **CMAKE_PREFIX_PATH**: Includes Qt 6.10.0 path
+- **Qt6_DIR**: Points to `/Users/underlord/Qt/6.10.1/macos/lib/cmake/Qt6`
+- **CMAKE_PREFIX_PATH**: Includes Qt 6.10.1 path
 
 ## Important Notes
 
 1. **Read-Only Qt Access**: UnderLord may read Qt installation for build purposes only
-2. **No Mark Account Access**: UnderLord must never access `/Users/mark/` except for read-only Qt access
+2. **No Mark Account Access**: UnderLord must never access `/Users/mark/` (Qt is now installed under `/Users/underlord/`)
 3. **Workspace Boundaries**: All work occurs in `/Users/underlord/workspace/`
 4. **This is context only**: This document provides information, not permission for broader Mac access
 
@@ -47,7 +47,7 @@ This document provides context about the Mac development environment. **This is 
 During the daily ritual, UnderLord acknowledges:
 - ✅ Valid account: underlord
 - ✅ Workspace: /Users/underlord/workspace/
-- ✅ Qt read-only: /Users/mark/Qt/6.10.0/macos
+- ✅ Qt read-only: /Users/underlord/Qt/6.10.1/macos
 - ⚠️  This is context only, not permission for Mac access
 
 ---
