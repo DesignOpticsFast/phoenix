@@ -3,12 +3,16 @@
 #include <QMap>
 #include <QVariant>
 #include <vector>
+#include <QMetaType>
 
 // Result structure for XY Sine computation (Phoenix-only, Phase 2B)
 struct XYSineResult {
     std::vector<double> x;
     std::vector<double> y;
 };
+
+// Register as Qt meta-type for signal/slot passing
+Q_DECLARE_METATYPE(XYSineResult)
 
 // Phoenix-only local XY Sine computation (Phase 2B)
 // This provides local compute path without transport dependencies
