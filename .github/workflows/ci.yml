@@ -213,7 +213,7 @@ jobs:
           skip: .git,build
 
   build:
-    name: Build (Qt on dev-01)
+    name: Build (Qt 6.10.0)
     needs: changes
     timeout-minutes: 30
     if: >
@@ -221,14 +221,12 @@ jobs:
       (github.event_name == 'pull_request' &&
        github.event.pull_request.head.repo.full_name == github.repository &&
        needs.changes.outputs.code_changed == 'true')
-    runs-on: [self-hosted, Linux, X64, dev-01, qt6]
+    runs-on: ubuntu-latest
     concurrency:
-      group: dev01-build
-      cancel-in-progress: false
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     env:
       QT_VERSION: 6.10.0
-      QT_PATH: /opt/Qt/6.10.0/gcc_64
-      CMAKE_PREFIX_PATH: /opt/Qt/6.10.0/gcc_64
       QTFRAMEWORK_BYPASS_LICENSE_CHECK: "1"
     steps:
       - uses: actions/checkout@v5
@@ -252,63 +250,56 @@ jobs:
           fi
           echo "✅ Contracts SHA parity check passed"
       
-      - name: Verify dev-01 labels & env
-        shell: bash
-        run: |
-          echo "labels = ${{ toJson(runner.labels) }}"
-          echo "QT_VERSION=${QT_VERSION:-<unset>}"
-          echo "CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH:-<unset>}"
-          echo "QTFRAMEWORK_BYPASS_LICENSE_CHECK=${QTFRAMEWORK_BYPASS_LICENSE_CHECK:-<unset>}"
-          
-          # Hard guards to fail fast if environment regresses
-          if [[ -z "${CMAKE_PREFIX_PATH:-}" ]]; then
-            echo "❌ CMAKE_PREFIX_PATH is empty"; exit 1
-          fi
-          if [[ "${QT_VERSION:-}" != "6.10.0" ]]; then
-            echo "❌ QT_VERSION must be 6.10.0, got: ${QT_VERSION:-<unset>}"; exit 1
-          fi
-          if [[ "${QTFRAMEWORK_BYPASS_LICENSE_CHECK:-}" != "1" ]]; then
-            echo "❌ QTFRAMEWORK_BYPASS_LICENSE_CHECK must be 1, got: ${QTFRAMEWORK_BYPASS_LICENSE_CHECK:-<unset>}"; exit 1
-          fi
-
       - name: Guard - no stale LogCategories includes
         run: |
           if git grep -n 'LogCategories.h' -- 'src/**' ; then
             echo "❌ Found stale include of LogCategories.h"; exit 1;
           fi
 
-      - name: Qt probe
-        shell: bash
+      - name: Install Qt 6.10.0
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.10.0'
+          modules: 'qtbase qttools qttranslations'
+          cache: true
+
+      - name: Verify Qt installation
         run: |
           set -e
-          echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH"
-          if [[ -z "$CMAKE_PREFIX_PATH" ]]; then
-            echo "❌ CMAKE_PREFIX_PATH not set"
+          # install-qt-action sets Qt6_DIR to the Qt installation path
+          if [[ -z "$Qt6_DIR" ]]; then
+            echo "❌ Qt6_DIR not set by install-qt-action"
             exit 1
           fi
-          if [[ ! -f "$CMAKE_PREFIX_PATH/lib/cmake/Qt6/Qt6Config.cmake" ]]; then
-            echo "❌ Qt6Config.cmake not found at $CMAKE_PREFIX_PATH/lib/cmake/Qt6/Qt6Config.cmake"
+          # Qt6_DIR points to the directory containing Qt6Config.cmake
+          if [[ ! -f "$Qt6_DIR/Qt6Config.cmake" ]]; then
+            echo "❌ Qt6Config.cmake not found at $Qt6_DIR/Qt6Config.cmake"
             exit 1
           fi
-          echo "✅ Qt probe OK: $CMAKE_PREFIX_PATH"
+          echo "✅ Qt installation verified: $Qt6_DIR"
+          echo "Qt6_DIR=$Qt6_DIR" >> $GITHUB_ENV
+          # CMAKE_PREFIX_PATH should point to the parent directory
+          CMAKE_PREFIX_PATH=$(dirname "$Qt6_DIR")
+          echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
+          echo "Using CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH"
 
       - name: Clean configure
         run: |
-          rm -rf build/dev-01-relwithdebinfo
-          cmake -S . -B build/dev-01-relwithdebinfo -G "Ninja" \
+          rm -rf build/relwithdebinfo
+          cmake -S . -B build/relwithdebinfo -G "Ninja" \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"
 
       - name: Build
-        run: cmake --build build/dev-01-relwithdebinfo -j $(nproc || echo 4)
+        run: cmake --build build/relwithdebinfo -j $(nproc || echo 4)
         continue-on-error: false
 
       - name: Translation drift guard
-        run: ./ci/check_translations.sh build/dev-01-relwithdebinfo
+        run: ./ci/check_translations.sh build/relwithdebinfo
 
       - name: Unit tests
-        if: hashFiles('build/dev-01-relwithdebinfo/CTestTestfile.cmake') != ''
-        run: ctest --test-dir build/dev-01-relwithdebinfo --output-on-failure
+        if: hashFiles('build/relwithdebinfo/CTestTestfile.cmake') != ''
+        run: ctest --test-dir build/relwithdebinfo --output-on-failure
         continue-on-error: false
 
   ci_checks:
