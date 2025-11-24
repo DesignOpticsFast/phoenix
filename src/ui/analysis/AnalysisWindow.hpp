@@ -4,7 +4,8 @@
 #include <memory>
 
 class IAnalysisView;
-class QVBoxLayout;
+class QSplitter;
+class FeatureParameterPanel;
 
 class AnalysisWindow : public QWidget {
     Q_OBJECT
@@ -15,9 +16,15 @@ public:
 
     void setView(std::unique_ptr<IAnalysisView> view);
     IAnalysisView* view() const;
+    
+    // Set feature and create parameter panel
+    void setFeature(const QString& featureId);
 
 private:
+    void setupParameterPanel(const QString& featureId);
+    
     std::unique_ptr<IAnalysisView> m_view;
-    QVBoxLayout* m_layout;
+    QSplitter* m_splitter;
+    FeatureParameterPanel* m_parameterPanel;
 };
 
