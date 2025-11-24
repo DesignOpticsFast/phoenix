@@ -442,11 +442,18 @@ void XYAnalysisWindow::dumpWidgetTree(QWidget* widget, int depth) const
     
     // Special handling for QSplitter
     if (QSplitter* splitter = qobject_cast<QSplitter*>(widget)) {
+        QList<int> sizes = splitter->sizes();
+        QString sizesStr = "[";
+        for (int i = 0; i < sizes.size(); ++i) {
+            if (i > 0) sizesStr += ", ";
+            sizesStr += QString::number(sizes[i]);
+        }
+        sizesStr += "]";
         qInfo() << QString("[TREE%1] %2  SPLITTER: count=%3 sizes=%4 orientation=%5")
                    .arg(depth)
                    .arg(indent)
                    .arg(splitter->count())
-                   .arg(splitter->sizes())
+                   .arg(sizesStr)
                    .arg(splitter->orientation() == Qt::Horizontal ? "Horizontal" : "Vertical");
     }
     
