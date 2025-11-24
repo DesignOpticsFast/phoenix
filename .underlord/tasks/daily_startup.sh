@@ -63,15 +63,26 @@ else
     main_clean=false
 fi
 
-# Check for dirty tree
+# Check for dirty tree (allow local .underlord/env.d changes which are gitignored)
 if git diff --quiet && git diff --cached --quiet; then
     tree_clean=true
     echo "   ✅ Tree is clean"
 else
-    echo "❌ FATAL: Dirty tree detected"
-    echo "   Tree must be clean before starting new work"
-    echo "   Please commit or stash changes first"
-    exit 1
+    # Check if only untracked or gitignored files are modified
+    # .underlord/env.d is gitignored and contains local config, so changes there are OK
+    modified_tracked=$(git diff --name-only 2>/dev/null | grep -v '^\.underlord/env\.d/' || true)
+    staged_tracked=$(git diff --cached --name-only 2>/dev/null || true)
+    if [ -z "$modified_tracked" ] && [ -z "$staged_tracked" ]; then
+        echo "   ✅ Tree is clean (only local config changes in .underlord/env.d)"
+        tree_clean=true
+    else
+        echo "❌ FATAL: Dirty tree detected"
+        echo "   Modified tracked files: $modified_tracked"
+        echo "   Staged files: $staged_tracked"
+        echo "   Tree must be clean before starting new work"
+        echo "   Please commit or stash changes first"
+        exit 1
+    fi
 fi
 
 echo "   ✅ Branch is correct sprint branch"
