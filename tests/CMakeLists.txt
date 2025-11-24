@@ -102,6 +102,29 @@ if(BUILD_TESTING)
 
   add_test(NAME test_analysis_window_creation COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysis_window_creation>)
 endif()
+
+# XY Plot instrumentation test (Phase 2D)
+if(BUILD_TESTING)
+  add_executable(test_xy_plot_instrumentation
+    test_xy_plot_instrumentation.cpp
+  )
+
+  target_link_libraries(test_xy_plot_instrumentation PRIVATE
+    phoenix_analysis
+    phoenix_feature_registry
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Test
+    Qt6::QuickWidgets
+  )
+
+  target_include_directories(test_xy_plot_instrumentation
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME test_xy_plot_instrumentation COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen PHOENIX_DEBUG_UI_LOG=1 $<TARGET_FILE:test_xy_plot_instrumentation>)
+endif()
 # Analysis window manager tests (Phoenix-only)
 if(BUILD_TESTING)
   add_executable(test_analysis_window_manager
