@@ -219,7 +219,7 @@ QMap<QString, QVariant> FeatureParameterPanel::parameters() const
     }
     
     // Ensure all params have values (use defaults for missing)
-    for (const ParamSpec& spec : m_descriptor.parameters()) {
+    for (const ParamSpec& spec : m_descriptor.params()) {
         if (!result.contains(spec.name())) {
             if (spec.defaultValue().isValid()) {
                 result.insert(spec.name(), spec.defaultValue());

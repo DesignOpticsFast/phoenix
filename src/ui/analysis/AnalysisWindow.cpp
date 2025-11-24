@@ -22,8 +22,10 @@ AnalysisWindow::~AnalysisWindow() = default;
 void AnalysisWindow::setView(std::unique_ptr<IAnalysisView> view) {
     // Remove old widget, if any
     if (m_view && m_view->widget()) {
-        m_splitter->removeWidget(m_view->widget());
-        m_view->widget()->setParent(nullptr);
+        // QSplitter doesn't have removeWidget() - extract widget first
+        QWidget* oldWidget = m_view->widget();
+        oldWidget->setParent(nullptr);
+        // Widget will be deleted when m_view is destroyed
     }
 
     m_view = std::move(view);
@@ -58,7 +60,8 @@ void AnalysisWindow::setupParameterPanel(const QString& featureId)
     
     // Remove existing parameter panel if any
     if (m_parameterPanel) {
-        m_splitter->removeWidget(m_parameterPanel);
+        // QSplitter doesn't have removeWidget() - extract widget first
+        m_parameterPanel->setParent(nullptr);
         delete m_parameterPanel;
         m_parameterPanel = nullptr;
     }
