@@ -15,6 +15,7 @@
 #include <QMessageBox>
 #include <QCloseEvent>
 #include <QThread>
+#include <QPointF>
 #include <QDebug>
 
 XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
