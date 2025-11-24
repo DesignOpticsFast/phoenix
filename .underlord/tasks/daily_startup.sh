@@ -477,12 +477,35 @@ if [ -f "$SPRINT_TASKS_FILE" ]; then
     not_started_tasks=$(grep -E '^\s*- \[ \]' "$SPRINT_TASKS_FILE" | sed 's/^\s*- \[ \] //' || true)
     blocked_tasks=$(grep -E '^\s*- \[!\]' "$SPRINT_TASKS_FILE" | sed 's/^\s*- \[!\] //' || true)
     
-    completed_count=$(echo "$completed_tasks" | grep -c . 2>/dev/null || echo "0")
-    in_progress_count=$(echo "$in_progress_tasks" | grep -c . 2>/dev/null || echo "0")
-    not_started_count=$(echo "$not_started_tasks" | grep -c . 2>/dev/null || echo "0")
-    blocked_count=$(echo "$blocked_tasks" | grep -c . 2>/dev/null || echo "0")
+    # Count tasks (handle empty strings and newlines properly)
+    if [ -z "$completed_tasks" ]; then
+        completed_count=0
+    else
+        completed_count=$(echo "$completed_tasks" | grep -c . 2>/dev/null | head -1 || echo "0")
+    fi
+    if [ -z "$in_progress_tasks" ]; then
+        in_progress_count=0
+    else
+        in_progress_count=$(echo "$in_progress_tasks" | grep -c . 2>/dev/null | head -1 || echo "0")
+    fi
+    if [ -z "$not_started_tasks" ]; then
+        not_started_count=0
+    else
+        not_started_count=$(echo "$not_started_tasks" | grep -c . 2>/dev/null | head -1 || echo "0")
+    fi
+    if [ -z "$blocked_tasks" ]; then
+        blocked_count=0
+    else
+        blocked_count=$(echo "$blocked_tasks" | grep -c . 2>/dev/null | head -1 || echo "0")
+    fi
     
-    # Ensure counts are numeric (handle empty strings)
+    # Ensure counts are numeric (strip any whitespace/newlines)
+    completed_count=$(echo "$completed_count" | tr -d '\n\r ' | head -1)
+    in_progress_count=$(echo "$in_progress_count" | tr -d '\n\r ' | head -1)
+    not_started_count=$(echo "$not_started_count" | tr -d '\n\r ' | head -1)
+    blocked_count=$(echo "$blocked_count" | tr -d '\n\r ' | head -1)
+    
+    # Default to 0 if empty
     completed_count=${completed_count:-0}
     in_progress_count=${in_progress_count:-0}
     not_started_count=${not_started_count:-0}
