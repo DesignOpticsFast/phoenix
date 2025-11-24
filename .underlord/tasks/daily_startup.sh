@@ -550,9 +550,17 @@ echo "Timestamp: $(date -Iseconds)"
 echo ""
 echo "ℹ️  For full preflight (clean build + tests), run: scripts/dev01-preflight.sh"
 
-# Rotate logs (keep last 30 entries)
-find "$root/.underlord/logs" -maxdepth 1 -type d -name '20*' -printf '%T@ %p\n' 2>/dev/null \
-  | sort -nr | awk 'NR>30 {print $2}' | xargs -r rm -rf
+# Rotate logs (keep last 30 entries) - macOS compatible
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  # macOS: use stat instead of -printf
+  find "$root/.underlord/logs" -maxdepth 1 -type d -name '20*' 2>/dev/null | while read -r dir; do
+    [ -n "$dir" ] && echo "$(stat -f '%m %N' "$dir" 2>/dev/null || echo "0 $dir")"
+  done | sort -rn | awk 'NR>30 {print $2}' | xargs rm -rf 2>/dev/null || true
+else
+  # Linux: use -printf
+  find "$root/.underlord/logs" -maxdepth 1 -type d -name '20*' -printf '%T@ %p\n' 2>/dev/null \
+    | sort -nr | awk 'NR>30 {print $2}' | xargs -r rm -rf 2>/dev/null || true
+fi
 
 # Cleanup temp files (no preflight logs to clean anymore)
 rm -rf /tmp/qt-smoke 2>/dev/null || true
