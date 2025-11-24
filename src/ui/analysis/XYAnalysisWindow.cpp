@@ -308,10 +308,3 @@ void XYAnalysisWindow::closeEvent(QCloseEvent* event)
     // Call base class implementation
     QMainWindow::closeEvent(event);
 }
-{
-    // Unregister from window manager before closing
-    AnalysisWindowManager::instance()->unregisterWindow(this);
-    
-    // Call base class implementation
-    QMainWindow::closeEvent(event);
-}
