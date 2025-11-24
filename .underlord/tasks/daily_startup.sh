@@ -355,8 +355,8 @@ echo "[daily] QML resource consistency check"
 # Verify that QML files referenced in .qrc match files on disk
 qrc_file="$root/src/qml/phoenix_qml.qrc"
 if [ -f "$qrc_file" ]; then
-    # Extract QML file references from .qrc
-    qrc_qml_files=$(grep -oP '<file[^>]*>.*?\.qml</file>' "$qrc_file" | sed -E 's/.*>(.*)<.*/\1/' || true)
+    # Extract QML file references from .qrc (macOS-compatible, no -P flag)
+    qrc_qml_files=$(grep -oE '<file[^>]*>.*\.qml</file>' "$qrc_file" | sed -E 's/.*>(.*)<.*/\1/' || true)
     if [ -n "$qrc_qml_files" ]; then
         qrc_dir=$(dirname "$qrc_file")
         all_match=true
@@ -477,10 +477,16 @@ if [ -f "$SPRINT_TASKS_FILE" ]; then
     not_started_tasks=$(grep -E '^\s*- \[ \]' "$SPRINT_TASKS_FILE" | sed 's/^\s*- \[ \] //' || true)
     blocked_tasks=$(grep -E '^\s*- \[!\]' "$SPRINT_TASKS_FILE" | sed 's/^\s*- \[!\] //' || true)
     
-    completed_count=$(echo "$completed_tasks" | grep -c . || echo "0")
-    in_progress_count=$(echo "$in_progress_tasks" | grep -c . || echo "0")
-    not_started_count=$(echo "$not_started_tasks" | grep -c . || echo "0")
-    blocked_count=$(echo "$blocked_tasks" | grep -c . || echo "0")
+    completed_count=$(echo "$completed_tasks" | grep -c . 2>/dev/null || echo "0")
+    in_progress_count=$(echo "$in_progress_tasks" | grep -c . 2>/dev/null || echo "0")
+    not_started_count=$(echo "$not_started_tasks" | grep -c . 2>/dev/null || echo "0")
+    blocked_count=$(echo "$blocked_tasks" | grep -c . 2>/dev/null || echo "0")
+    
+    # Ensure counts are numeric (handle empty strings)
+    completed_count=${completed_count:-0}
+    in_progress_count=${in_progress_count:-0}
+    not_started_count=${not_started_count:-0}
+    blocked_count=${blocked_count:-0}
     
     if [ "$completed_count" -gt 0 ]; then
         echo "   Completed:"
