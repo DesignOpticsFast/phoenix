@@ -36,6 +36,9 @@ public:
     bool isValid(const QVariant& value) const;
     QString validationError(const QVariant& value) const;
     
+    // Display name (label -> name -> generic fallback)
+    QString displayName() const;
+    
     // Conversion to/from string (for proto map<string, string>)
     QString valueToString(const QVariant& value) const;
     QVariant stringToValue(const QString& str) const;
