@@ -107,6 +107,7 @@ endif()
 if(BUILD_TESTING)
   add_executable(test_xy_plot_instrumentation
     test_xy_plot_instrumentation.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/widgets/FeatureParameterPanel.cpp
   )
 
   target_link_libraries(test_xy_plot_instrumentation PRIVATE
