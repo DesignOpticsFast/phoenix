@@ -1801,24 +1801,7 @@ void MainWindow::showHelp()
     QMessageBox::information(this, tr("Help"), tr("This feature is not yet implemented."));
 }
 
-<<<<<<< HEAD
-=======
-void MainWindow::showLicense()
-{
-    LicenseDialog* dialog = new LicenseDialog(this);
-    dialog->setAttribute(Qt::WA_DeleteOnClose);
-    dialog->exec();
-}
-
-void MainWindow::showEchoTestDialog()
-{
-    if (!m_echoTestDialog) {
-        m_echoTestDialog = new EchoTestDialog(this);
-        m_echoTestDialog->setAttribute(Qt::WA_DeleteOnClose);
-    }
-    m_echoTestDialog->exec();
-}
-
+// Window menu management (Phoenix-only, no transport dependencies)
 void MainWindow::updateWindowMenu()
 {
     if (!m_windowMenu) {
@@ -1892,41 +1875,8 @@ void MainWindow::onBringAllToFront()
     }
 }
 
-void MainWindow::updateActionLicenseState(QAction* action, const QString& feature)
-{
-    if (!action) return;
-    
-    LicenseManager* mgr = LicenseManager::instance();
-    LicenseManager::LicenseState state = mgr->currentState();
-    
-    // If licensing is not configured, allow feature (graceful degradation)
-    if (state == LicenseManager::LicenseState::NotConfigured) {
-        action->setEnabled(true);
-        action->setToolTip(QString()); // Clear any previous tooltip
-        return;
-    }
-    
-    // Check if feature is available
-    bool hasFeature = mgr->hasFeature(feature);
-    
-    if (hasFeature) {
-        action->setEnabled(true);
-        action->setToolTip(QString()); // Clear any previous tooltip
-    } else {
-        action->setEnabled(false);
-        QString tooltip = tr("This feature requires a valid license with the '%1' feature").arg(feature);
-        if (state == LicenseManager::LicenseState::Expired) {
-            tooltip += tr(" (License expired)");
-        } else if (state == LicenseManager::LicenseState::Invalid) {
-            tooltip += tr(" (License invalid)");
-        } else if (state == LicenseManager::LicenseState::NoLicense) {
-            tooltip += tr(" (No license file)");
-        }
-        action->setToolTip(tooltip);
-    }
-}
-
->>>>>>> 6842673 (S4.3-Windowing-Polish-1: Cascade XY analysis windows and add Window menu)
+// Note: showLicense(), showEchoTestDialog(), and updateActionLicenseState() removed
+// (transport-dependent, will be added in Phase 3+)
 // Telemetry hooks for UI latency logging
 void MainWindow::logUIAction(const QString& action, qint64 elapsed)
 {
