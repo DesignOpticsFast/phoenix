@@ -235,15 +235,28 @@ echo ""
 echo "[env] CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}"
 echo "[env] git branch=$(git rev-parse --abbrev-ref HEAD) commit=$(git rev-parse --short HEAD)"
 
-if [[ "$Qt6_DIR" != "/opt/Qt/6.10.0/gcc_64/lib/cmake/Qt6" ]]; then
-  echo "[env] ERROR: Qt6_DIR not at 6.10.0 baseline: $Qt6_DIR"
-  env_error=1
+# Check Qt version (accept 6.10.x on macOS, 6.10.0 on Linux)
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  # macOS: Accept 6.10.x versions
+  if [[ ! "$Qt6_DIR" =~ /Qt/6\.10\.[0-9]+/macos/lib/cmake/Qt6 ]]; then
+    echo "[env] ERROR: Qt6_DIR not at 6.10.x baseline on macOS: $Qt6_DIR"
+    env_error=1
+  fi
+  # Check CMAKE_PREFIX_PATH starts with Qt 6.10.x on macOS
+  if [[ ! "$CMAKE_PREFIX_PATH" =~ ^/Users/[^/]+/Qt/6\.10\.[0-9]+/macos ]]; then
+    echo "[env] WARNING: CMAKE_PREFIX_PATH does not start with Qt 6.10.x prefix on macOS"
+  fi
+else
+  # Linux: Require exactly 6.10.0
+  if [[ "$Qt6_DIR" != "/opt/Qt/6.10.0/gcc_64/lib/cmake/Qt6" ]]; then
+    echo "[env] ERROR: Qt6_DIR not at 6.10.0 baseline: $Qt6_DIR"
+    env_error=1
+  fi
+  case "$CMAKE_PREFIX_PATH" in
+    /opt/Qt/6.10.0/gcc_64:*) : ;;
+    *) echo "[env] WARNING: CMAKE_PREFIX_PATH does not start with 6.10.0 prefix" ;;
+  esac
 fi
-
-case "$CMAKE_PREFIX_PATH" in
-  /opt/Qt/6.10.0/gcc_64:*) : ;;
-  *) echo "[env] WARNING: CMAKE_PREFIX_PATH does not start with 6.10.0 prefix" ;;
-esac
 
 if [[ $env_error -ne 0 ]]; then
   echo "[STOP-THE-LINE] $(date -Iseconds) – Environment verification failed."
