@@ -4,6 +4,8 @@
 #ifdef PHX_WITH_TRANSPORT_DEPS
 #include "transport/TransportFactory.hpp"
 #include "transport/TransportClient.hpp"
+// Proto header is in generated directory, included via CMake include paths
+#include "palantir/capabilities.pb.h"
 #endif
 
 #include <atomic>
@@ -32,9 +34,51 @@ void RemoteExecutor::execute(
     m_cancelled.store(false);
 
 #ifdef PHX_WITH_TRANSPORT_DEPS
-    // WP1: Return immediate error - no Bedrock communication yet
+    if (!m_transport) {
+        if (onError) {
+            onError(QString("Transport client not available"));
+        }
+        return;
+    }
+    
+    // Connect to remote service
+    if (!m_transport->connect()) {
+        QString errorMsg = "Unable to connect to remote analysis service";
+        if (onError) {
+            onError(errorMsg);
+        }
+        return;
+    }
+    
+    // Check for cancellation
+    if (m_cancelled.load()) {
+        if (onError) {
+            onError(QString("Computation cancelled"));
+        }
+        return;
+    }
+    
+    // Fetch capabilities (WP1: stub implementation, no real IPC yet)
+    QString errorMsg;
+    auto capabilities = m_transport->getCapabilities(&errorMsg);
+    
+    if (!capabilities.has_value()) {
+        if (onError) {
+            onError(errorMsg.isEmpty() ? QString("Failed to fetch capabilities") : errorMsg);
+        }
+        return;
+    }
+    
+    // WP1: For now, just log that capabilities were fetched successfully
+    // Future: Use capabilities to determine available features, then execute remote computation
+    qDebug() << "Capabilities fetched: server_version=" 
+             << QString::fromStdString(capabilities->capabilities().server_version())
+             << "features=" << capabilities->capabilities().supported_features_size();
+    
+    // For this chunk, return a message indicating capabilities were fetched
+    // (In future chunks, we'll actually execute remote computation)
     if (onError) {
-        onError(QString("Remote execution not yet implemented"));
+        onError(QString("Remote execution stubbed (capabilities fetched successfully)"));
     }
 #else
     // Transport deps not available

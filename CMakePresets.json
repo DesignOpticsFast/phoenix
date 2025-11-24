@@ -1,0 +1,55 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "macos-arm64-debug",
+      "displayName": "macOS Apple Silicon Debug",
+      "description": "Debug build for macOS on Apple Silicon (arm64) with Qt6",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "13.0",
+        "Qt6_DIR": "$env{HOME}/Qt/6.10.1/macos/lib/cmake/Qt6"
+      },
+      "environment": {
+        "CMAKE_PREFIX_PATH": "$env{HOME}/Qt/6.10.1/macos"
+      }
+    },
+    {
+      "name": "macos-arm64-release",
+      "displayName": "macOS Apple Silicon Release",
+      "description": "Release build for macOS on Apple Silicon (arm64) with Qt6",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "13.0",
+        "Qt6_DIR": "$env{HOME}/Qt/6.10.1/macos/lib/cmake/Qt6"
+      },
+      "environment": {
+        "CMAKE_PREFIX_PATH": "$env{HOME}/Qt/6.10.1/macos"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "macos-arm64-debug",
+      "displayName": "Build macOS Apple Silicon Debug",
+      "configurePreset": "macos-arm64-debug"
+    },
+    {
+      "name": "macos-arm64-release",
+      "displayName": "Build macOS Apple Silicon Release",
+      "configurePreset": "macos-arm64-release"
+    }
+  ]
+}
+

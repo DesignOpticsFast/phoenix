@@ -356,6 +356,13 @@ target_link_libraries(phoenix_analysis PUBLIC
 if(PHX_WITH_TRANSPORT_DEPS)
   target_compile_definitions(phoenix_analysis PRIVATE PHX_WITH_TRANSPORT_DEPS)
   target_link_libraries(phoenix_analysis PRIVATE phoenix_transport)
+  # Add generated proto directory to include path
+  target_include_directories(phoenix_analysis PRIVATE
+    ${CMAKE_BINARY_DIR}/generated/contracts
+  )
+  # Link protobuf to get its include paths
+  find_package(Protobuf REQUIRED)
+  target_link_libraries(phoenix_analysis PRIVATE protobuf::libprotobuf)
 endif()
 
 # ---- Palantir contracts proto generation scaffolding ---------------------------
@@ -440,6 +447,26 @@ if(PHX_WITH_TRANSPORT_DEPS)
     target_link_libraries(phoenix_palantir_proto PUBLIC
       protobuf::libprotobuf
     )
+    
+    # Protobuf 6.33+ requires abseil libraries
+    # Link abseil libraries that protobuf depends on
+    find_library(ABSL_DIE_IF_NULL_LIB absl_die_if_null PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+    find_library(ABSL_LOG_INITIALIZE_LIB absl_log_initialize PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+    find_library(ABSL_STATUSOR_LIB absl_statusor PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+    find_library(ABSL_LOG_INTERNAL_CHECK_OP_LIB absl_log_internal_check_op PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+    find_library(ABSL_LOG_INTERNAL_CONDITIONS_LIB absl_log_internal_conditions PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+    find_library(ABSL_LOG_INTERNAL_MESSAGE_LIB absl_log_internal_message PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+    
+    if(ABSL_DIE_IF_NULL_LIB AND ABSL_LOG_INITIALIZE_LIB AND ABSL_STATUSOR_LIB)
+      target_link_libraries(phoenix_palantir_proto PUBLIC
+        ${ABSL_DIE_IF_NULL_LIB}
+        ${ABSL_LOG_INITIALIZE_LIB}
+        ${ABSL_STATUSOR_LIB}
+        ${ABSL_LOG_INTERNAL_CHECK_OP_LIB}
+        ${ABSL_LOG_INTERNAL_CONDITIONS_LIB}
+        ${ABSL_LOG_INTERNAL_MESSAGE_LIB}
+      )
+    endif()
 
     message(STATUS "Palantir proto codegen enabled: Capabilities.proto -> phoenix_palantir_proto")
   endif()

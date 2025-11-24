@@ -16,8 +16,12 @@ public:
     bool connect() override;
     void disconnect() override;
     bool isConnected() const override;
+#ifdef PHX_WITH_TRANSPORT_DEPS
     std::optional<palantir::CapabilitiesResponse>
-        getCapabilities(std::string* outError = nullptr) override;
+        getCapabilities(QString* outError = nullptr) override;
+#else
+    std::optional<int> getCapabilities(QString* outError = nullptr) override;
+#endif
 
 private:
     std::unique_ptr<QLocalSocket> m_socket;
