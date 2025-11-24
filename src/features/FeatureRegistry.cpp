@@ -46,11 +46,11 @@ QList<FeatureDescriptor> FeatureRegistry::featuresByCategory(const QString& cate
 
 void FeatureRegistry::registerDefaultFeatures()
 {
-    // XY Sine feature
+    // XY Sine feature (Phoenix-only, Phase 2B)
     FeatureDescriptor xySine("xy_sine", "XY Sine");
     xySine.setCategory("Analysis")
-          .setRequiresLicenseFeature("feature_xy_sine")
-          .setRequiresTransport(true);
+          .setRequiresLicenseFeature("feature_xy_sine")  // License check deferred to Phase 3+
+          .setRequiresTransport(false);  // Phase 2B: local-only compute
     
     // Parameters based on experiments/analysis/XYWindow.cpp
     xySine.addParam(ParamSpec("frequency", "Frequency", ParamSpec::Type::Double)

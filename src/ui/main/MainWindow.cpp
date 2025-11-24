@@ -1286,11 +1286,12 @@ void MainWindow::showXYPlot()
         points.emplace_back(x, y);
     }
     
-    // Set data on the plot view
+    // Set initial data on the plot view (will be replaced when Run is clicked)
     win->plotView()->setData(points);
     win->plotView()->setTitle(tr("XY Sine"));
     
-    // Note: setFeature() not called - parameter panel requires transport dependencies (Phase 3+)
+    // Wire FeatureParameterPanel for XY Sine feature (Phase 2C)
+    win->setFeature("xy_sine");
     
     // Show and bring to front (tool windows will stay on top)
     win->show();
