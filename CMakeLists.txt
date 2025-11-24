@@ -26,6 +26,9 @@ option(PHX_WITH_PALANTIR_CONTRACTS "Enable Palantir contract stub generation" ON
 
 # (Note: real/stub source selection will be added in a later chunk)
 
+# === Transport dependencies (protobuf, Palantir proto) ===
+option(PHX_WITH_TRANSPORT_DEPS "Enable Palantir/transport deps" OFF)
+
 # ---- Version header (generated at configure time)
 # Generates ${CMAKE_BINARY_DIR}/generated/version.h containing PHOENIX_VERSION
 configure_file(${CMAKE_SOURCE_DIR}/src/version.h.in
@@ -79,6 +82,9 @@ set(PHOENIX_SOURCES
   src/ui/dialogs/EnvironmentPage.cpp
   src/ui/dialogs/LanguagePage.cpp
 
+  # New UI structure - Widgets
+  src/ui/widgets/FeatureParameterPanel.cpp
+
   # New UI structure - Themes
   src/ui/themes/ThemeManager.cpp
 
@@ -110,6 +116,9 @@ set(PHOENIX_SOURCES
   src/ui/dialogs/PreferencesDialog.h
   src/ui/dialogs/EnvironmentPage.h
   src/ui/dialogs/LanguagePage.h
+
+  # New UI structure - Widgets
+  src/ui/widgets/FeatureParameterPanel.hpp
 
   # New UI structure - Themes
   src/ui/themes/ThemeManager.h
@@ -265,19 +274,46 @@ target_link_libraries(phoenix_canonical_json PUBLIC
 )
 
 # ---- transport library ----------------------------------------------------
-add_library(phoenix_transport STATIC
-  src/transport/TransportClient.hpp
-  src/transport/GrpcUdsChannel.hpp
-  src/transport/GrpcUdsChannel.cpp
-  src/transport/LocalSocketChannel.hpp
-  src/transport/LocalSocketChannel.cpp
+# WP1: Transport library restored with minimal skeleton
+if(PHX_WITH_TRANSPORT_DEPS)
+  add_library(phoenix_transport STATIC
+    src/transport/TransportClient.hpp
+    src/transport/LocalSocketChannel.cpp
+    src/transport/LocalSocketChannel.hpp
+    src/transport/TransportFactory.cpp
+    src/transport/TransportFactory.hpp
+  )
+
+  target_include_directories(phoenix_transport PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+  )
+
+  target_link_libraries(phoenix_transport
+    PRIVATE
+      Qt6::Core
+      Qt6::Network
+      phoenix_palantir_proto
+  )
+
+  # Add compile definition so code can check for transport deps
+  target_compile_definitions(phoenix_transport PRIVATE PHX_WITH_TRANSPORT_DEPS)
+endif()
+
+# ---- feature registry library --------------------------------------------
+add_library(phoenix_feature_registry STATIC
+  src/features/ParamSpec.hpp
+  src/features/ParamSpec.cpp
+  src/features/FeatureDescriptor.hpp
+  src/features/FeatureDescriptor.cpp
+  src/features/FeatureRegistry.hpp
+  src/features/FeatureRegistry.cpp
 )
 
-target_include_directories(phoenix_transport PUBLIC
+target_include_directories(phoenix_feature_registry PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(phoenix_transport PUBLIC
+target_link_libraries(phoenix_feature_registry PUBLIC
   Qt6::Core
 )
 
@@ -286,13 +322,21 @@ add_library(phoenix_analysis STATIC
   src/ui/analysis/IAnalysisView.hpp
   src/ui/analysis/AnalysisWindow.cpp
   src/ui/analysis/AnalysisWindow.hpp
-  src/ui/analysis/XYAnalysisWindow.cpp
-  src/ui/analysis/XYAnalysisWindow.hpp
   src/ui/analysis/AnalysisWindowManager.cpp
   src/ui/analysis/AnalysisWindowManager.hpp
+  src/ui/analysis/XYAnalysisWindow.cpp
+  src/ui/analysis/XYAnalysisWindow.hpp
   src/plot/XYPlotViewGraphs.cpp
   src/plot/XYPlotViewGraphs.hpp
   src/qml/phoenix_qml.qrc
+  src/analysis/demo/XYSineDemo.cpp
+  src/analysis/AnalysisWorker.cpp
+  # WP1: Executor pattern (compile regardless of transport flag)
+  src/analysis/IAnalysisExecutor.hpp
+  src/analysis/LocalExecutor.cpp
+  src/analysis/LocalExecutor.hpp
+  src/analysis/RemoteExecutor.cpp
+  src/analysis/RemoteExecutor.hpp
 )
 
 target_include_directories(phoenix_analysis PUBLIC
@@ -306,6 +350,20 @@ target_link_libraries(phoenix_analysis PUBLIC
   Qt6::GraphsWidgets
   Qt6::QuickWidgets
 )
+
+# Add compile definition and link transport library when transport deps are enabled
+# (Must be after phoenix_analysis target is defined)
+if(PHX_WITH_TRANSPORT_DEPS)
+  target_compile_definitions(phoenix_analysis PRIVATE PHX_WITH_TRANSPORT_DEPS)
+  target_link_libraries(phoenix_analysis PRIVATE phoenix_transport)
+  # Add generated proto directory to include path
+  target_include_directories(phoenix_analysis PRIVATE
+    ${CMAKE_BINARY_DIR}/generated/contracts
+  )
+  # Link protobuf to get its include paths
+  find_package(Protobuf REQUIRED)
+  target_link_libraries(phoenix_analysis PRIVATE protobuf::libprotobuf)
+endif()
 
 # ---- Palantir contracts proto generation scaffolding ---------------------------
 if(PHX_WITH_PALANTIR_CONTRACTS)
@@ -342,6 +400,78 @@ if(PHX_WITH_PALANTIR_CONTRACTS)
   endif()
 endif()
 
+# ---- Palantir protobuf code generation (WP1) ------------------------------------
+if(PHX_WITH_TRANSPORT_DEPS)
+  # Find protoc executable
+  find_program(PROTOC_EXECUTABLE protoc)
+  if(NOT PROTOC_EXECUTABLE)
+    message(FATAL_ERROR "protoc not found but PHX_WITH_TRANSPORT_DEPS=ON. Install protobuf (e.g., brew install protobuf)")
+  endif()
+
+  # Set up proto directories
+  set(PALANTIR_PROTO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/contracts/proto")
+  set(PALANTIR_PROTO_OUT_DIR "${CMAKE_BINARY_DIR}/generated/contracts")
+  file(MAKE_DIRECTORY "${PALANTIR_PROTO_OUT_DIR}")
+
+  # Define input proto file (WP1: Capabilities only)
+  set(CAPABILITIES_PROTO "${PALANTIR_PROTO_DIR}/palantir/capabilities.proto")
+
+  # Check if proto file exists
+  if(NOT EXISTS "${CAPABILITIES_PROTO}")
+    message(WARNING "Capabilities.proto not found at ${CAPABILITIES_PROTO}")
+  else()
+    # Generate C++ code from Capabilities.proto
+    add_custom_command(
+      OUTPUT
+        "${PALANTIR_PROTO_OUT_DIR}/palantir/capabilities.pb.cc"
+        "${PALANTIR_PROTO_OUT_DIR}/palantir/capabilities.pb.h"
+      COMMAND "${PROTOC_EXECUTABLE}"
+        --proto_path="${PALANTIR_PROTO_DIR}"
+        --cpp_out="${PALANTIR_PROTO_OUT_DIR}"
+        "${CAPABILITIES_PROTO}"
+      DEPENDS "${CAPABILITIES_PROTO}"
+      COMMENT "Generating C++ from Capabilities.proto"
+    )
+
+    # Create phoenix_palantir_proto library
+    add_library(phoenix_palantir_proto STATIC
+      "${PALANTIR_PROTO_OUT_DIR}/palantir/capabilities.pb.cc"
+    )
+
+    target_include_directories(phoenix_palantir_proto PUBLIC
+      "${PALANTIR_PROTO_OUT_DIR}"
+    )
+
+    # Find and link protobuf library
+    find_package(Protobuf REQUIRED)
+    target_link_libraries(phoenix_palantir_proto PUBLIC
+      protobuf::libprotobuf
+    )
+    
+    # Protobuf 6.33+ requires abseil libraries
+    # Link abseil libraries that protobuf depends on
+    find_library(ABSL_DIE_IF_NULL_LIB absl_die_if_null PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+    find_library(ABSL_LOG_INITIALIZE_LIB absl_log_initialize PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+    find_library(ABSL_STATUSOR_LIB absl_statusor PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+    find_library(ABSL_LOG_INTERNAL_CHECK_OP_LIB absl_log_internal_check_op PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+    find_library(ABSL_LOG_INTERNAL_CONDITIONS_LIB absl_log_internal_conditions PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+    find_library(ABSL_LOG_INTERNAL_MESSAGE_LIB absl_log_internal_message PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+    
+    if(ABSL_DIE_IF_NULL_LIB AND ABSL_LOG_INITIALIZE_LIB AND ABSL_STATUSOR_LIB)
+      target_link_libraries(phoenix_palantir_proto PUBLIC
+        ${ABSL_DIE_IF_NULL_LIB}
+        ${ABSL_LOG_INITIALIZE_LIB}
+        ${ABSL_STATUSOR_LIB}
+        ${ABSL_LOG_INTERNAL_CHECK_OP_LIB}
+        ${ABSL_LOG_INTERNAL_CONDITIONS_LIB}
+        ${ABSL_LOG_INTERNAL_MESSAGE_LIB}
+      )
+    endif()
+
+    message(STATUS "Palantir proto codegen enabled: Capabilities.proto -> phoenix_palantir_proto")
+  endif()
+endif()
+
 include(CTest)
 if(BUILD_TESTING)
   add_subdirectory(tests)
@@ -360,6 +490,7 @@ target_link_libraries(phoenix_app
     Qt6::Concurrent
     Qt6::Core
     Qt6::Graphs
+    phoenix_feature_registry
     phoenix_analysis
 )
 

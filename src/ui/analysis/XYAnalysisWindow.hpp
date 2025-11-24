@@ -9,8 +9,6 @@ class QAction;
 class QWidget;
 class FeatureParameterPanel;
 class QCloseEvent;
-class QThread;
-class AnalysisWorker;
 
 class XYAnalysisWindow : public QMainWindow {
     Q_OBJECT
@@ -26,6 +24,7 @@ public:
 
 protected:
     void closeEvent(QCloseEvent* event) override;
+    void showEvent(QShowEvent* event) override;
 
 private slots:
     void onRunClicked();
@@ -33,11 +32,17 @@ private slots:
     void onCloseClicked();
     void onWorkerFinished(bool success, const QVariant& result, const QString& error);
     void onWorkerCancelled();
+    void onThemeChanged(); // Theme sync handler
 
 private:
     void setupToolbar();
     void setupParameterPanel(const QString& featureId);
     void cleanupWorker();
+    
+#ifndef NDEBUG
+public:
+    void dumpWidgetTree(QWidget* widget = nullptr, int depth = 0) const;
+#endif
     
     XYPlotViewGraphs* m_plotView;
     QToolBar* m_toolbar;
@@ -49,6 +54,6 @@ private:
     
     // Worker thread infrastructure
     QThread* m_workerThread;
-    AnalysisWorker* m_worker;
+    class AnalysisWorker* m_worker;
 };
 

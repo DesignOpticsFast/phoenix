@@ -4,11 +4,13 @@
 #include "ui/icons/IconProvider.h"
 #include "ui/icons/PhxLogging.h"
 #include "ui/themes/ThemeManager.h"
+#include "ui/analysis/AnalysisWindowManager.hpp"
 #include "app/LocaleInit.hpp"
 #include "app/SettingsProvider.h"
-#include "ui/analysis/AnalysisWindowManager.hpp"
+#include "features/FeatureRegistry.hpp"
 #include "version.h"
 #include <QApplication>
+#include <QCoreApplication>
 #include <QTimer>
 #include <QIcon>
 #include <QSplashScreen>
@@ -44,6 +46,28 @@ int main(int argc, char** argv) {
 
     QApplication app(argc, argv);
     
+    // Parse command-line arguments
+    const QStringList args = QCoreApplication::arguments();
+    
+    // Parse command-line arguments for debug UI logging
+#ifndef NDEBUG
+    const bool debugUILog = args.contains(QStringLiteral("--debug-ui-log"));
+    
+    if (debugUILog) {
+        qputenv("PHOENIX_DEBUG_UI_LOG", "1");
+        QLoggingCategory::setFilterRules(QStringLiteral(
+            "phx.icons.debug=false\n"
+            "phx.fonts.debug=false\n"
+            "phx.ui.debug=true\n"
+            "*.debug=true\n"
+        ));
+        qInfo() << "[MAIN] Debug UI logging enabled via --debug-ui-log";
+    }
+#endif
+    
+    // Register QMainWindow* metatype for use in QVariant (Window menu)
+    qRegisterMetaType<QMainWindow*>("QMainWindow*");
+    
     // Disable verbose logs by default (still toggleable via QT_LOGGING_RULES)
     QLoggingCategory::setFilterRules(QStringLiteral(
         "phx.icons.debug=false\n"
@@ -56,8 +80,6 @@ int main(int argc, char** argv) {
     QCoreApplication::setApplicationVersion(QStringLiteral(PHOENIX_VERSION));
     QCoreApplication::setOrganizationName("Phoenix");
     QCoreApplication::setOrganizationDomain("phoenix.dev");
-    
-    const QStringList args = QCoreApplication::arguments();
     const bool testI18n = args.contains(QStringLiteral("--test-i18n"));
     QString optLang;
     for (int i = 0; i < args.size(); ++i) {
@@ -122,6 +144,13 @@ int main(int argc, char** argv) {
     // Wire ThemeManager singleton (must happen before ThemeManager::instance() use)
     ThemeManager::setSettingsProvider(settingsProvider);
     
+    // Register default features (Phoenix-only, no license dependencies)
+    FeatureRegistry::instance().registerDefaultFeatures();
+    
+    // Connect application quit signal to close all analysis windows
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, []() {
+        AnalysisWindowManager::instance()->closeAll();
+    });
     // Create main window (but don't show it yet)
     MainWindow mainWindow(settingsProvider);
     mainWindow.setStartupStartTime(startupStartMs);
@@ -145,12 +174,6 @@ int main(int argc, char** argv) {
     mainWindow.show();
     mainWindow.raise();
     mainWindow.activateWindow();
-    
-    // Ensure all analysis windows are closed on application exit
-    // This is a safety net for cases where main window close doesn't trigger closeEvent
-    QObject::connect(&app, &QApplication::aboutToQuit, []() {
-        AnalysisWindowManager::instance()->closeAll();
-    });
     
     return app.exec();
 }

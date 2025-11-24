@@ -5,6 +5,7 @@
 #include <QList>
 
 class QMainWindow;
+class QDockWidget;
 
 class AnalysisWindowManager : public QObject {
     Q_OBJECT
@@ -16,13 +17,27 @@ public:
     void registerWindow(QMainWindow* window);
     void unregisterWindow(QMainWindow* window);
     
+    // Register/unregister tool windows (QDockWidget)
+    void registerToolWindow(QDockWidget* dock);
+    void unregisterToolWindow(QDockWidget* dock);
+    
     // Close all registered analysis windows
     void closeAll();
     
+    // Close all registered tool windows
+    void closeAllTools();
+    
+    // Close everything (analysis + tool windows)
+    void closeAllWindows();
+    
+    // Raise all visible analysis windows above MainWindow (Z-order enforcement)
+    void raiseAllAnalysisWindows();
+    
     // Get count of registered windows
     int windowCount() const { return m_windows.size(); }
+    int toolWindowCount() const { return m_toolWindows.size(); }
     
-    // Get list of all registered windows
+    // Get list of all currently registered analysis windows (non-null only)
     QList<QMainWindow*> windows() const;
 
 private:
@@ -30,6 +45,9 @@ private:
     ~AnalysisWindowManager() override = default;
     
     QList<QPointer<QMainWindow>> m_windows;
+    QList<QPointer<QDockWidget>> m_toolWindows;
+    bool m_closingAll = false;  // Guard flag to prevent re-entrancy issues
+    bool m_closingTools = false;  // Guard flag for tool window closing
     static AnalysisWindowManager* s_instance;
 };
 

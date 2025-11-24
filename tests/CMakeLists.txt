@@ -53,27 +53,142 @@ if(BUILD_TESTING)
   add_test(NAME canonical_json_tests COMMAND canonical_json_tests)
 endif()
 
-# transport sanity tests
+# transport sanity tests (removed for Phase 2A - Phoenix-only phase)
+# Will be restored in Phase 3 (transport scaffolding)
+# if(BUILD_TESTING AND PHX_WITH_TRANSPORT_DEPS)
+#   add_executable(transport_sanity_tests ...)
+# endif()
+
+# XY plot autoscaling tests (Phoenix-only, no transport dependencies)
 if(BUILD_TESTING)
-  add_executable(transport_sanity_tests
-    transport_sanity_tests.cpp
+  add_executable(test_xyplot_autoscale
+    test_xyplot_autoscale.cpp
   )
 
-  target_link_libraries(transport_sanity_tests
-    PRIVATE
-      phoenix_transport
-      Qt6::Test
-      Qt6::Core
+  target_link_libraries(test_xyplot_autoscale PRIVATE
+    phoenix_analysis
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Test
+    Qt6::QuickWidgets
   )
 
-  target_include_directories(transport_sanity_tests
+  target_include_directories(test_xyplot_autoscale
     PRIVATE
       ${CMAKE_SOURCE_DIR}/src
   )
 
-  add_test(NAME transport_sanity_tests COMMAND transport_sanity_tests)
+  add_test(NAME test_xyplot_autoscale COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_xyplot_autoscale>)
+endif()
+# XY analysis window creation tests (Phoenix-only)
+if(BUILD_TESTING)
+  add_executable(test_analysis_window_creation
+    test_analysis_window_creation.cpp
+  )
+
+  target_link_libraries(test_analysis_window_creation PRIVATE
+    phoenix_analysis
+    phoenix_feature_registry
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Test
+    Qt6::QuickWidgets
+  )
+
+  target_include_directories(test_analysis_window_creation
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME test_analysis_window_creation COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysis_window_creation>)
 endif()
 
+# XY Plot instrumentation test (Phase 2D)
+if(BUILD_TESTING)
+  add_executable(test_xy_plot_instrumentation
+    test_xy_plot_instrumentation.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/widgets/FeatureParameterPanel.cpp
+  )
+
+  target_link_libraries(test_xy_plot_instrumentation PRIVATE
+    phoenix_analysis
+    phoenix_feature_registry
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Test
+    Qt6::QuickWidgets
+  )
+
+  target_include_directories(test_xy_plot_instrumentation
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME test_xy_plot_instrumentation COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen PHOENIX_DEBUG_UI_LOG=1 $<TARGET_FILE:test_xy_plot_instrumentation>)
+endif()
+# Analysis window manager tests (Phoenix-only)
+if(BUILD_TESTING)
+  add_executable(test_analysis_window_manager
+    test_analysis_window_manager.cpp
+  )
+
+  target_link_libraries(test_analysis_window_manager PRIVATE
+    phoenix_analysis
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Test
+  )
+
+  target_include_directories(test_analysis_window_manager
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME test_analysis_window_manager COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:test_analysis_window_manager>)
+endif()
+# feature registry tests (Phoenix-only)
+if(BUILD_TESTING)
+  add_executable(feature_registry_tests
+    feature_registry_tests.cpp
+  )
+
+  target_link_libraries(feature_registry_tests PRIVATE
+    phoenix_feature_registry
+    Qt6::Core
+    Qt6::Test
+  )
+
+  target_include_directories(feature_registry_tests
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME feature_registry_tests COMMAND feature_registry_tests)
+endif()
+
+# feature parameter panel tests (Phoenix-only)
+if(BUILD_TESTING)
+  add_executable(feature_parameter_panel_tests
+    feature_parameter_panel_tests.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/widgets/FeatureParameterPanel.cpp
+  )
+
+  target_link_libraries(feature_parameter_panel_tests PRIVATE
+    phoenix_feature_registry
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Test
+  )
+
+  target_include_directories(feature_parameter_panel_tests
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  add_test(NAME feature_parameter_panel_tests COMMAND ${CMAKE_COMMAND} -E env QT_QPA_PLATFORM=offscreen $<TARGET_FILE:feature_parameter_panel_tests>)
+endif()
+
+# Note: license_manager_tests and echo_dialog_tests removed (transport-dependent, Phase 3+)
 # analysis sanity tests
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests

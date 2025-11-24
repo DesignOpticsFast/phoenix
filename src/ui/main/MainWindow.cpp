@@ -33,6 +33,7 @@
 #include <QThread>
 #include <QDateTime>
 #include <QShowEvent>
+#include <QFocusEvent>
 #include <QEvent>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -40,11 +41,14 @@
 #include <QAction>
 #include <QMenu>
 #include <QStyle>
+#include <QVariant>
 #include <functional>
 #include <cmath>
-#include "ui/analysis/XYAnalysisWindow.hpp"
+#include "ui/analysis/AnalysisWindow.hpp"
 #include "ui/analysis/AnalysisWindowManager.hpp"
 #include "plot/XYPlotViewGraphs.hpp"
+#include "ui/analysis/XYAnalysisWindow.hpp"
+#include <QDockWidget>
 #include <QPointF>
 #include <vector>
 #include <memory>
@@ -91,6 +95,7 @@ MainWindow::MainWindow(SettingsProvider* sp, QWidget *parent)
     , m_mainToolBar(nullptr)
     , m_statusBar(nullptr)
     , m_themeMenu(nullptr)
+    , m_windowMenu(nullptr)
     , m_uiInitialized(false)
     , m_toolboxDock(nullptr)
     , m_propertiesDock(nullptr)
@@ -200,11 +205,23 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    // Close all analysis windows before closing main window
-    AnalysisWindowManager::instance()->closeAll();
+    // Close all analysis windows and tool windows before closing main window
+    AnalysisWindowManager::instance()->closeAllWindows();
     
     saveSettings();
     QMainWindow::closeEvent(event);
+}
+
+void MainWindow::focusInEvent(QFocusEvent* event)
+{
+    // Call base class first to preserve normal focus behavior
+    QMainWindow::focusInEvent(event);
+    
+    // When MainWindow gets focus, raise all visible analysis windows above it
+    // This ensures analysis windows stay above MainWindow but below tool windows
+    if (AnalysisWindowManager* mgr = AnalysisWindowManager::instance()) {
+        mgr->raiseAllAnalysisWindows();
+    }
 }
 
 bool MainWindow::event(QEvent* e)
@@ -493,86 +510,6 @@ QMenu* MainWindow::createWindowMenu()
     connect(m_windowMenu, &QMenu::aboutToShow, this, &MainWindow::updateWindowMenu);
     
     return m_windowMenu;
-}
-
-void MainWindow::updateWindowMenu()
-{
-    if (!m_windowMenu) {
-        return;
-    }
-    
-    // Remove all window-specific actions (keep "Bring All to Front" and separator)
-    // Window actions always carry a non-null data(); static menu entries don't
-    QList<QAction*> actions = m_windowMenu->actions();
-    for (QAction* action : actions) {
-        if (action->data().isValid()) {
-            m_windowMenu->removeAction(action);
-            delete action;
-        }
-    }
-    
-    // Get current windows from manager
-    AnalysisWindowManager* mgr = AnalysisWindowManager::instance();
-    QList<QMainWindow*> windows = mgr->windows();
-    
-    // Add action for each window
-    int index = 1;
-    for (QMainWindow* window : windows) {
-        if (!window) {
-            continue;
-        }
-        
-        QString title = window->windowTitle();
-        if (title.isEmpty()) {
-            title = tr("XY Plot #%1").arg(index);
-        } else {
-            // Truncate long titles
-            if (title.length() > 50) {
-                title = title.left(47) + "...";
-            }
-        }
-        
-        QAction* windowAction = new QAction(title, this);
-        windowAction->setCheckable(true);
-        windowAction->setChecked(window->isActiveWindow());
-        windowAction->setData(QVariant::fromValue<QMainWindow*>(window));
-        connect(windowAction, &QAction::triggered, this, [this, windowAction]() {
-            onWindowMenuActionTriggered(windowAction);
-        });
-        m_windowMenu->addAction(windowAction);
-        index++;
-    }
-}
-
-void MainWindow::onWindowMenuActionTriggered(QAction* action)
-{
-    if (!action || !action->data().isValid()) {
-        return;
-    }
-    
-    QMainWindow* window = action->data().value<QMainWindow*>();
-    if (window) {
-        window->raise();
-        window->activateWindow();
-    }
-}
-
-void MainWindow::onBringAllToFront()
-{
-    AnalysisWindowManager* mgr = AnalysisWindowManager::instance();
-    QList<QMainWindow*> windows = mgr->windows();
-    
-    // Raise all windows
-    for (QMainWindow* window : windows) {
-        if (window && window->isVisible()) {
-            window->raise();
-        }
-    }
-    
-    // Activate the last window (most recently created)
-    if (!windows.isEmpty() && windows.last()) {
-        windows.last()->activateWindow();
-    }
 }
 
 QMenu* MainWindow::createHelpMenu()
@@ -918,6 +855,9 @@ void MainWindow::setupDockWidgets()
     m_toolboxDock->setWidget(toolboxContent);
     addDockWidget(Qt::LeftDockWidgetArea, m_toolboxDock);
     
+    // Register toolbox dock with window manager for clean shutdown
+    AnalysisWindowManager::instance()->registerToolWindow(m_toolboxDock);
+    
     // Properties dock (right)
     m_propertiesDock = new QDockWidget(tr("Properties"), this);
     m_propertiesDock->setObjectName("propertiesDock");
@@ -935,6 +875,9 @@ void MainWindow::setupDockWidgets()
     m_propertiesDock->setWidget(propsContent);
     addDockWidget(Qt::RightDockWidgetArea, m_propertiesDock);
     
+    // Register properties dock with window manager for clean shutdown
+    AnalysisWindowManager::instance()->registerToolWindow(m_propertiesDock);
+    
     // Central widget placeholder
     QWidget* centralWidget = new QWidget();
     centralWidget->setMinimumSize(phx::ui::kDockWideWidth, phx::ui::kPanelMinHeight);
@@ -951,17 +894,25 @@ void MainWindow::setupFloatingToolbarsAndDocks()
         if (auto* tb = qobject_cast<QToolBar*>(w)) {
             connect(tb, &QToolBar::topLevelChanged, this, [w](bool floating) {
                 if (floating) {
-                    w->show();
-                    // Removed w->raise() - on Wayland this triggers popup-only mouse grab
-                    // Qt's default z-ordering is sufficient on all platforms
+                    // When the toolbar is floating, make it a top-level always-on-top window
+                    w->setWindowFlag(Qt::WindowStaysOnTopHint, true);
+                    w->show(); // Re-polish with new flags
+                } else {
+                    // When re-docked, clear the always-on-top hint
+                    w->setWindowFlag(Qt::WindowStaysOnTopHint, false);
+                    w->show(); // Re-apply normal docking behavior
                 }
             });
         } else if (auto* dw = qobject_cast<QDockWidget*>(w)) {
             connect(dw, &QDockWidget::topLevelChanged, this, [w](bool floating) {
                 if (floating) {
+                    // When the dock widget is floating, keep it above MainWindow
+                    w->setWindowFlag(Qt::WindowStaysOnTopHint, true);
                     w->show();
-                    // Removed w->raise() - on Wayland this triggers popup-only mouse grab
-                    // Qt's default z-ordering is sufficient on all platforms
+                } else {
+                    // When docked back into MainWindow, remove the always-on-top hint
+                    w->setWindowFlag(Qt::WindowStaysOnTopHint, false);
+                    w->show();
                 }
             });
         }
@@ -1277,15 +1228,11 @@ void MainWindow::saveAsFile()
 
 void MainWindow::showPreferences()
 {
-    if (!m_preferencesDialog) {
-        if (!m_settingsProvider) return;
-        m_preferencesDialog = new PreferencesDialog(this, this);
-        m_preferencesDialog->setAttribute(Qt::WA_DeleteOnClose, true);  // auto-delete on close
-    } else {
-        m_preferencesDialog->raise();
-        m_preferencesDialog->activateWindow();
-    }
-    m_preferencesDialog->show();  // non-modal
+    if (!m_settingsProvider) return;
+    
+    // Use stack-allocated modal dialog (consistent across platforms)
+    PreferencesDialog dlg(this, this);
+    dlg.exec();
 }
 
 void MainWindow::exitApplication()
@@ -1307,17 +1254,29 @@ void MainWindow::showSystemViewer()
 // Analysis menu actions
 void MainWindow::showXYPlot()
 {
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[MAIN] showXYPlot() called";
+    }
+#endif
     // Create XYAnalysisWindow as top-level window (no parent)
     // This ensures macOS allows it to appear above MainWindow
-    // XYAnalysisWindow already sets Qt::WindowStaysOnTopHint in its constructor
+    // Tool windows (Qt::Tool) will naturally stay on top of both
+    // License checking removed (transport-dependent, Phase 3+)
     auto* win = new XYAnalysisWindow(nullptr);
+    
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[MAIN] XYAnalysisWindow created - pointer:" << (void*)win;
+    }
+#endif
     
     // Cascade positioning: offset each new window by a small amount
     static int cascadeOffset = 0;
     constexpr int cascadeDelta = 20;
     constexpr int maxCascadeOffset = 100;
     
-    const QPoint baseOffset(50, 50);  // Base offset from MainWindow's top-left
+    const QPoint baseOffset(80, 120);  // Base offset from MainWindow's top-left (clears ribbon area)
     const QPoint mainPos = pos();
     const QPoint cascadePos = mainPos + baseOffset + QPoint(cascadeOffset, cascadeOffset);
     
@@ -1338,12 +1297,36 @@ void MainWindow::showXYPlot()
         points.emplace_back(x, y);
     }
     
-    // Set data on the plot view
+    // Set initial data on the plot view (will be replaced when Run is clicked)
     win->plotView()->setData(points);
-    win->plotView()->setTitle(tr("Sine Wave Test"));
+    win->plotView()->setTitle(tr("XY Sine"));
     
-    // Show the window (XYAnalysisWindow constructor already sets up everything)
+    // Wire FeatureParameterPanel for XY Sine feature (Phase 2C)
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[MAIN] Calling setFeature(\"xy_sine\")";
+    }
+#endif
+    win->setFeature("xy_sine");
+    
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[MAIN] Dumping widget tree after setFeature():";
+        win->dumpWidgetTree();
+    }
+#endif
+    
+    // Show and bring to front (tool windows will stay on top)
     win->show();
+    win->raise();
+    win->activateWindow();
+    
+#ifndef NDEBUG
+    if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
+        qInfo() << "[MAIN] Window shown - calling dumpWidgetTree() again:";
+        win->dumpWidgetTree();
+    }
+#endif
 }
 
 void MainWindow::show2DPlot()
@@ -1849,6 +1832,82 @@ void MainWindow::showHelp()
     QMessageBox::information(this, tr("Help"), tr("This feature is not yet implemented."));
 }
 
+// Window menu management (Phoenix-only, no transport dependencies)
+void MainWindow::updateWindowMenu()
+{
+    if (!m_windowMenu) {
+        return;
+    }
+    
+    // Remove all window-specific actions (keep "Bring All to Front" and separator)
+    // Window actions always carry a non-null data(); static menu entries don't
+    QList<QAction*> actions = m_windowMenu->actions();
+    for (QAction* action : actions) {
+        if (action->data().isValid()) {
+            m_windowMenu->removeAction(action);
+            delete action;
+        }
+    }
+    
+    // Get current windows from manager
+    AnalysisWindowManager* mgr = AnalysisWindowManager::instance();
+    QList<QMainWindow*> windows = mgr->windows();
+    
+    // Add action for each window
+    int index = 1;
+    for (QMainWindow* window : windows) {
+        if (!window) {
+            continue;
+        }
+        
+        QString title = window->windowTitle();
+        if (title.isEmpty()) {
+            title = tr("XY Plot #%1").arg(index);
+        } else {
+            title = tr("%1 (%2)").arg(title).arg(index);
+        }
+        
+        QAction* windowAction = new QAction(title, this);
+        windowAction->setData(QVariant::fromValue<QMainWindow*>(window));
+        windowAction->setCheckable(false);
+        connect(windowAction, &QAction::triggered, this, [this, windowAction]() {
+            onWindowMenuActionTriggered(windowAction);
+        });
+        m_windowMenu->addAction(windowAction);
+        
+        index++;
+    }
+}
+
+void MainWindow::onWindowMenuActionTriggered(QAction* action)
+{
+    QMainWindow* window = action->data().value<QMainWindow*>();
+    if (window) {
+        window->raise();
+        window->activateWindow();
+    }
+}
+
+void MainWindow::onBringAllToFront()
+{
+    AnalysisWindowManager* mgr = AnalysisWindowManager::instance();
+    QList<QMainWindow*> windows = mgr->windows();
+    
+    // Raise all windows
+    for (QMainWindow* window : windows) {
+        if (window && window->isVisible()) {
+            window->raise();
+        }
+    }
+    
+    // Activate the last window (most recently created)
+    if (!windows.isEmpty() && windows.last()) {
+        windows.last()->activateWindow();
+    }
+}
+
+// Note: showLicense(), showEchoTestDialog(), and updateActionLicenseState() removed
+// (transport-dependent, will be added in Phase 3+)
 // Telemetry hooks for UI latency logging
 void MainWindow::logUIAction(const QString& action, qint64 elapsed)
 {
@@ -1878,5 +1937,3 @@ void MainWindow::logRibbonAction(const QString& action)
         logUIAction(QString("ribbon_%1").arg(action), elapsed);
     });
 }
-
-
