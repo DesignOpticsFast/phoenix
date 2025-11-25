@@ -413,29 +413,41 @@ if(PHX_WITH_TRANSPORT_DEPS)
   set(PALANTIR_PROTO_OUT_DIR "${CMAKE_BINARY_DIR}/generated/contracts")
   file(MAKE_DIRECTORY "${PALANTIR_PROTO_OUT_DIR}")
 
-  # Define input proto file (WP1: Capabilities only)
-  set(CAPABILITIES_PROTO "${PALANTIR_PROTO_DIR}/palantir/capabilities.proto")
+  # Define proto files to generate (Sprint 4.5: envelope-based protocol)
+  set(PALANTIR_PROTO_FILES
+    "${PALANTIR_PROTO_DIR}/palantir/capabilities.proto"
+    "${PALANTIR_PROTO_DIR}/palantir/envelope.proto"
+    "${PALANTIR_PROTO_DIR}/palantir/error.proto"
+    "${PALANTIR_PROTO_DIR}/palantir/xysine.proto"
+  )
 
-  # Check if proto file exists
-  if(NOT EXISTS "${CAPABILITIES_PROTO}")
-    message(WARNING "Capabilities.proto not found at ${CAPABILITIES_PROTO}")
-  else()
-    # Generate C++ code from Capabilities.proto
-    add_custom_command(
-      OUTPUT
-        "${PALANTIR_PROTO_OUT_DIR}/palantir/capabilities.pb.cc"
-        "${PALANTIR_PROTO_OUT_DIR}/palantir/capabilities.pb.h"
-      COMMAND "${PROTOC_EXECUTABLE}"
-        --proto_path="${PALANTIR_PROTO_DIR}"
-        --cpp_out="${PALANTIR_PROTO_OUT_DIR}"
-        "${CAPABILITIES_PROTO}"
-      DEPENDS "${CAPABILITIES_PROTO}"
-      COMMENT "Generating C++ from Capabilities.proto"
-    )
+  # Generate C++ code from all proto files
+  set(GENERATED_PROTO_SOURCES)
+  foreach(PROTO_FILE ${PALANTIR_PROTO_FILES})
+    get_filename_component(PROTO_NAME ${PROTO_FILE} NAME_WE)
+    if(EXISTS "${PROTO_FILE}")
+      # Generate C++ code from proto file
+      add_custom_command(
+        OUTPUT
+          "${PALANTIR_PROTO_OUT_DIR}/palantir/${PROTO_NAME}.pb.cc"
+          "${PALANTIR_PROTO_OUT_DIR}/palantir/${PROTO_NAME}.pb.h"
+        COMMAND "${PROTOC_EXECUTABLE}"
+          --proto_path="${PALANTIR_PROTO_DIR}"
+          --cpp_out="${PALANTIR_PROTO_OUT_DIR}"
+          "${PROTO_FILE}"
+        DEPENDS "${PROTO_FILE}"
+        COMMENT "Generating C++ from ${PROTO_NAME}.proto"
+      )
+      list(APPEND GENERATED_PROTO_SOURCES "${PALANTIR_PROTO_OUT_DIR}/palantir/${PROTO_NAME}.pb.cc")
+    else()
+      message(WARNING "${PROTO_NAME}.proto not found at ${PROTO_FILE}")
+    endif()
+  endforeach()
 
-    # Create phoenix_palantir_proto library
+  # Create phoenix_palantir_proto library if we have any proto files
+  if(GENERATED_PROTO_SOURCES)
     add_library(phoenix_palantir_proto STATIC
-      "${PALANTIR_PROTO_OUT_DIR}/palantir/capabilities.pb.cc"
+      ${GENERATED_PROTO_SOURCES}
     )
 
     target_include_directories(phoenix_palantir_proto PUBLIC
@@ -468,7 +480,8 @@ if(PHX_WITH_TRANSPORT_DEPS)
       )
     endif()
 
-    message(STATUS "Palantir proto codegen enabled: Capabilities.proto -> phoenix_palantir_proto")
+    list(LENGTH GENERATED_PROTO_SOURCES PROTO_COUNT)
+    message(STATUS "Palantir proto codegen enabled: ${PROTO_COUNT} proto file(s) -> phoenix_palantir_proto")
   endif()
 endif()
 
