@@ -6,6 +6,22 @@ This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ---
 
+## [0.0.4] – 2025-01-25
+### Phoenix (Frontend)
+- **Envelope-Based Palantir Protocol**: Migrated to envelope-based wire format for all IPC communication. All messages now use `MessageEnvelope` protobuf with version, type, payload, and metadata fields. Wire format: `[4-byte length][serialized MessageEnvelope]`. See `ADR-0002-Envelope-Based-Palantir-Framing.md` for details.
+- **IPC Hardening**: Eliminated deadlocks in transport layer by refactoring lock scope. Narrowed mutex protection to buffer manipulation only, with dispatch and I/O operations outside critical sections. Transport layer now safe under concurrency.
+- **Envelope Helpers**: Added reusable `makeEnvelope()` and `parseEnvelope()` helpers for creating and parsing envelope messages. Helpers include version validation, type checking, and error reporting.
+- **Transport Layer Rewrite**: Removed legacy `[length][type][payload]` format. All RPCs now use envelope-based transport with proper versioning and extensibility.
+
+### Bedrock (Backend)
+- **Envelope-Based Palantir Transport**: Server-side migration to envelope-based protocol matching Phoenix client. All message handling now uses `MessageEnvelope` with proper validation.
+- **Deadlock Elimination**: Fixed deadlock in `parseIncomingData()` by refactoring to `extractMessage()` helper (no locking) and narrowing lock scope. Removed mutex from `sendMessage()` to prevent nested locking.
+- **Integration Test Harness**: Added comprehensive integration test framework with in-process server fixture and minimal test client. Validates end-to-end envelope transport for RPCs.
+- **Capabilities RPC Integration Test**: End-to-end test validating Capabilities request/response cycle using envelope transport.
+- **XY Sine RPC Integration Test**: End-to-end test validating XY Sine computation with mathematical correctness checks. Validates envelope transport for numeric RPCs with repeated double fields.
+
+---
+
 ## [0.0.3] – 2025-01-XX
 ### Phoenix (Frontend)
 - **PalantirClient Async FSM**: Non-blocking connection state machine with exponential backoff (1s, 2s, 4s, 8s, 16s). Connection states: Idle → Connecting → Connected → ErrorBackoff → PermanentFail. All socket operations are event-driven; GUI thread never blocks.

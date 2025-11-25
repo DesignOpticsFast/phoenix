@@ -59,6 +59,27 @@ endif()
 #   add_executable(transport_sanity_tests ...)
 # endif()
 
+# envelope helpers tests (Sprint 4.5 - Workstream 1)
+if(BUILD_TESTING AND PHX_WITH_TRANSPORT_DEPS)
+  add_executable(envelope_helpers_test
+    envelope_helpers_test.cpp
+  )
+
+  target_link_libraries(envelope_helpers_test PRIVATE
+    phoenix_transport
+    phoenix_palantir_proto
+    Qt6::Test
+    Qt6::Core
+  )
+
+  target_include_directories(envelope_helpers_test
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/..
+  )
+
+  add_test(NAME envelope_helpers_test COMMAND envelope_helpers_test)
+endif()
+
 # XY plot autoscaling tests (Phoenix-only, no transport dependencies)
 if(BUILD_TESTING)
   add_executable(test_xyplot_autoscale
