@@ -4,6 +4,8 @@
 // CMake will define PHX_WITH_TRANSPORT_DEPS as a compile definition when flag is ON
 #ifdef PHX_WITH_TRANSPORT_DEPS
 #include "palantir/capabilities.pb.h"
+#include "palantir/envelope.pb.h"
+#include "EnvelopeHelpers.hpp"
 #endif
 
 #include <QLocalSocket>
@@ -92,17 +94,33 @@ std::optional<palantir::CapabilitiesResponse> LocalSocketChannel::getCapabilitie
         return std::nullopt;
     }
     
-    // Serialize CapabilitiesRequest
+    // Create CapabilitiesRequest and wrap in envelope
     palantir::CapabilitiesRequest request;
-    std::string serialized;
-    if (!request.SerializeToString(&serialized)) {
+    QString envelopeError;
+    auto envelope = phoenix::transport::makeEnvelope(
+        palantir::MessageType::CAPABILITIES_REQUEST,
+        request,
+        {},
+        &envelopeError
+    );
+    
+    if (!envelope.has_value()) {
         if (outError) {
-            *outError = QString("Failed to serialize CapabilitiesRequest");
+            *outError = QString("Failed to create envelope: %1").arg(envelopeError);
         }
         return std::nullopt;
     }
     
-    // Create length-prefixed frame (4-byte little-endian length + message)
+    // Serialize envelope
+    std::string serialized;
+    if (!envelope->SerializeToString(&serialized)) {
+        if (outError) {
+            *outError = QString("Failed to serialize MessageEnvelope");
+        }
+        return std::nullopt;
+    }
+    
+    // Create length-prefixed frame (4-byte little-endian length + serialized envelope)
     uint32_t length = static_cast<uint32_t>(serialized.size());
     QByteArray data;
     data.append(reinterpret_cast<const char*>(&length), 4);
@@ -145,30 +163,56 @@ std::optional<palantir::CapabilitiesResponse> LocalSocketChannel::getCapabilitie
     uint32_t responseLength;
     std::memcpy(&responseLength, lengthBytes.data(), 4);
     
-    // Read message bytes (may need multiple reads)
-    QByteArray messageBytes;
-    while (messageBytes.size() < static_cast<int>(responseLength)) {
+    // Read envelope bytes (may need multiple reads)
+    QByteArray envelopeBytes;
+    while (envelopeBytes.size() < static_cast<int>(responseLength)) {
         if (!m_socket->waitForReadyRead(5000)) {
             if (outError) {
-                *outError = QString("Timeout reading CapabilitiesResponse");
+                *outError = QString("Timeout reading MessageEnvelope");
             }
             return std::nullopt;
         }
-        messageBytes += m_socket->read(responseLength - messageBytes.size());
+        envelopeBytes += m_socket->read(responseLength - envelopeBytes.size());
     }
     
-    if (messageBytes.size() != static_cast<int>(responseLength)) {
+    if (envelopeBytes.size() != static_cast<int>(responseLength)) {
         if (outError) {
-            *outError = QString("Failed to read complete CapabilitiesResponse");
+            *outError = QString("Failed to read complete MessageEnvelope");
         }
         return std::nullopt;
     }
     
-    // Parse response
-    palantir::CapabilitiesResponse response;
-    if (!response.ParseFromArray(messageBytes.data(), messageBytes.size())) {
+    // Parse envelope
+    palantir::MessageEnvelope responseEnvelope;
+    QString parseError;
+    if (!phoenix::transport::parseEnvelope(envelopeBytes, responseEnvelope, &parseError)) {
         if (outError) {
-            *outError = QString("Failed to parse CapabilitiesResponse");
+            *outError = QString("Failed to parse MessageEnvelope: %1").arg(parseError);
+        }
+        return std::nullopt;
+    }
+    
+    // Validate envelope
+    if (responseEnvelope.version() != 1) {
+        if (outError) {
+            *outError = QString("Invalid envelope version: %1").arg(responseEnvelope.version());
+        }
+        return std::nullopt;
+    }
+    
+    if (responseEnvelope.type() != palantir::MessageType::CAPABILITIES_RESPONSE) {
+        if (outError) {
+            *outError = QString("Unexpected message type: %1").arg(static_cast<int>(responseEnvelope.type()));
+        }
+        return std::nullopt;
+    }
+    
+    // Parse inner CapabilitiesResponse from payload
+    palantir::CapabilitiesResponse response;
+    const std::string& payload = responseEnvelope.payload();
+    if (!response.ParseFromArray(payload.data(), static_cast<int>(payload.size()))) {
+        if (outError) {
+            *outError = QString("Failed to parse CapabilitiesResponse from envelope payload");
         }
         return std::nullopt;
     }

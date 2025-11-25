@@ -71,11 +71,36 @@ if(BUILD_TESTING AND PHX_WITH_TRANSPORT_DEPS)
     Qt6::Test
     Qt6::Core
   )
+  
+  # Link abseil libraries (required by protobuf 6.33+)
+  find_library(ABSL_DIE_IF_NULL_LIB absl_die_if_null PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+  find_library(ABSL_LOG_INITIALIZE_LIB absl_log_initialize PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+  find_library(ABSL_STATUSOR_LIB absl_statusor PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+  find_library(ABSL_LOG_INTERNAL_CHECK_OP_LIB absl_log_internal_check_op PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+  find_library(ABSL_LOG_INTERNAL_CONDITIONS_LIB absl_log_internal_conditions PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+  find_library(ABSL_LOG_INTERNAL_MESSAGE_LIB absl_log_internal_message PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+  find_library(ABSL_HASH_LIB absl_hash PATHS /opt/homebrew/opt/abseil/lib NO_DEFAULT_PATH)
+  
+  if(ABSL_DIE_IF_NULL_LIB AND ABSL_LOG_INITIALIZE_LIB AND ABSL_STATUSOR_LIB)
+    target_link_libraries(envelope_helpers_test PRIVATE
+      ${ABSL_DIE_IF_NULL_LIB}
+      ${ABSL_LOG_INITIALIZE_LIB}
+      ${ABSL_STATUSOR_LIB}
+      ${ABSL_LOG_INTERNAL_CHECK_OP_LIB}
+      ${ABSL_LOG_INTERNAL_CONDITIONS_LIB}
+      ${ABSL_LOG_INTERNAL_MESSAGE_LIB}
+    )
+    if(ABSL_HASH_LIB)
+      target_link_libraries(envelope_helpers_test PRIVATE ${ABSL_HASH_LIB})
+    endif()
+  endif()
 
   target_include_directories(envelope_helpers_test
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/..
   )
+
+  target_compile_definitions(envelope_helpers_test PRIVATE PHX_WITH_TRANSPORT_DEPS)
 
   add_test(NAME envelope_helpers_test COMMAND envelope_helpers_test)
 endif()
