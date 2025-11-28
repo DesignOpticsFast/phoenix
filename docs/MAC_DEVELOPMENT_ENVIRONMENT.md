@@ -1,47 +1,48 @@
 # Mac Development Environment Documentation
 
 **Purpose**: Document Mac development environment setup for Phoenix  
-**Last Updated**: 2025-01-22  
-**Status**: ✅ Working (Tested on macOS 26.0.1, Apple Silicon)
+**Last Updated**: 2025-01-26 (Sprint 4.5)  
+**Status**: ✅ Working
+
+> **Note:** For current toolchain versions (Qt, C++ standard, CMake, Protobuf, etc.), see [VERSIONS.md](VERSIONS.md).
 
 ## 🖥️ **System Information**
 
-- **macOS Version**: 26.0.1 (Build 25A362)
-- **Architecture**: ARM64 (Apple Silicon)
-- **Memory**: 64 GB
-- **User**: mark
-- **Connection**: Tailscale IP 100.97.54.75
+- **macOS Version**: Tested on macOS 13+ (Apple Silicon and Intel)
+- **Architecture**: ARM64 (Apple Silicon) or x86_64 (Intel)
+- **Primary Development**: Crucible (macOS)
 
 ## 🔧 **Development Tools**
 
-### **Qt6 Installation**
+### **Qt Installation**
 
-- **Location**: `/Users/mark/Qt/6.9.3/macos`
-- **Version**: Qt 6.9.3
-- **Installation Method**: Qt Installer
-- **CMake Path**: `/Users/mark/Qt/6.9.3/macos/lib/cmake/Qt6`
+- **Location**: `$HOME/Qt/<version>/macos` (see [VERSIONS.md](VERSIONS.md) for current version)
+- **Installation Method**: Qt Online Installer (recommended) or Homebrew
+- **CMake Path**: `$HOME/Qt/<version>/macos/lib/cmake`
+
+> **Note:** For the current Qt version and exact path, see [VERSIONS.md](VERSIONS.md).
 
 **Key Files:**
 
 ```bash
-# Qt6 Configuration
-/Users/mark/Qt/6.9.3/macos/lib/cmake/Qt6/Qt6Config.cmake
+# Qt6 Configuration (adjust version as needed)
+$HOME/Qt/<version>/macos/lib/cmake/Qt6/Qt6Config.cmake
 
 # Qt6 Binaries
-/Users/mark/Qt/6.9.3/macos/bin/qmake
-/Users/mark/Qt/6.9.3/macos/bin/moc
-/Users/mark/Qt/6.9.3/macos/bin/uic
-/Users/mark/Qt/6.9.3/macos/bin/rcc
+$HOME/Qt/<version>/macos/bin/qmake
+$HOME/Qt/<version>/macos/bin/moc
+$HOME/Qt/<version>/macos/bin/uic
+$HOME/Qt/<version>/macos/bin/rcc
 
 # Qt6 Libraries
-/Users/mark/Qt/6.9.3/macos/lib/
+$HOME/Qt/<version>/macos/lib/
 ```
 
 ### **CMake**
 
-- **Location**: System-installed (via Xcode Command Line Tools)
-- **Version**: Available via `cmake --version`
-- **Usage**: `cmake -S . -B build -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos`
+- **Location**: System-installed (via Xcode Command Line Tools) or Homebrew
+- **Version**: See [VERSIONS.md](VERSIONS.md) for minimum version
+- **Usage**: `cmake -S . -B build -DCMAKE_PREFIX_PATH=$HOME/Qt/<version>/macos`
 
 ### **Git**
 
@@ -59,8 +60,8 @@
 ### **Standard Build**
 
 ```bash
-# Configure with Qt6
-cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos
+# Configure with Qt (see VERSIONS.md for current version and path)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$HOME/Qt/<version>/macos
 
 # Build
 cmake --build build -j
@@ -69,8 +70,8 @@ cmake --build build -j
 ### **Debug Build**
 
 ```bash
-# Configure for debug
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos
+# Configure for debug (see VERSIONS.md for Qt path)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=$HOME/Qt/<version>/macos
 
 # Build
 cmake --build build -j
@@ -82,15 +83,15 @@ cmake --build build -j
 # Remove build directory
 rm -rf build
 
-# Reconfigure and build
-cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos
+# Reconfigure and build (see VERSIONS.md for Qt path)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$HOME/Qt/<version>/macos
 cmake --build build -j
 ```
 
 ## 📁 **Directory Structure**
 
 ```
-/Users/mark/Projects/phoenix/
+$HOME/workspace/phoenix/  # or your preferred location
 ├── build/                          # Build directory
 │   └── Phoenix.app/                # macOS app bundle
 │       ├── Contents/
@@ -114,20 +115,20 @@ cmake --build build -j
 ### **Required for Phoenix Build**
 
 ```bash
-# Set Qt6 path (if not using -DCMAKE_PREFIX_PATH)
-export CMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos
+# Set Qt path (see VERSIONS.md for current version)
+export CMAKE_PREFIX_PATH=$HOME/Qt/<version>/macos
 
 # Alternative: Set Qt6_DIR
-export Qt6_DIR=/Users/mark/Qt/6.9.3/macos/lib/cmake/Qt6
+export Qt6_DIR=$HOME/Qt/<version>/macos/lib/cmake/Qt6
 ```
 
 ### **Optional Environment Setup**
 
 ```bash
-# Add Qt6 tools to PATH (if needed)
-export PATH="/Users/mark/Qt/6.9.3/macos/bin:$PATH"
+# Add Qt tools to PATH (if needed, see VERSIONS.md for version)
+export PATH="$HOME/Qt/<version>/macos/bin:$PATH"
 
-# Verify Qt6 installation
+# Verify Qt installation
 qmake -v
 moc -v
 uic -v
@@ -144,8 +145,8 @@ git pull
 # 2. Generate Dock icon (if needed)
 ./scripts/generate_macos_icon.sh
 
-# 3. Build Phoenix
-cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos
+# 3. Build Phoenix (see VERSIONS.md for Qt path)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$HOME/Qt/<version>/macos
 cmake --build build -j
 
 # 4. Test application
@@ -163,7 +164,7 @@ cp your_new_icon.svg resources/macos/Phoenix.svg
 
 # 3. Rebuild
 rm -rf build
-cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos
+cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$HOME/Qt/<version>/macos
 cmake --build build -j
 
 # 4. Test new icon
@@ -173,21 +174,21 @@ open build/Phoenix.app
 
 ## 🔧 **Troubleshooting**
 
-### **Qt6 Not Found**
+### **Qt Not Found**
 
 ```bash
-# Check Qt6 installation
-ls -la /Users/mark/Qt/6.9.3/macos/lib/cmake/Qt6/
+# Check Qt installation (see VERSIONS.md for current version)
+ls -la $HOME/Qt/<version>/macos/lib/cmake/Qt6/
 
 # Verify CMake can find Qt6
-cmake --find-package -DNAME=Qt6 -DCOMPILER_ID=GNU -DLANGUAGE=CXX -DMODE=EXIST -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos
+cmake --find-package -DNAME=Qt6 -DCOMPILER_ID=GNU -DLANGUAGE=CXX -DMODE=EXIST -DCMAKE_PREFIX_PATH=$HOME/Qt/<version>/macos
 ```
 
 ### **Build Failures**
 
 ```bash
-# Check CMake configuration
-cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos --debug-output
+# Check CMake configuration (see VERSIONS.md for Qt path)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$HOME/Qt/<version>/macos --debug-output
 
 # Check build logs
 cmake --build build -j --verbose
@@ -230,15 +231,15 @@ cmake --version
 # Check Git
 git --version
 
-# Check Qt6
-/Users/mark/Qt/6.9.3/macos/bin/qmake -v
+# Check Qt (see VERSIONS.md for version)
+$HOME/Qt/<version>/macos/bin/qmake -v
 ```
 
 ### **Phoenix Build Check**
 
 ```bash
-# Check if Phoenix builds
-cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos
+# Check if Phoenix builds (see VERSIONS.md for Qt path)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$HOME/Qt/<version>/macos
 cmake --build build -j
 
 # Check if app runs
@@ -250,8 +251,8 @@ open build/Phoenix.app
 ### **Essential Commands**
 
 ```bash
-# Build Phoenix
-cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=/Users/mark/Qt/6.9.3/macos && cmake --build build -j
+# Build Phoenix (see VERSIONS.md for Qt path)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=$HOME/Qt/<version>/macos && cmake --build build -j
 
 # Generate Dock icon
 ./scripts/generate_macos_icon.sh
@@ -265,10 +266,10 @@ rm -rf build
 
 ### **Key Paths**
 
-- **Qt6**: `/Users/mark/Qt/6.9.3/macos`
-- **CMake**: System-installed
+- **Qt**: `$HOME/Qt/<version>/macos` (see [VERSIONS.md](VERSIONS.md) for current version)
+- **CMake**: System-installed (see [VERSIONS.md](VERSIONS.md) for minimum version)
 - **Git**: System-installed
-- **Phoenix**: `/Users/mark/Projects/phoenix`
+- **Phoenix**: `$HOME/workspace/phoenix` (or your preferred location)
 
 ## 📚 **Related Documentation**
 

@@ -1,196 +1,144 @@
-Developer Environment Setup — Amazon Linux 2023 + Qt 6.10.0
+# Developer Environment Setup — macOS
 
-This guide provides complete steps for setting up a development environment for Phoenix/Bedrock/Rosetta. It covers installing prerequisites, downloading Qt from S3, verifying integrity, configuring environment variables, and running a smoke test build.
+> ⚠️ **UPDATED (2025-11-25): dev-01 removed. All CI now runs on GitHub Actions.**
+>
+> This guide is for **local macOS development** only. CI runs automatically on GitHub Actions.
 
-> ⚠️ **Updated for Phase 0.5 Gate PASS (2025-10-18): Qt 6.10.0 + Qt Graphs / gRPC UDS foundation.**  
-> 🚀 **NEW (2025-01-21): Tailscale integration for secure development workflow.**
+This guide provides steps for setting up a local macOS development environment for Phoenix. It covers installing Qt, configuring environment variables, and running a smoke test build.
+
+> **Note:** For current toolchain versions (Qt, C++ standard, CMake, Protobuf, etc.), see [VERSIONS.md](VERSIONS.md).
 
 ---
 
 ## 🎯 **Development Policy**
 
-### **ALL CODE CHANGES MUST BE DONE ON DEV-01 FIRST**
-
-**Rationale:**
-
-- ✅ **Consistent build environment** - Linux-based development
-- ✅ **Automated testing** - CI/CD pipelines run on dev-01
-- ✅ **Resource debugging** - Can test GUI with Xvfb
-- ✅ **Version control** - All changes tracked in Git
-- ✅ **Collaboration** - Team can access and review changes
-- ✅ **Quality assurance** - Automated tests and validation
+### **Local Development + GitHub Actions CI**
 
 **Workflow:**
+1. **Develop locally** - Make code changes on your macOS machine
+2. **Test locally** - Build and test with Qt 6.10.1
+3. **Commit and push** - Push changes to repository
+4. **CI validates** - GitHub Actions runs tests automatically
 
-1. **Develop on dev-01** - Make all code changes
-2. **Test on dev-01** - Build and test with Xvfb
-3. **Commit from dev-01** - Push changes to repository
-4. **Test locally** - Pull changes and test on local machine
+---
 
-⸻
+## 📦 **Prerequisites**
 
-## 🔗 **Tailscale Integration**
+- macOS (tested on macOS 13+)
+- Homebrew (or Qt installer from qt.io)
+- CMake (see [VERSIONS.md](VERSIONS.md) for minimum version)
+- Git
+- C++17 compatible compiler (Xcode Command Line Tools)
 
-### **Connection Setup**
+> **Note:** For exact version requirements, see [VERSIONS.md](VERSIONS.md).
 
-```bash
-# Install Tailscale on dev-01 (already configured)
-# Install Tailscale on local machine
-# Join same Tailscale network
+---
 
-# Connect via Tailscale IP
-ssh -i ~/.ssh/github_phoenix mark@100.97.54.75
-```
+## 🔧 **Qt Installation**
 
-### **Benefits of Tailscale**
-
-- ✅ **Direct connection** - No NAT issues
-- ✅ **Secure** - Encrypted tunnel
-- ✅ **Reliable** - No port forwarding needed
-- ✅ **Fast** - Low latency connection
-- ✅ **Persistent** - Always available
-
-### **Development Commands**
+### **Option 1: Homebrew (Recommended)**
 
 ```bash
-# Connect to dev-01
-ssh -i ~/.ssh/github_phoenix mark@100.97.54.75
-cd /home/ec2-user/workspace/phoenix
+# Install Qt via Homebrew
+brew install qt@6
 
-# Test GUI with Xvfb
-xvfb-run -a ./phoenix_app
-
-# Capture screenshots
-xvfb-run -a ./phoenix_app &
-sleep 5
-import -window root screenshot.png
+# Verify installation
+brew list qt@6
 ```
 
-⸻
+### **Option 2: Qt Installer**
 
-0) System & Toolchain
+1. Download Qt from [qt.io](https://www.qt.io/download) (see [VERSIONS.md](VERSIONS.md) for current version)
+2. Install to the standard location (see [VERSIONS.md](VERSIONS.md) for macOS path)
+3. Verify: `ls ~/Qt/<version>/macos/lib/cmake/Qt6`
 
-Update the system and install required packages:
+---
 
-sudo dnf update -y
-sudo dnf install -y gcc gcc-c++ cmake ninja-build git \
-  mesa-libGL-devel libglvnd-devel unzip xz tar
+## 🛠️ **Environment Setup**
 
-If AWS CLI v2 is missing:
+### **Set CMAKE_PREFIX_PATH**
 
-cd /tmp
-curl -fsSL -o awscliv2.zip <https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip>
-unzip awscliv2.zip
-sudo ./aws/install --update
-aws --version
+**Homebrew:**
+```bash
+export CMAKE_PREFIX_PATH=$(brew --prefix qt@6)
+```
 
-⸻
+**Qt Installer:**
+```bash
+export CMAKE_PREFIX_PATH=~/Qt/<version>/macos
+```
 
-1) Download Qt tarball + SHA256 from S3
+**Add to `~/.zshrc` or `~/.bash_profile`:**
+```bash
+# Qt for Phoenix development (see VERSIONS.md for current version)
+export CMAKE_PREFIX_PATH=$(brew --prefix qt@6)  # or ~/Qt/<version>/macos
+```
 
-Artifacts are versioned and stored with a checksum file.
+> **Note:** For the exact Qt path and version, see [VERSIONS.md](VERSIONS.md).
 
-aws s3 cp s3://phoenix-dev-artifacts-us-east-2-mn/artifacts/6.10.0/Qt-6.10.0-gcc_64.tgz /tmp/
-aws s3 cp s3://phoenix-dev-artifacts-us-east-2-mn/artifacts/6.10.0/Qt-6.10.0-gcc_64.sha256 /tmp/
+---
 
-⸻
+## 🚀 **Build and Test**
 
-2) Verify SHA256 checksum
-
-cd /tmp
-sha256sum -c Qt-6.9.3-gcc_64.sha256
-
-Expected output:
-
-Qt-6.9.3-gcc_64.tgz: OK
-
-If it does not match, re-download and re-verify.
-
-⸻
-
-3) Extract to /opt/Qt
-
-sudo mkdir -p /opt/Qt
-sudo tar -xzf /tmp/Qt-6.9.3-gcc_64.tgz -C /opt
-ls -l /opt/Qt/6.9.3/gcc_64/bin/qmake
-
-Ensure that qmake exists in the extracted directory.
-
-⸻
-
-4) Set environment variables globally
-
-Append the environment variables globally so all users/shells inherit them.
-
-echo 'PATH=/opt/Qt/6.9.3/gcc_64/bin:$PATH' | sudo tee -a /etc/environment
-echo 'CMAKE_PREFIX_PATH=/opt/Qt/6.9.3/gcc_64/lib/cmake' | sudo tee -a /etc/environment
-echo 'ARTIFACTS_BUCKET=phoenix-dev-artifacts-us-east-2-mn' | sudo tee -a /etc/environment
-
-Open a new shell to apply changes:
-
-exec bash -l
-
-Verify:
-
-which qmake
-qmake -v
-echo $CMAKE_PREFIX_PATH
-
-Expected:
- • which qmake → /opt/Qt/6.9.3/gcc_64/bin/qmake
- • qmake -v → Qt version 6.9.3
- • CMAKE_PREFIX_PATH → /opt/Qt/6.9.3/gcc_64/lib/cmake
-
-⸻
-
-5) Smoke test build
-
-Run a minimal Qt build to verify toolchain + environment.
-
-mkdir -p ~/qt-smoke && cd ~/qt-smoke
-
-cat > CMakeLists.txt <<'EOF'
-cmake_minimum_required(VERSION 3.22)
-project(QtSmoke LANGUAGES CXX)
-set(CMAKE_CXX_STANDARD 17)
-find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets)
-add_executable(qt_smoke main.cpp)
-target_link_libraries(qt_smoke PRIVATE Qt6::Widgets)
-EOF
-
-cat > main.cpp <<'EOF'
-# include <QApplication>
-# include <QLabel>
-int main(int argc, char** argv){
-  QApplication a(argc, argv);
-  QLabel l("Qt smoke ✅");
-  return 0;
-}
-EOF
-
-cmake -G Ninja .
-ninja -k0
-
-If the build succeeds and produces a qt_smoke executable, Qt is installed and wired correctly.
-
-⸻
-
-Troubleshooting
- • qmake: command not found: Ensure /etc/environment has been updated and reload your shell with bash -l.
- • CMake cannot find Qt: Ensure CMAKE_PREFIX_PATH points to /opt/Qt/6.9.3/gcc_64/lib/cmake.
- • Missing OpenGL headers: Run sudo dnf install -y mesa-libGL-devel libglvnd-devel.
-
-⸻
-
-Next Steps
-
-After the environment is verified, clone and build project repositories:
-
-cd ~
-git clone <https://github.com/DesignOpticsFast/phoenix.git>
+```bash
+# Clone repository
+git clone https://github.com/DesignOpticsFast/phoenix.git
 cd phoenix
-mkdir build && cd build
-cmake .. -G Ninja
-ninja -k0
 
-This completes the dev environment setup for Phoenix, Bedrock, and Rosetta.
+# Initialize submodules
+git submodule update --init --recursive
+
+# Configure build
+cmake -S . -B build \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"
+
+# Build
+cmake --build build -j
+
+# Run
+./build/phoenix_app
+```
+
+---
+
+## ✅ **Verification**
+
+```bash
+# Check Qt version
+qmake --version
+
+# Verify CMake can find Qt
+cmake --find-package -DNAME=Qt6 -DCOMPILER_ID=GNU -DLANGUAGE=CXX -DMODE=EXIST
+
+# Test build
+cmake -S . -B build -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH" && cmake --build build
+```
+
+---
+
+## 🔍 **Troubleshooting**
+
+### CMake cannot find Qt
+- Ensure `CMAKE_PREFIX_PATH` points to Qt installation root
+- For Homebrew: `CMAKE_PREFIX_PATH=$(brew --prefix qt@6)`
+- For Qt Installer: `CMAKE_PREFIX_PATH=~/Qt/6.10.1/macos`
+
+### Build fails
+- Check Qt version: `qmake --version` (see [VERSIONS.md](VERSIONS.md) for expected version)
+- Verify Qt modules: `ls $CMAKE_PREFIX_PATH/lib/cmake/Qt6/`
+- Check CMake output for Qt6_DIR path
+
+---
+
+## 📚 **Additional Resources**
+
+- [Phoenix README](../README.md) - Main project documentation
+- [Development Workflow](DEVELOPMENT_WORKFLOW.md) - Development process
+- [CI Workflow System](CI_WORKFLOW_SYSTEM.md) - CI documentation
+
+---
+
+## ⚠️ **Note**
+
+**dev-01 has been permanently removed.** All CI now runs on GitHub Actions. This guide is for local development only.

@@ -1,0 +1,470 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage.info - opt/homebrew/include/absl/numeric/internal/bits.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory /opt/homebrew/include/absl/numeric/internal">/opt/homebrew/include/absl/numeric/internal</a> - bits.h<span style="font-size: 80%;"> (source / <a href="bits.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">8</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-11-26 15:36:30</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryMed">80.0&nbsp;%</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">4</td>
+          </tr>
+                  <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // Copyright 2020 The Abseil Authors</span>
+<span id="L2"><span class="lineNum">       2</span>              : //</span>
+<span id="L3"><span class="lineNum">       3</span>              : // Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span id="L4"><span class="lineNum">       4</span>              : // you may not use this file except in compliance with the License.</span>
+<span id="L5"><span class="lineNum">       5</span>              : // You may obtain a copy of the License at</span>
+<span id="L6"><span class="lineNum">       6</span>              : //</span>
+<span id="L7"><span class="lineNum">       7</span>              : //     https://www.apache.org/licenses/LICENSE-2.0</span>
+<span id="L8"><span class="lineNum">       8</span>              : //</span>
+<span id="L9"><span class="lineNum">       9</span>              : // Unless required by applicable law or agreed to in writing, software</span>
+<span id="L10"><span class="lineNum">      10</span>              : // distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span id="L11"><span class="lineNum">      11</span>              : // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span id="L12"><span class="lineNum">      12</span>              : // See the License for the specific language governing permissions and</span>
+<span id="L13"><span class="lineNum">      13</span>              : // limitations under the License.</span>
+<span id="L14"><span class="lineNum">      14</span>              : </span>
+<span id="L15"><span class="lineNum">      15</span>              : #ifndef ABSL_NUMERIC_INTERNAL_BITS_H_</span>
+<span id="L16"><span class="lineNum">      16</span>              : #define ABSL_NUMERIC_INTERNAL_BITS_H_</span>
+<span id="L17"><span class="lineNum">      17</span>              : </span>
+<span id="L18"><span class="lineNum">      18</span>              : #include &lt;cstdint&gt;</span>
+<span id="L19"><span class="lineNum">      19</span>              : #include &lt;limits&gt;</span>
+<span id="L20"><span class="lineNum">      20</span>              : #include &lt;type_traits&gt;</span>
+<span id="L21"><span class="lineNum">      21</span>              : </span>
+<span id="L22"><span class="lineNum">      22</span>              : // Clang on Windows has __builtin_clzll; otherwise we need to use the</span>
+<span id="L23"><span class="lineNum">      23</span>              : // windows intrinsic functions.</span>
+<span id="L24"><span class="lineNum">      24</span>              : #if defined(_MSC_VER) &amp;&amp; !defined(__clang__)</span>
+<span id="L25"><span class="lineNum">      25</span>              : #include &lt;intrin.h&gt;</span>
+<span id="L26"><span class="lineNum">      26</span>              : #endif</span>
+<span id="L27"><span class="lineNum">      27</span>              : </span>
+<span id="L28"><span class="lineNum">      28</span>              : #include &quot;absl/base/attributes.h&quot;</span>
+<span id="L29"><span class="lineNum">      29</span>              : #include &quot;absl/base/config.h&quot;</span>
+<span id="L30"><span class="lineNum">      30</span>              : </span>
+<span id="L31"><span class="lineNum">      31</span>              : #if defined(__GNUC__) &amp;&amp; !defined(__clang__)</span>
+<span id="L32"><span class="lineNum">      32</span>              : // GCC</span>
+<span id="L33"><span class="lineNum">      33</span>              : #define ABSL_NUMERIC_INTERNAL_HAVE_BUILTIN_OR_GCC(x) 1</span>
+<span id="L34"><span class="lineNum">      34</span>              : #else</span>
+<span id="L35"><span class="lineNum">      35</span>              : #define ABSL_NUMERIC_INTERNAL_HAVE_BUILTIN_OR_GCC(x) ABSL_HAVE_BUILTIN(x)</span>
+<span id="L36"><span class="lineNum">      36</span>              : #endif</span>
+<span id="L37"><span class="lineNum">      37</span>              : </span>
+<span id="L38"><span class="lineNum">      38</span>              : #if ABSL_NUMERIC_INTERNAL_HAVE_BUILTIN_OR_GCC(__builtin_popcountl) &amp;&amp; \</span>
+<span id="L39"><span class="lineNum">      39</span>              :     ABSL_NUMERIC_INTERNAL_HAVE_BUILTIN_OR_GCC(__builtin_popcountll)</span>
+<span id="L40"><span class="lineNum">      40</span>              : #define ABSL_INTERNAL_CONSTEXPR_POPCOUNT constexpr</span>
+<span id="L41"><span class="lineNum">      41</span>              : #define ABSL_INTERNAL_HAS_CONSTEXPR_POPCOUNT 1</span>
+<span id="L42"><span class="lineNum">      42</span>              : #else</span>
+<span id="L43"><span class="lineNum">      43</span>              : #define ABSL_INTERNAL_CONSTEXPR_POPCOUNT</span>
+<span id="L44"><span class="lineNum">      44</span>              : #define ABSL_INTERNAL_HAS_CONSTEXPR_POPCOUNT 0</span>
+<span id="L45"><span class="lineNum">      45</span>              : #endif</span>
+<span id="L46"><span class="lineNum">      46</span>              : </span>
+<span id="L47"><span class="lineNum">      47</span>              : #if ABSL_NUMERIC_INTERNAL_HAVE_BUILTIN_OR_GCC(__builtin_clz) &amp;&amp; \</span>
+<span id="L48"><span class="lineNum">      48</span>              :     ABSL_NUMERIC_INTERNAL_HAVE_BUILTIN_OR_GCC(__builtin_clzll)</span>
+<span id="L49"><span class="lineNum">      49</span>              : #define ABSL_INTERNAL_CONSTEXPR_CLZ constexpr</span>
+<span id="L50"><span class="lineNum">      50</span>              : #define ABSL_INTERNAL_HAS_CONSTEXPR_CLZ 1</span>
+<span id="L51"><span class="lineNum">      51</span>              : #else</span>
+<span id="L52"><span class="lineNum">      52</span>              : #define ABSL_INTERNAL_CONSTEXPR_CLZ</span>
+<span id="L53"><span class="lineNum">      53</span>              : #define ABSL_INTERNAL_HAS_CONSTEXPR_CLZ 0</span>
+<span id="L54"><span class="lineNum">      54</span>              : #endif</span>
+<span id="L55"><span class="lineNum">      55</span>              : </span>
+<span id="L56"><span class="lineNum">      56</span>              : #if ABSL_NUMERIC_INTERNAL_HAVE_BUILTIN_OR_GCC(__builtin_ctz) &amp;&amp; \</span>
+<span id="L57"><span class="lineNum">      57</span>              :     ABSL_NUMERIC_INTERNAL_HAVE_BUILTIN_OR_GCC(__builtin_ctzll)</span>
+<span id="L58"><span class="lineNum">      58</span>              : #define ABSL_INTERNAL_CONSTEXPR_CTZ constexpr</span>
+<span id="L59"><span class="lineNum">      59</span>              : #define ABSL_INTERNAL_HAS_CONSTEXPR_CTZ 1</span>
+<span id="L60"><span class="lineNum">      60</span>              : #else</span>
+<span id="L61"><span class="lineNum">      61</span>              : #define ABSL_INTERNAL_CONSTEXPR_CTZ</span>
+<span id="L62"><span class="lineNum">      62</span>              : #define ABSL_INTERNAL_HAS_CONSTEXPR_CTZ 0</span>
+<span id="L63"><span class="lineNum">      63</span>              : #endif</span>
+<span id="L64"><span class="lineNum">      64</span>              : </span>
+<span id="L65"><span class="lineNum">      65</span>              : namespace absl {</span>
+<span id="L66"><span class="lineNum">      66</span>              : ABSL_NAMESPACE_BEGIN</span>
+<span id="L67"><span class="lineNum">      67</span>              : namespace numeric_internal {</span>
+<span id="L68"><span class="lineNum">      68</span>              : </span>
+<span id="L69"><span class="lineNum">      69</span>              : constexpr bool IsPowerOf2(unsigned int x) noexcept {</span>
+<span id="L70"><span class="lineNum">      70</span>              :   return x != 0 &amp;&amp; (x &amp; (x - 1)) == 0;</span>
+<span id="L71"><span class="lineNum">      71</span>              : }</span>
+<span id="L72"><span class="lineNum">      72</span>              : </span>
+<span id="L73"><span class="lineNum">      73</span>              : template &lt;class T&gt;</span>
+<span id="L74"><span class="lineNum">      74</span>              : [[nodiscard]] ABSL_ATTRIBUTE_ALWAYS_INLINE constexpr T RotateRight(</span>
+<span id="L75"><span class="lineNum">      75</span>              :     T x, int s) noexcept {</span>
+<span id="L76"><span class="lineNum">      76</span>              :   static_assert(std::is_unsigned&lt;T&gt;::value, &quot;T must be unsigned&quot;);</span>
+<span id="L77"><span class="lineNum">      77</span>              :   static_assert(IsPowerOf2(std::numeric_limits&lt;T&gt;::digits),</span>
+<span id="L78"><span class="lineNum">      78</span>              :                 &quot;T must have a power-of-2 size&quot;);</span>
+<span id="L79"><span class="lineNum">      79</span>              : </span>
+<span id="L80"><span class="lineNum">      80</span>              :   // Rotate by s mod the number of digits to avoid unnecessary rotations.</span>
+<span id="L81"><span class="lineNum">      81</span>              :   //</span>
+<span id="L82"><span class="lineNum">      82</span>              :   // A negative s represents a left rotation instead of a right rotation.</span>
+<span id="L83"><span class="lineNum">      83</span>              :   // We compute it as an equivalent complementary right rotation by leveraging</span>
+<span id="L84"><span class="lineNum">      84</span>              :   // its two's complement representation.</span>
+<span id="L85"><span class="lineNum">      85</span>              :   //</span>
+<span id="L86"><span class="lineNum">      86</span>              :   // For example, suppose we rotate a 3-bit number by -2.</span>
+<span id="L87"><span class="lineNum">      87</span>              :   // In that case:</span>
+<span id="L88"><span class="lineNum">      88</span>              :   //   * s = 0b11111111111111111111111111111110</span>
+<span id="L89"><span class="lineNum">      89</span>              :   //   * n = 8</span>
+<span id="L90"><span class="lineNum">      90</span>              :   //   * r = (0b11111111111111111111111111111110 &amp; 0b111) = 0b110</span>
+<span id="L91"><span class="lineNum">      91</span>              :   //</span>
+<span id="L92"><span class="lineNum">      92</span>              :   // Instead of rotating by 2 to the left, we rotate by 6 to the right, which</span>
+<span id="L93"><span class="lineNum">      93</span>              :   // is equivalent.</span>
+<span id="L94"><span class="lineNum">      94</span>              :   const int n = std::numeric_limits&lt;T&gt;::digits;</span>
+<span id="L95"><span class="lineNum">      95</span>              :   const int r = s &amp; (n - 1);</span>
+<span id="L96"><span class="lineNum">      96</span>              : </span>
+<span id="L97"><span class="lineNum">      97</span>              :   if (r == 0) {</span>
+<span id="L98"><span class="lineNum">      98</span>              :     return x;</span>
+<span id="L99"><span class="lineNum">      99</span>              :   } else {</span>
+<span id="L100"><span class="lineNum">     100</span>              :     return (x &gt;&gt; r) | (x &lt;&lt; (n - r));</span>
+<span id="L101"><span class="lineNum">     101</span>              :   }</span>
+<span id="L102"><span class="lineNum">     102</span>              : }</span>
+<span id="L103"><span class="lineNum">     103</span>              : </span>
+<span id="L104"><span class="lineNum">     104</span>              : template &lt;class T&gt;</span>
+<span id="L105"><span class="lineNum">     105</span>              : [[nodiscard]] ABSL_ATTRIBUTE_ALWAYS_INLINE constexpr T RotateLeft(</span>
+<span id="L106"><span class="lineNum">     106</span>              :     T x, int s) noexcept {</span>
+<span id="L107"><span class="lineNum">     107</span>              :   static_assert(std::is_unsigned&lt;T&gt;::value, &quot;T must be unsigned&quot;);</span>
+<span id="L108"><span class="lineNum">     108</span>              :   static_assert(IsPowerOf2(std::numeric_limits&lt;T&gt;::digits),</span>
+<span id="L109"><span class="lineNum">     109</span>              :                 &quot;T must have a power-of-2 size&quot;);</span>
+<span id="L110"><span class="lineNum">     110</span>              : </span>
+<span id="L111"><span class="lineNum">     111</span>              :   // Rotate by s mod the number of digits to avoid unnecessary rotations.</span>
+<span id="L112"><span class="lineNum">     112</span>              :   // See comment in RotateRight for a detailed explanation of the logic below.</span>
+<span id="L113"><span class="lineNum">     113</span>              :   const int n = std::numeric_limits&lt;T&gt;::digits;</span>
+<span id="L114"><span class="lineNum">     114</span>              :   const int r = s &amp; (n - 1);</span>
+<span id="L115"><span class="lineNum">     115</span>              : </span>
+<span id="L116"><span class="lineNum">     116</span>              :   if (r == 0) {</span>
+<span id="L117"><span class="lineNum">     117</span>              :     return x;</span>
+<span id="L118"><span class="lineNum">     118</span>              :   } else {</span>
+<span id="L119"><span class="lineNum">     119</span>              :     return (x &lt;&lt; r) | (x &gt;&gt; (n - r));</span>
+<span id="L120"><span class="lineNum">     120</span>              :   }</span>
+<span id="L121"><span class="lineNum">     121</span>              : }</span>
+<span id="L122"><span class="lineNum">     122</span>              : </span>
+<span id="L123"><span class="lineNum">     123</span>              : ABSL_ATTRIBUTE_ALWAYS_INLINE ABSL_INTERNAL_CONSTEXPR_POPCOUNT inline int</span>
+<span id="L124"><span class="lineNum">     124</span>              : Popcount32(uint32_t x) noexcept {</span>
+<span id="L125"><span class="lineNum">     125</span>              : #if ABSL_NUMERIC_INTERNAL_HAVE_BUILTIN_OR_GCC(__builtin_popcount)</span>
+<span id="L126"><span class="lineNum">     126</span>              :   static_assert(sizeof(unsigned int) == sizeof(x),</span>
+<span id="L127"><span class="lineNum">     127</span>              :                 &quot;__builtin_popcount does not take 32-bit arg&quot;);</span>
+<span id="L128"><span class="lineNum">     128</span>              :   return __builtin_popcount(x);</span>
+<span id="L129"><span class="lineNum">     129</span>              : #else</span>
+<span id="L130"><span class="lineNum">     130</span>              :   x -= ((x &gt;&gt; 1) &amp; 0x55555555);</span>
+<span id="L131"><span class="lineNum">     131</span>              :   x = ((x &gt;&gt; 2) &amp; 0x33333333) + (x &amp; 0x33333333);</span>
+<span id="L132"><span class="lineNum">     132</span>              :   return static_cast&lt;int&gt;((((x + (x &gt;&gt; 4)) &amp; 0xF0F0F0F) * 0x1010101) &gt;&gt; 24);</span>
+<span id="L133"><span class="lineNum">     133</span>              : #endif</span>
+<span id="L134"><span class="lineNum">     134</span>              : }</span>
+<span id="L135"><span class="lineNum">     135</span>              : </span>
+<span id="L136"><span class="lineNum">     136</span>              : ABSL_ATTRIBUTE_ALWAYS_INLINE ABSL_INTERNAL_CONSTEXPR_POPCOUNT inline int</span>
+<span id="L137"><span class="lineNum">     137</span>              : Popcount64(uint64_t x) noexcept {</span>
+<span id="L138"><span class="lineNum">     138</span>              : #if ABSL_NUMERIC_INTERNAL_HAVE_BUILTIN_OR_GCC(__builtin_popcountll)</span>
+<span id="L139"><span class="lineNum">     139</span>              :   static_assert(sizeof(unsigned long long) == sizeof(x),  // NOLINT(runtime/int)</span>
+<span id="L140"><span class="lineNum">     140</span>              :                 &quot;__builtin_popcount does not take 64-bit arg&quot;);</span>
+<span id="L141"><span class="lineNum">     141</span>              :   return __builtin_popcountll(x);</span>
+<span id="L142"><span class="lineNum">     142</span>              : #else</span>
+<span id="L143"><span class="lineNum">     143</span>              :   x -= (x &gt;&gt; 1) &amp; 0x5555555555555555ULL;</span>
+<span id="L144"><span class="lineNum">     144</span>              :   x = ((x &gt;&gt; 2) &amp; 0x3333333333333333ULL) + (x &amp; 0x3333333333333333ULL);</span>
+<span id="L145"><span class="lineNum">     145</span>              :   return static_cast&lt;int&gt;(</span>
+<span id="L146"><span class="lineNum">     146</span>              :       (((x + (x &gt;&gt; 4)) &amp; 0xF0F0F0F0F0F0F0FULL) * 0x101010101010101ULL) &gt;&gt; 56);</span>
+<span id="L147"><span class="lineNum">     147</span>              : #endif</span>
+<span id="L148"><span class="lineNum">     148</span>              : }</span>
+<span id="L149"><span class="lineNum">     149</span>              : </span>
+<span id="L150"><span class="lineNum">     150</span>              : template &lt;class T&gt;</span>
+<span id="L151"><span class="lineNum">     151</span>              : ABSL_ATTRIBUTE_ALWAYS_INLINE ABSL_INTERNAL_CONSTEXPR_POPCOUNT inline int</span>
+<span id="L152"><span class="lineNum">     152</span>              : Popcount(T x) noexcept {</span>
+<span id="L153"><span class="lineNum">     153</span>              :   static_assert(std::is_unsigned&lt;T&gt;::value, &quot;T must be unsigned&quot;);</span>
+<span id="L154"><span class="lineNum">     154</span>              :   static_assert(IsPowerOf2(std::numeric_limits&lt;T&gt;::digits),</span>
+<span id="L155"><span class="lineNum">     155</span>              :                 &quot;T must have a power-of-2 size&quot;);</span>
+<span id="L156"><span class="lineNum">     156</span>              :   static_assert(sizeof(x) &lt;= sizeof(uint64_t), &quot;T is too large&quot;);</span>
+<span id="L157"><span class="lineNum">     157</span>              :   if constexpr (sizeof(x) &lt;= sizeof(uint32_t)) {</span>
+<span id="L158"><span class="lineNum">     158</span>              :     return Popcount32(x);</span>
+<span id="L159"><span class="lineNum">     159</span>              :   } else {</span>
+<span id="L160"><span class="lineNum">     160</span>              :     return Popcount64(x);</span>
+<span id="L161"><span class="lineNum">     161</span>              :   }</span>
+<span id="L162"><span class="lineNum">     162</span>              : }</span>
+<span id="L163"><span class="lineNum">     163</span>              : </span>
+<span id="L164"><span class="lineNum">     164</span>              : ABSL_ATTRIBUTE_ALWAYS_INLINE ABSL_INTERNAL_CONSTEXPR_CLZ inline int</span>
+<span id="L165"><span class="lineNum">     165</span> <span class="tlaGNC">         138 : CountLeadingZeroes32(uint32_t x) {</span></span>
+<span id="L166"><span class="lineNum">     166</span>              : #if ABSL_NUMERIC_INTERNAL_HAVE_BUILTIN_OR_GCC(__builtin_clz)</span>
+<span id="L167"><span class="lineNum">     167</span>              :   // Use __builtin_clz, which uses the following instructions:</span>
+<span id="L168"><span class="lineNum">     168</span>              :   //  x86: bsr, lzcnt</span>
+<span id="L169"><span class="lineNum">     169</span>              :   //  ARM64: clz</span>
+<span id="L170"><span class="lineNum">     170</span>              :   //  PPC: cntlzd</span>
+<span id="L171"><span class="lineNum">     171</span>              : </span>
+<span id="L172"><span class="lineNum">     172</span>              :   static_assert(sizeof(unsigned int) == sizeof(x),</span>
+<span id="L173"><span class="lineNum">     173</span>              :                 &quot;__builtin_clz does not take 32-bit arg&quot;);</span>
+<span id="L174"><span class="lineNum">     174</span>              :   // Handle 0 as a special case because __builtin_clz(0) is undefined.</span>
+<span id="L175"><span class="lineNum">     175</span> <span class="tlaGNC">         138 :   return x == 0 ? 32 : __builtin_clz(x);</span></span>
+<span id="L176"><span class="lineNum">     176</span>              : #elif defined(_MSC_VER) &amp;&amp; !defined(__clang__)</span>
+<span id="L177"><span class="lineNum">     177</span>              :   unsigned long result = 0;  // NOLINT(runtime/int)</span>
+<span id="L178"><span class="lineNum">     178</span>              :   if (_BitScanReverse(&amp;result, x)) {</span>
+<span id="L179"><span class="lineNum">     179</span>              :     return 31 - result;</span>
+<span id="L180"><span class="lineNum">     180</span>              :   }</span>
+<span id="L181"><span class="lineNum">     181</span>              :   return 32;</span>
+<span id="L182"><span class="lineNum">     182</span>              : #else</span>
+<span id="L183"><span class="lineNum">     183</span>              :   int zeroes = 28;</span>
+<span id="L184"><span class="lineNum">     184</span>              :   if (x &gt;&gt; 16) {</span>
+<span id="L185"><span class="lineNum">     185</span>              :     zeroes -= 16;</span>
+<span id="L186"><span class="lineNum">     186</span>              :     x &gt;&gt;= 16;</span>
+<span id="L187"><span class="lineNum">     187</span>              :   }</span>
+<span id="L188"><span class="lineNum">     188</span>              :   if (x &gt;&gt; 8) {</span>
+<span id="L189"><span class="lineNum">     189</span>              :     zeroes -= 8;</span>
+<span id="L190"><span class="lineNum">     190</span>              :     x &gt;&gt;= 8;</span>
+<span id="L191"><span class="lineNum">     191</span>              :   }</span>
+<span id="L192"><span class="lineNum">     192</span>              :   if (x &gt;&gt; 4) {</span>
+<span id="L193"><span class="lineNum">     193</span>              :     zeroes -= 4;</span>
+<span id="L194"><span class="lineNum">     194</span>              :     x &gt;&gt;= 4;</span>
+<span id="L195"><span class="lineNum">     195</span>              :   }</span>
+<span id="L196"><span class="lineNum">     196</span>              :   return &quot;\4\3\2\2\1\1\1\1\0\0\0\0\0\0\0&quot;[x] + zeroes;</span>
+<span id="L197"><span class="lineNum">     197</span>              : #endif</span>
+<span id="L198"><span class="lineNum">     198</span>              : }</span>
+<span id="L199"><span class="lineNum">     199</span>              : </span>
+<span id="L200"><span class="lineNum">     200</span>              : ABSL_ATTRIBUTE_ALWAYS_INLINE ABSL_INTERNAL_CONSTEXPR_CLZ inline int</span>
+<span id="L201"><span class="lineNum">     201</span>              : CountLeadingZeroes16(uint16_t x) {</span>
+<span id="L202"><span class="lineNum">     202</span>              : #if ABSL_HAVE_BUILTIN(__builtin_clzg)</span>
+<span id="L203"><span class="lineNum">     203</span>              :   return x == 0 ? 16 : __builtin_clzg(x);</span>
+<span id="L204"><span class="lineNum">     204</span>              : #elif ABSL_HAVE_BUILTIN(__builtin_clzs)</span>
+<span id="L205"><span class="lineNum">     205</span>              :   static_assert(sizeof(unsigned short) == sizeof(x),  // NOLINT(runtime/int)</span>
+<span id="L206"><span class="lineNum">     206</span>              :                 &quot;__builtin_clzs does not take 16-bit arg&quot;);</span>
+<span id="L207"><span class="lineNum">     207</span>              :   return x == 0 ? 16 : __builtin_clzs(x);</span>
+<span id="L208"><span class="lineNum">     208</span>              : #else</span>
+<span id="L209"><span class="lineNum">     209</span>              :   return CountLeadingZeroes32(x) - 16;</span>
+<span id="L210"><span class="lineNum">     210</span>              : #endif</span>
+<span id="L211"><span class="lineNum">     211</span>              : }</span>
+<span id="L212"><span class="lineNum">     212</span>              : </span>
+<span id="L213"><span class="lineNum">     213</span>              : ABSL_ATTRIBUTE_ALWAYS_INLINE ABSL_INTERNAL_CONSTEXPR_CLZ inline int</span>
+<span id="L214"><span class="lineNum">     214</span> <span class="tlaGNC">          78 : CountLeadingZeroes64(uint64_t x) {</span></span>
+<span id="L215"><span class="lineNum">     215</span>              : #if ABSL_NUMERIC_INTERNAL_HAVE_BUILTIN_OR_GCC(__builtin_clzll)</span>
+<span id="L216"><span class="lineNum">     216</span>              :   // Use __builtin_clzll, which uses the following instructions:</span>
+<span id="L217"><span class="lineNum">     217</span>              :   //  x86: bsr, lzcnt</span>
+<span id="L218"><span class="lineNum">     218</span>              :   //  ARM64: clz</span>
+<span id="L219"><span class="lineNum">     219</span>              :   //  PPC: cntlzd</span>
+<span id="L220"><span class="lineNum">     220</span>              :   static_assert(sizeof(unsigned long long) == sizeof(x),  // NOLINT(runtime/int)</span>
+<span id="L221"><span class="lineNum">     221</span>              :                 &quot;__builtin_clzll does not take 64-bit arg&quot;);</span>
+<span id="L222"><span class="lineNum">     222</span>              : </span>
+<span id="L223"><span class="lineNum">     223</span>              :   // Handle 0 as a special case because __builtin_clzll(0) is undefined.</span>
+<span id="L224"><span class="lineNum">     224</span> <span class="tlaGNC">          78 :   return x == 0 ? 64 : __builtin_clzll(x);</span></span>
+<span id="L225"><span class="lineNum">     225</span>              : #elif defined(_MSC_VER) &amp;&amp; !defined(__clang__) &amp;&amp; \</span>
+<span id="L226"><span class="lineNum">     226</span>              :     (defined(_M_X64) || defined(_M_ARM64))</span>
+<span id="L227"><span class="lineNum">     227</span>              :   // MSVC does not have __buitin_clzll. Use _BitScanReverse64.</span>
+<span id="L228"><span class="lineNum">     228</span>              :   unsigned long result = 0;  // NOLINT(runtime/int)</span>
+<span id="L229"><span class="lineNum">     229</span>              :   if (_BitScanReverse64(&amp;result, x)) {</span>
+<span id="L230"><span class="lineNum">     230</span>              :     return 63 - result;</span>
+<span id="L231"><span class="lineNum">     231</span>              :   }</span>
+<span id="L232"><span class="lineNum">     232</span>              :   return 64;</span>
+<span id="L233"><span class="lineNum">     233</span>              : #elif defined(_MSC_VER) &amp;&amp; !defined(__clang__)</span>
+<span id="L234"><span class="lineNum">     234</span>              :   // MSVC does not have __buitin_clzll. Compose two calls to _BitScanReverse</span>
+<span id="L235"><span class="lineNum">     235</span>              :   unsigned long result = 0;  // NOLINT(runtime/int)</span>
+<span id="L236"><span class="lineNum">     236</span>              :   if ((x &gt;&gt; 32) &amp;&amp;</span>
+<span id="L237"><span class="lineNum">     237</span>              :       _BitScanReverse(&amp;result, static_cast&lt;unsigned long&gt;(x &gt;&gt; 32))) {</span>
+<span id="L238"><span class="lineNum">     238</span>              :     return 31 - result;</span>
+<span id="L239"><span class="lineNum">     239</span>              :   }</span>
+<span id="L240"><span class="lineNum">     240</span>              :   if (_BitScanReverse(&amp;result, static_cast&lt;unsigned long&gt;(x))) {</span>
+<span id="L241"><span class="lineNum">     241</span>              :     return 63 - result;</span>
+<span id="L242"><span class="lineNum">     242</span>              :   }</span>
+<span id="L243"><span class="lineNum">     243</span>              :   return 64;</span>
+<span id="L244"><span class="lineNum">     244</span>              : #else</span>
+<span id="L245"><span class="lineNum">     245</span>              :   int zeroes = 60;</span>
+<span id="L246"><span class="lineNum">     246</span>              :   if (x &gt;&gt; 32) {</span>
+<span id="L247"><span class="lineNum">     247</span>              :     zeroes -= 32;</span>
+<span id="L248"><span class="lineNum">     248</span>              :     x &gt;&gt;= 32;</span>
+<span id="L249"><span class="lineNum">     249</span>              :   }</span>
+<span id="L250"><span class="lineNum">     250</span>              :   if (x &gt;&gt; 16) {</span>
+<span id="L251"><span class="lineNum">     251</span>              :     zeroes -= 16;</span>
+<span id="L252"><span class="lineNum">     252</span>              :     x &gt;&gt;= 16;</span>
+<span id="L253"><span class="lineNum">     253</span>              :   }</span>
+<span id="L254"><span class="lineNum">     254</span>              :   if (x &gt;&gt; 8) {</span>
+<span id="L255"><span class="lineNum">     255</span>              :     zeroes -= 8;</span>
+<span id="L256"><span class="lineNum">     256</span>              :     x &gt;&gt;= 8;</span>
+<span id="L257"><span class="lineNum">     257</span>              :   }</span>
+<span id="L258"><span class="lineNum">     258</span>              :   if (x &gt;&gt; 4) {</span>
+<span id="L259"><span class="lineNum">     259</span>              :     zeroes -= 4;</span>
+<span id="L260"><span class="lineNum">     260</span>              :     x &gt;&gt;= 4;</span>
+<span id="L261"><span class="lineNum">     261</span>              :   }</span>
+<span id="L262"><span class="lineNum">     262</span>              :   return &quot;\4\3\2\2\1\1\1\1\0\0\0\0\0\0\0&quot;[x] + zeroes;</span>
+<span id="L263"><span class="lineNum">     263</span>              : #endif</span>
+<span id="L264"><span class="lineNum">     264</span>              : }</span>
+<span id="L265"><span class="lineNum">     265</span>              : </span>
+<span id="L266"><span class="lineNum">     266</span>              : template &lt;typename T&gt;</span>
+<span id="L267"><span class="lineNum">     267</span>              : ABSL_ATTRIBUTE_ALWAYS_INLINE ABSL_INTERNAL_CONSTEXPR_CLZ inline int</span>
+<span id="L268"><span class="lineNum">     268</span> <span class="tlaGNC">         216 : CountLeadingZeroes(T x) {</span></span>
+<span id="L269"><span class="lineNum">     269</span>              :   static_assert(std::is_unsigned&lt;T&gt;::value, &quot;T must be unsigned&quot;);</span>
+<span id="L270"><span class="lineNum">     270</span>              :   static_assert(IsPowerOf2(std::numeric_limits&lt;T&gt;::digits),</span>
+<span id="L271"><span class="lineNum">     271</span>              :                 &quot;T must have a power-of-2 size&quot;);</span>
+<span id="L272"><span class="lineNum">     272</span>              :   static_assert(sizeof(T) &lt;= sizeof(uint64_t), &quot;T too large&quot;);</span>
+<span id="L273"><span class="lineNum">     273</span> <span class="tlaGNC">         216 :   return sizeof(T) &lt;= sizeof(uint16_t)</span></span>
+<span id="L274"><span class="lineNum">     274</span>              :              ? CountLeadingZeroes16(static_cast&lt;uint16_t&gt;(x)) -</span>
+<span id="L275"><span class="lineNum">     275</span>              :                    (std::numeric_limits&lt;uint16_t&gt;::digits -</span>
+<span id="L276"><span class="lineNum">     276</span>              :                     std::numeric_limits&lt;T&gt;::digits)</span>
+<span id="L277"><span class="lineNum">     277</span>              :              : (sizeof(T) &lt;= sizeof(uint32_t)</span>
+<span id="L278"><span class="lineNum">     278</span> <span class="tlaGNC">         138 :                     ? CountLeadingZeroes32(static_cast&lt;uint32_t&gt;(x)) -</span></span>
+<span id="L279"><span class="lineNum">     279</span>              :                           (std::numeric_limits&lt;uint32_t&gt;::digits -</span>
+<span id="L280"><span class="lineNum">     280</span>              :                            std::numeric_limits&lt;T&gt;::digits)</span>
+<span id="L281"><span class="lineNum">     281</span> <span class="tlaGNC">          78 :                     : CountLeadingZeroes64(x));</span></span>
+<span id="L282"><span class="lineNum">     282</span>              : }</span>
+<span id="L283"><span class="lineNum">     283</span>              : </span>
+<span id="L284"><span class="lineNum">     284</span>              : ABSL_ATTRIBUTE_ALWAYS_INLINE ABSL_INTERNAL_CONSTEXPR_CTZ inline int</span>
+<span id="L285"><span class="lineNum">     285</span>              : CountTrailingZeroesNonzero32(uint32_t x) {</span>
+<span id="L286"><span class="lineNum">     286</span>              : #if ABSL_NUMERIC_INTERNAL_HAVE_BUILTIN_OR_GCC(__builtin_ctz)</span>
+<span id="L287"><span class="lineNum">     287</span>              :   static_assert(sizeof(unsigned int) == sizeof(x),</span>
+<span id="L288"><span class="lineNum">     288</span>              :                 &quot;__builtin_ctz does not take 32-bit arg&quot;);</span>
+<span id="L289"><span class="lineNum">     289</span>              :   return __builtin_ctz(x);</span>
+<span id="L290"><span class="lineNum">     290</span>              : #elif defined(_MSC_VER) &amp;&amp; !defined(__clang__)</span>
+<span id="L291"><span class="lineNum">     291</span>              :   unsigned long result = 0;  // NOLINT(runtime/int)</span>
+<span id="L292"><span class="lineNum">     292</span>              :   _BitScanForward(&amp;result, x);</span>
+<span id="L293"><span class="lineNum">     293</span>              :   return result;</span>
+<span id="L294"><span class="lineNum">     294</span>              : #else</span>
+<span id="L295"><span class="lineNum">     295</span>              :   int c = 31;</span>
+<span id="L296"><span class="lineNum">     296</span>              :   x &amp;= ~x + 1;</span>
+<span id="L297"><span class="lineNum">     297</span>              :   if (x &amp; 0x0000FFFF) c -= 16;</span>
+<span id="L298"><span class="lineNum">     298</span>              :   if (x &amp; 0x00FF00FF) c -= 8;</span>
+<span id="L299"><span class="lineNum">     299</span>              :   if (x &amp; 0x0F0F0F0F) c -= 4;</span>
+<span id="L300"><span class="lineNum">     300</span>              :   if (x &amp; 0x33333333) c -= 2;</span>
+<span id="L301"><span class="lineNum">     301</span>              :   if (x &amp; 0x55555555) c -= 1;</span>
+<span id="L302"><span class="lineNum">     302</span>              :   return c;</span>
+<span id="L303"><span class="lineNum">     303</span>              : #endif</span>
+<span id="L304"><span class="lineNum">     304</span>              : }</span>
+<span id="L305"><span class="lineNum">     305</span>              : </span>
+<span id="L306"><span class="lineNum">     306</span>              : ABSL_ATTRIBUTE_ALWAYS_INLINE ABSL_INTERNAL_CONSTEXPR_CTZ inline int</span>
+<span id="L307"><span class="lineNum">     307</span>              : CountTrailingZeroesNonzero64(uint64_t x) {</span>
+<span id="L308"><span class="lineNum">     308</span>              : #if ABSL_NUMERIC_INTERNAL_HAVE_BUILTIN_OR_GCC(__builtin_ctzll)</span>
+<span id="L309"><span class="lineNum">     309</span>              :   static_assert(sizeof(unsigned long long) == sizeof(x),  // NOLINT(runtime/int)</span>
+<span id="L310"><span class="lineNum">     310</span>              :                 &quot;__builtin_ctzll does not take 64-bit arg&quot;);</span>
+<span id="L311"><span class="lineNum">     311</span>              :   return __builtin_ctzll(x);</span>
+<span id="L312"><span class="lineNum">     312</span>              : #elif defined(_MSC_VER) &amp;&amp; !defined(__clang__) &amp;&amp; \</span>
+<span id="L313"><span class="lineNum">     313</span>              :     (defined(_M_X64) || defined(_M_ARM64))</span>
+<span id="L314"><span class="lineNum">     314</span>              :   unsigned long result = 0;  // NOLINT(runtime/int)</span>
+<span id="L315"><span class="lineNum">     315</span>              :   _BitScanForward64(&amp;result, x);</span>
+<span id="L316"><span class="lineNum">     316</span>              :   return result;</span>
+<span id="L317"><span class="lineNum">     317</span>              : #elif defined(_MSC_VER) &amp;&amp; !defined(__clang__)</span>
+<span id="L318"><span class="lineNum">     318</span>              :   unsigned long result = 0;  // NOLINT(runtime/int)</span>
+<span id="L319"><span class="lineNum">     319</span>              :   if (static_cast&lt;uint32_t&gt;(x) == 0) {</span>
+<span id="L320"><span class="lineNum">     320</span>              :     _BitScanForward(&amp;result, static_cast&lt;unsigned long&gt;(x &gt;&gt; 32));</span>
+<span id="L321"><span class="lineNum">     321</span>              :     return result + 32;</span>
+<span id="L322"><span class="lineNum">     322</span>              :   }</span>
+<span id="L323"><span class="lineNum">     323</span>              :   _BitScanForward(&amp;result, static_cast&lt;unsigned long&gt;(x));</span>
+<span id="L324"><span class="lineNum">     324</span>              :   return result;</span>
+<span id="L325"><span class="lineNum">     325</span>              : #else</span>
+<span id="L326"><span class="lineNum">     326</span>              :   int c = 63;</span>
+<span id="L327"><span class="lineNum">     327</span>              :   x &amp;= ~x + 1;</span>
+<span id="L328"><span class="lineNum">     328</span>              :   if (x &amp; 0x00000000FFFFFFFF) c -= 32;</span>
+<span id="L329"><span class="lineNum">     329</span>              :   if (x &amp; 0x0000FFFF0000FFFF) c -= 16;</span>
+<span id="L330"><span class="lineNum">     330</span>              :   if (x &amp; 0x00FF00FF00FF00FF) c -= 8;</span>
+<span id="L331"><span class="lineNum">     331</span>              :   if (x &amp; 0x0F0F0F0F0F0F0F0F) c -= 4;</span>
+<span id="L332"><span class="lineNum">     332</span>              :   if (x &amp; 0x3333333333333333) c -= 2;</span>
+<span id="L333"><span class="lineNum">     333</span>              :   if (x &amp; 0x5555555555555555) c -= 1;</span>
+<span id="L334"><span class="lineNum">     334</span>              :   return c;</span>
+<span id="L335"><span class="lineNum">     335</span>              : #endif</span>
+<span id="L336"><span class="lineNum">     336</span>              : }</span>
+<span id="L337"><span class="lineNum">     337</span>              : </span>
+<span id="L338"><span class="lineNum">     338</span>              : ABSL_ATTRIBUTE_ALWAYS_INLINE ABSL_INTERNAL_CONSTEXPR_CTZ inline int</span>
+<span id="L339"><span class="lineNum">     339</span>              : CountTrailingZeroesNonzero16(uint16_t x) {</span>
+<span id="L340"><span class="lineNum">     340</span>              : #if ABSL_HAVE_BUILTIN(__builtin_ctzg)</span>
+<span id="L341"><span class="lineNum">     341</span>              :   return __builtin_ctzg(x);</span>
+<span id="L342"><span class="lineNum">     342</span>              : #elif ABSL_HAVE_BUILTIN(__builtin_ctzs)</span>
+<span id="L343"><span class="lineNum">     343</span>              :   static_assert(sizeof(unsigned short) == sizeof(x),  // NOLINT(runtime/int)</span>
+<span id="L344"><span class="lineNum">     344</span>              :                 &quot;__builtin_ctzs does not take 16-bit arg&quot;);</span>
+<span id="L345"><span class="lineNum">     345</span>              :   return __builtin_ctzs(x);</span>
+<span id="L346"><span class="lineNum">     346</span>              : #else</span>
+<span id="L347"><span class="lineNum">     347</span>              :   return CountTrailingZeroesNonzero32(x);</span>
+<span id="L348"><span class="lineNum">     348</span>              : #endif</span>
+<span id="L349"><span class="lineNum">     349</span>              : }</span>
+<span id="L350"><span class="lineNum">     350</span>              : </span>
+<span id="L351"><span class="lineNum">     351</span>              : template &lt;class T&gt;</span>
+<span id="L352"><span class="lineNum">     352</span>              : ABSL_ATTRIBUTE_ALWAYS_INLINE ABSL_INTERNAL_CONSTEXPR_CTZ inline int</span>
+<span id="L353"><span class="lineNum">     353</span>              : CountTrailingZeroes(T x) noexcept {</span>
+<span id="L354"><span class="lineNum">     354</span>              :   static_assert(std::is_unsigned&lt;T&gt;::value, &quot;T must be unsigned&quot;);</span>
+<span id="L355"><span class="lineNum">     355</span>              :   static_assert(IsPowerOf2(std::numeric_limits&lt;T&gt;::digits),</span>
+<span id="L356"><span class="lineNum">     356</span>              :                 &quot;T must have a power-of-2 size&quot;);</span>
+<span id="L357"><span class="lineNum">     357</span>              :   static_assert(sizeof(T) &lt;= sizeof(uint64_t), &quot;T too large&quot;);</span>
+<span id="L358"><span class="lineNum">     358</span>              :   return x == 0 ? std::numeric_limits&lt;T&gt;::digits</span>
+<span id="L359"><span class="lineNum">     359</span>              :                 : (sizeof(T) &lt;= sizeof(uint16_t)</span>
+<span id="L360"><span class="lineNum">     360</span>              :                        ? CountTrailingZeroesNonzero16(static_cast&lt;uint16_t&gt;(x))</span>
+<span id="L361"><span class="lineNum">     361</span>              :                        : (sizeof(T) &lt;= sizeof(uint32_t)</span>
+<span id="L362"><span class="lineNum">     362</span>              :                               ? CountTrailingZeroesNonzero32(</span>
+<span id="L363"><span class="lineNum">     363</span>              :                                     static_cast&lt;uint32_t&gt;(x))</span>
+<span id="L364"><span class="lineNum">     364</span>              :                               : CountTrailingZeroesNonzero64(x)));</span>
+<span id="L365"><span class="lineNum">     365</span>              : }</span>
+<span id="L366"><span class="lineNum">     366</span>              : </span>
+<span id="L367"><span class="lineNum">     367</span>              : // If T is narrower than unsigned, T{1} &lt;&lt; bit_width will be promoted.  We</span>
+<span id="L368"><span class="lineNum">     368</span>              : // want to force it to wraparound so that bit_ceil of an invalid value are not</span>
+<span id="L369"><span class="lineNum">     369</span>              : // core constant expressions.</span>
+<span id="L370"><span class="lineNum">     370</span>              : template &lt;class T&gt;</span>
+<span id="L371"><span class="lineNum">     371</span>              : ABSL_ATTRIBUTE_ALWAYS_INLINE ABSL_INTERNAL_CONSTEXPR_CLZ inline</span>
+<span id="L372"><span class="lineNum">     372</span>              :     typename std::enable_if&lt;std::is_unsigned&lt;T&gt;::value, T&gt;::type</span>
+<span id="L373"><span class="lineNum">     373</span>              :     BitCeilPromotionHelper(T x, T promotion) {</span>
+<span id="L374"><span class="lineNum">     374</span>              :   return (T{1} &lt;&lt; (x + promotion)) &gt;&gt; promotion;</span>
+<span id="L375"><span class="lineNum">     375</span>              : }</span>
+<span id="L376"><span class="lineNum">     376</span>              : </span>
+<span id="L377"><span class="lineNum">     377</span>              : template &lt;class T&gt;</span>
+<span id="L378"><span class="lineNum">     378</span>              : ABSL_ATTRIBUTE_ALWAYS_INLINE ABSL_INTERNAL_CONSTEXPR_CLZ inline</span>
+<span id="L379"><span class="lineNum">     379</span>              :     typename std::enable_if&lt;std::is_unsigned&lt;T&gt;::value, T&gt;::type</span>
+<span id="L380"><span class="lineNum">     380</span>              :     BitCeilNonPowerOf2(T x) {</span>
+<span id="L381"><span class="lineNum">     381</span>              :   // If T is narrower than unsigned, it undergoes promotion to unsigned when we</span>
+<span id="L382"><span class="lineNum">     382</span>              :   // shift.  We calculate the number of bits added by the wider type.</span>
+<span id="L383"><span class="lineNum">     383</span>              :   return BitCeilPromotionHelper(</span>
+<span id="L384"><span class="lineNum">     384</span>              :       static_cast&lt;T&gt;(std::numeric_limits&lt;T&gt;::digits - CountLeadingZeroes(x)),</span>
+<span id="L385"><span class="lineNum">     385</span>              :       T{sizeof(T) &gt;= sizeof(unsigned) ? 0</span>
+<span id="L386"><span class="lineNum">     386</span>              :                                       : std::numeric_limits&lt;unsigned&gt;::digits -</span>
+<span id="L387"><span class="lineNum">     387</span>              :                                             std::numeric_limits&lt;T&gt;::digits});</span>
+<span id="L388"><span class="lineNum">     388</span>              : }</span>
+<span id="L389"><span class="lineNum">     389</span>              : </span>
+<span id="L390"><span class="lineNum">     390</span>              : }  // namespace numeric_internal</span>
+<span id="L391"><span class="lineNum">     391</span>              : ABSL_NAMESPACE_END</span>
+<span id="L392"><span class="lineNum">     392</span>              : }  // namespace absl</span>
+<span id="L393"><span class="lineNum">     393</span>              : </span>
+<span id="L394"><span class="lineNum">     394</span>              : #endif  // ABSL_NUMERIC_INTERNAL_BITS_H_</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.3.2-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

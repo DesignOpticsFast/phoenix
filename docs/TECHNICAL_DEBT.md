@@ -4,32 +4,31 @@ This document tracks temporary implementations, workarounds, and known limitatio
 
 ---
 
-## Demo-Mode Local XY Sine (Sprint 4.4)
+## Local XY Sine Computation (Sprint 4.4+)
 
-**Item:** `XYSineDemo` namespace and local compute path in `AnalysisWorker`
+**Item:** `XYSineDemo` namespace and local compute implementation
 
 **Location:**
 - `src/analysis/demo/XYSineDemo.hpp`
 - `src/analysis/demo/XYSineDemo.cpp`
-- `src/analysis/AnalysisWorker.cpp` (demo mode check)
+- Used by `LocalExecutor` for local-only XY Sine computation
 
-**Why:** Temporary bridge to allow Mac testing without Bedrock/Palantir server running. Enables Capo to test XY Sine functionality (async, progress, cancel, timeout, auto-run) on macOS without requiring a full Bedrock setup.
+**Why:** Phoenix supports two compute modes for XY Sine:
+- **LocalExecutor**: Uses `XYSineDemo` for local XY Sine computation (no Bedrock server required)
+- **RemoteExecutor**: Uses Palantir/Bedrock for remote XY Sine computation
 
 **Current State:**
-- Demo mode enabled via `PHOENIX_DEMO_MODE=1` environment variable
-- Local XY Sine computation matches Bedrock's math exactly
+- `XYSineDemo` provides local XY Sine computation that matches Bedrock's math exactly
+- Used by `LocalExecutor` when `AnalysisRunMode::LocalOnly` is selected
 - Preserves all async/progress/cancel/timeout semantics
 - License checks remain in place (licensing is core, not optional)
 
-**Remove By:** End of Big Sprint 5 (or whenever we have a permanent local/remote compute story)
-
-**Owner:** Mark / Lyra
+**Status:** Production local compute implementation (not a demo or temporary feature)
 
 **Notes:**
-- This is explicitly marked as temporary and demo-only
-- Must NOT become a permanent architecture feature
-- All demo code is clearly namespaced and documented with TODO(Sprint 4.4) tags
-- Demo mode is opt-in only (no automatic fallback)
+- `XYSineDemo` is a legitimate local compute implementation, not a demo
+- Both local and remote compute paths are supported and production-ready
+- Users can choose between local and remote execution via `AnalysisRunMode`
 
 ---
 

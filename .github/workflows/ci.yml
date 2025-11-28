@@ -213,7 +213,7 @@ jobs:
           skip: .git,build
 
   build:
-    name: Build (Qt 6.10.0)
+    name: Build + Tests
     needs: changes
     timeout-minutes: 30
     if: >
@@ -221,12 +221,15 @@ jobs:
       (github.event_name == 'pull_request' &&
        github.event.pull_request.head.repo.full_name == github.repository &&
        needs.changes.outputs.code_changed == 'true')
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
     env:
-      QT_VERSION: 6.10.0
+      QT_VERSION: 6.10.1
       QTFRAMEWORK_BYPASS_LICENSE_CHECK: "1"
     steps:
       - uses: actions/checkout@v5
@@ -256,11 +259,11 @@ jobs:
             echo "❌ Found stale include of LogCategories.h"; exit 1;
           fi
 
-      - name: Install Qt 6.10.0
+      - name: Install Qt 6.10.1
         uses: jurplel/install-qt-action@v3
         with:
-          version: '6.10.0'
-          modules: 'qtbase qttools qttranslations'
+          version: '6.10.1'
+          modules: 'qtbase qttools qttranslations qtgraphs qtgraphswidgets'
           cache: true
 
       - name: Verify Qt installation
@@ -286,9 +289,19 @@ jobs:
       - name: Clean configure
         run: |
           rm -rf build/relwithdebinfo
+          # Enable coverage on Linux only
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            COVERAGE_FLAGS="-fprofile-arcs -ftest-coverage --coverage"
+          else
+            COVERAGE_FLAGS=""
+          fi
           cmake -S . -B build/relwithdebinfo -G "Ninja" \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"
+            -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH" \
+            -DCMAKE_CXX_FLAGS="$COVERAGE_FLAGS" \
+            -DCMAKE_EXE_LINKER_FLAGS="$COVERAGE_FLAGS" \
+            -DPHX_WITH_TRANSPORT_DEPS=ON \
+            -DBUILD_TESTING=ON
 
       - name: Build
         run: cmake --build build/relwithdebinfo -j $(nproc || echo 4)
@@ -297,10 +310,60 @@ jobs:
       - name: Translation drift guard
         run: ./ci/check_translations.sh build/relwithdebinfo
 
-      - name: Unit tests
+      - name: Run all tests (ctest)
         if: hashFiles('build/relwithdebinfo/CTestTestfile.cmake') != ''
         run: ctest --test-dir build/relwithdebinfo --output-on-failure
         continue-on-error: false
+
+      - name: Install lcov (Linux only)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lcov
+
+      - name: Generate coverage report (Linux only)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd build/relwithdebinfo
+          # Capture coverage data
+          lcov --directory . --capture --output-file coverage.info
+          
+          # Remove system headers, external libs, and test files
+          # Focus on src/transport/* and src/analysis/RemoteExecutor*
+          lcov --remove coverage.info \
+            '/usr/*' \
+            '*/tests/*' \
+            '*/build/*' \
+            '*/generated/*' \
+            '*/contracts/*' \
+            --output-file coverage-filtered.info
+          
+          # Generate HTML report
+          genhtml coverage-filtered.info \
+            --output-directory coverage-html \
+            --prefix "$(pwd)/../.." \
+            --show-details \
+            --legend \
+            --demangle-cpp
+          
+          # Print summary
+          echo "=== Coverage Summary ==="
+          lcov --summary coverage-filtered.info || true
+          
+          # Print coverage for Palantir-related paths
+          echo ""
+          echo "=== Palantir-Related Coverage ==="
+          lcov --summary coverage-filtered.info | grep -E "(src/transport|src/analysis)" || echo "No Palantir paths found in coverage"
+
+      - name: Upload coverage report (Linux only)
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-phoenix
+          path: |
+            build/relwithdebinfo/coverage-html/**
+            build/relwithdebinfo/coverage-filtered.info
+          retention-days: 30
 
   ci_checks:
     needs: changes
@@ -357,10 +420,32 @@ jobs:
   soak-nightly:
     name: Soak (Linux 30m)
     if: github.event_name == 'schedule' && github.event.schedule == '0 3 * * *'
-    runs-on: [self-hosted, Linux, X64, dev-01, qt6]
+    runs-on: ubuntu-latest
     timeout-minutes: 120
+    env:
+      QT_VERSION: 6.10.1
+      QTFRAMEWORK_BYPASS_LICENSE_CHECK: "1"
     steps:
       - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      
+      - name: Install Qt 6.10.1
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.10.1'
+          modules: 'qtbase qttools qttranslations qtgraphs qtgraphswidgets'
+          cache: true
+      
+      - name: Setup Qt environment
+        run: |
+          if [[ -z "$Qt6_DIR" ]]; then
+            echo "❌ Qt6_DIR not set by install-qt-action"
+            exit 1
+          fi
+          CMAKE_PREFIX_PATH=$(dirname "$Qt6_DIR")
+          echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
+      
       - name: Build soak binary
         run: make soak-build
       - name: Run soak (30 minutes)
@@ -397,10 +482,32 @@ jobs:
     if: |
       (github.event_name == 'workflow_dispatch' && github.event.inputs.soak == '1h') ||
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/phoenix-sprint'))
-    runs-on: [self-hosted, Linux, X64, dev-01, qt6]
+    runs-on: ubuntu-latest
     timeout-minutes: 180
+    env:
+      QT_VERSION: 6.10.1
+      QTFRAMEWORK_BYPASS_LICENSE_CHECK: "1"
     steps:
       - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      
+      - name: Install Qt 6.10.1
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.10.1'
+          modules: 'qtbase qttools qttranslations qtgraphs qtgraphswidgets'
+          cache: true
+      
+      - name: Setup Qt environment
+        run: |
+          if [[ -z "$Qt6_DIR" ]]; then
+            echo "❌ Qt6_DIR not set by install-qt-action"
+            exit 1
+          fi
+          CMAKE_PREFIX_PATH=$(dirname "$Qt6_DIR")
+          echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
+      
       - name: Build soak binary
         run: make soak-build
       - name: Run soak (60 minutes)
@@ -440,7 +547,11 @@ jobs:
           fi
 
           if [[ "${{ needs.changes.outputs.code_changed }}" == "true" ]]; then
-            [[ "${{ needs.build.result }}" == "success" ]] || { echo "Build failed"; exit 1; }
+            # Build job now runs on matrix (ubuntu + macos), check both succeeded
+            if [[ "${{ needs.build.result }}" != "success" ]]; then
+              echo "Build failed (one or more matrix jobs failed)"
+              exit 1
+            fi
             echo "✅ Gate: code path passed."; exit 0
           fi
 

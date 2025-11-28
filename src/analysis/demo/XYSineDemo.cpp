@@ -1,5 +1,6 @@
-// Phoenix-only local XY Sine computation (Phase 2B)
+// Local XY Sine computation implementation (Phase 2B)
 // Provides local compute path without transport dependencies
+// Used by LocalExecutor for local-only XY Sine computation
 
 #include "XYSineDemo.hpp"
 #include <cmath>

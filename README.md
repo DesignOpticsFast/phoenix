@@ -1,11 +1,11 @@
 # Phoenix — GUI/IDE for Optical Design
 
-> **Version**: 0.0.3  
-> **Status**: CI workflows stabilized and tested ✅  
+> **Version**: 0.0.4  
+> **Status**: CI workflows running on GitHub Actions ✅  
 > **Icons**: Font Awesome Pro icon system integrated 🎨  
-> **Development**: dev-01-first workflow established 🚀  
-> **CI stabilized on**: 2025-01-27  
-> **Icon system fixed**: 2025-01-21
+> **CI**: GitHub Actions 🚀  
+> **Icon system fixed**: 2025-01-21  
+> **Toolchain**: See [docs/VERSIONS.md](docs/VERSIONS.md) for current versions
 
 [![CI](https://github.com/DesignOpticsFast/phoenix/actions/workflows/ci.yml/badge.svg)](https://github.com/DesignOpticsFast/phoenix/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/DesignOpticsFast/phoenix/actions/workflows/codeql.yml/badge.svg)](https://github.com/DesignOpticsFast/phoenix/actions/workflows/codeql.yml)
@@ -22,13 +22,13 @@ visualization, tolerancing, reporting, and (eventually) AI-assisted design.
 
 ---
 
-## 🚀 Current Scope (Sprint 4/5)
+## 🚀 Current Scope (Sprint 4.5)
 
-**Version 0.0.3** — UI Hardening & Palantir Foundation
+**Version 0.0.4** — Envelope Protocol & IPC Hardening
 
 - **Icon System**: Font Awesome Pro integration with theme-aware tinting
 - **Palantir IPC**: Non-blocking connection FSM with exponential backoff
-- **Protocol Layer**: Framed binary protocol (PLTR magic, BigEndian, version/type/length header)
+- **Protocol Layer**: Envelope-based Palantir protocol (MessageEnvelope with length prefix)
 - **Message Dispatcher**: Type→handler registration scaffold for future features
 - **UI Polish**: Version display in splash, window title, and About dialog
 
@@ -86,41 +86,55 @@ git commit -m "chore: update contracts submodule to <version>"
 
 ## 🛠️ Development Workflow
 
-### **🎯 Core Policy: ALL CODE CHANGES ON DEV-01 FIRST**
+### **🎯 CI/CD: GitHub Actions**
 
-**Rationale:**
-- ✅ **Consistent build environment** - Linux-based development
-- ✅ **Automated testing** - CI/CD pipelines run on dev-01
-- ✅ **Resource debugging** - Can test GUI with Xvfb
-- ✅ **Version control** - All changes tracked in Git
-- ✅ **Quality assurance** - Automated tests and validation
+**CI runs on GitHub Actions with:**
+- ✅ **Linux builds** - Ubuntu latest (see [docs/VERSIONS.md](docs/VERSIONS.md) for toolchain versions)
+- ✅ **Automated testing** - Unit tests run on every PR
+- ✅ **Integration tests** - Bedrock integration tests in CI
+- ✅ **Quality assurance** - Automated validation and checks
 
-**Workflow:**
-1. **Develop on dev-01** - Make all code changes via Tailscale
-2. **Test on dev-01** - Build and test with Xvfb for GUI
-3. **Commit from dev-01** - Push changes to repository
-4. **Test locally** - Pull changes and test on local machine
+**Local Development:**
+1. **Develop locally** - Make code changes on your machine
+2. **Test locally** - Build and test (see [docs/VERSIONS.md](docs/VERSIONS.md) for toolchain versions)
+3. **Commit and push** - Push changes to repository
+4. **CI validates** - GitHub Actions runs tests automatically
 
-### **Connection Setup**
+> **Note:** For current toolchain versions (Qt, C++ standard, CMake, Protobuf, etc.), see [docs/VERSIONS.md](docs/VERSIONS.md).
+
+### **Local Build Setup**
+
+**macOS:**
 ```bash
-# Connect to dev-01 via Tailscale
-ssh -i ~/.ssh/github_phoenix mark@100.97.54.75
-cd /home/ec2-user/workspace/phoenix
+# Install Qt (via Homebrew or Qt installer, see docs/VERSIONS.md for current version)
+brew install qt@6  # or download from qt.io
 
-# Initialize submodules (if not already done)
+# Initialize submodules
 git submodule update --init --recursive
 
-# Build with Qt 6.10.0 (required)
+# Build (see docs/VERSIONS.md for Qt path)
 cmake -S . -B build \
-  -DCMAKE_PREFIX_PATH=/opt/Qt/6.10.0/gcc_64 \
+  -DCMAKE_PREFIX_PATH=$(brew --prefix qt@6) \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cmake --build build
-
-# Test GUI with Xvfb
-xvfb-run -a ./build/phoenix_app
 ```
 
-**Important:** Phoenix must be configured with Qt 6.10.0 on dev-01. Always use `-DCMAKE_PREFIX_PATH=/opt/Qt/6.10.0/gcc_64` when configuring CMake.
+**Linux:**
+```bash
+# Install Qt (via package manager or Qt installer, see docs/VERSIONS.md for current version)
+# Then set CMAKE_PREFIX_PATH to Qt installation
+
+# Initialize submodules
+git submodule update --init --recursive
+
+# Build (see docs/VERSIONS.md for Qt path)
+cmake -S . -B build \
+  -DCMAKE_PREFIX_PATH=/path/to/Qt/<version>/gcc_64 \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo
+cmake --build build
+```
+
+**Important:** For current Qt version and installation paths, see [docs/VERSIONS.md](docs/VERSIONS.md). CI uses `jurplel/install-qt-action@v3` to install Qt automatically.
 
 ### **Branch Naming**
 Use `type/scope/short-desc`:
@@ -197,22 +211,22 @@ QT_QPA_PLATFORM=wayland ./phoenix_app
 - ✅ **Phoenix icon path corrected** - Application icon in Dock
 
 ### **Development Workflow Established**
-- ✅ **dev-01-first policy** - All code changes on dev-01 first
-- ✅ **Tailscale integration** - Secure connection for development
-- ✅ **Xvfb GUI testing** - Can test Phoenix UI on dev-01
+- ✅ **GitHub Actions CI** - Automated builds and tests
+- ✅ **Qt 6.10.1** - Latest stable Qt version
+- ✅ **Local development** - Build and test on your machine
 - ✅ **Resource debugging** - Proper testing of resource embedding
 
 ### **Documentation Updates**
-- ✅ **DEVELOPMENT_WORKFLOW.md** - Comprehensive dev-01 workflow
-- ✅ **CODING_STANDARDS.md** - Updated with dev-01 policy
-- ✅ **dev-setup.md** - Added Tailscale integration
-- ✅ **README.md** - Updated with new workflow
+- ✅ **DEVELOPMENT_WORKFLOW.md** - Comprehensive development workflow
+- ✅ **CODING_STANDARDS.md** - Coding standards and guidelines
+- ✅ **CI_WORKFLOW_SYSTEM.md** - CI workflow documentation
+- ✅ **README.md** - Updated with GitHub Actions workflow
 
 ### **Technical Achievements**
 - ✅ **Resource embedding working** - Individual files instead of QRC
 - ✅ **Icon manifest updated** - Font Awesome Unicode characters
 - ✅ **Build process optimized** - CMake configuration improved
-- ✅ **Quality assurance** - Automated testing on dev-01
+- ✅ **Quality assurance** - Automated testing on GitHub Actions
 
 ### **CI Workflow System (2025-01-23)**
 - ✅ **Self-healing CI system** - Comprehensive conflict prevention
@@ -232,6 +246,6 @@ QT_QPA_PLATFORM=wayland ./phoenix_app
 - Tolerancing and optimization workflows
 - AI-assisted design tools
 # Trigger validation with infra-ci label
-# Test commit for dev-01 runner
+# CI runs on GitHub Actions
 # Test Phoenix CI
 # Final Sprint 3 validation

@@ -1,71 +1,7 @@
-# Development Workflow
+# Developer Diagnostics & Troubleshooting
 
-## Dev-01 Preflight (Required)
-
-All PRs must pass a local dev-01 build before push.
-
-### Preflight Process
-
-- Run `scripts/dev01-preflight.sh` on dev-01 before committing.
-- Pushing from dev-01 automatically runs this via a Git pre-push hook.
-- If preflight fails, fix locally before pushing.
-- CI builds run on dev-01 and expect a green preflight.
-
-### For Remote Developers
-
-If you work remotely, you can SSH into dev-01 and push after running:
-
-```bash
-ssh dev-01
-cd /path/to/phoenix
-scripts/dev01-preflight.sh
-git push
-```
-
-### Makefile Targets
-
-- `make preflight` - Run the preflight build
-- `make build-dev01` - Same as preflight
-- `make clean-dev01` - Clean the dev-01 build directory
-
-### Troubleshooting
-
-#### Preflight Fails
-
-1. Check you're on dev-01: `hostname`
-2. Verify Qt environment: `echo $CMAKE_PREFIX_PATH`
-3. Run preflight manually: `./scripts/dev01-preflight.sh`
-4. Check build logs for specific errors
-
-#### CI Fails After Preflight Passes
-
-1. Ensure you're using the correct runner labels
-2. Verify environment variables match between local and CI
-3. Check that all changes are committed and pushed
-
-### Environment Requirements
-
-- **Host**: Must be dev-01 (hostname contains "dev-01")
-- **Qt**: CMAKE_PREFIX_PATH must point to Qt 6.10.0 installation
-- **Build Tools**: Ninja, CMake, GCC
-- **License**: QTFRAMEWORK_BYPASS_LICENSE_CHECK=1 (automatically set)
-
-### Build Environment Policy
-
-**dev-01 is the canonical build environment** - macOS builds are intentionally not required because:
-
-- dev-01 provides consistent, fast builds (25 seconds)
-- All developers can access dev-01 for validation
-- CI runs exclusively on dev-01 for reliability
-- No macOS-specific dependencies or workflows needed
-
-### Build Directory
-
-All dev-01 builds use `build/dev-01-relwithdebinfo` to:
-
-- Isolate from other build configurations
-- Document the build source (dev-01)
-- Allow parallel builds with different configurations
+> **Note:** For the main development workflow, see [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md).  
+> This document focuses on diagnostics, troubleshooting, and protocol details.
 
 ## QML Debugging
 
@@ -148,26 +84,35 @@ PalantirClient uses a finite state machine (FSM) with the following states:
 
 - **Exponential Backoff**: Reconnection attempts use exponential delays (1s, 2s, 4s, 8s, 16s)
 - **Max Attempts**: After 5 failed attempts, connection enters `PermanentFail` state
-- **Protocol Errors**: Malformed frames (bad magic, version mismatch, oversize payload) trigger immediate disconnect and backoff
+- **Protocol Errors**: Malformed envelopes (invalid version, unknown type, oversize payload) trigger immediate disconnect and backoff
 
 ### Protocol
 
-> ⚠️ **Note (v0.0.3)**: Phoenix currently uses a framed binary protocol (`'PLTR'` magic) over `QLocalSocket`. Future versions may migrate to gRPC or Arrow Flight for enhanced performance and type safety.
+Phoenix uses the **envelope-based Palantir protocol** over `QLocalSocket`. The protocol uses `MessageEnvelope` protobuf messages wrapped in a length-prefixed wire format.
 
-Palantir uses a framed binary protocol:
-- **Magic**: `'PLTR'` (0x504C5452)
-- **Byte Order**: BigEndian (network byte order)
-- **Header**: 12 bytes (magic: u32, version: u16, type: u16, length: u32)
-- **Max Message Size**: 8 MiB
-- **Version**: Currently v1
+**Wire Format:**
+```
+[4-byte length][serialized MessageEnvelope]
+```
+
+**MessageEnvelope Structure:**
+- **version**: Protocol version (currently 1)
+- **type**: Message type enum (e.g., `CAPABILITIES_REQUEST`, `XY_SINE_REQUEST`)
+- **payload**: Serialized inner protobuf message (e.g., `CapabilitiesRequest`, `XYSineRequest`)
+- **metadata**: Optional string→string map for tracing/flags
+
+**Max Message Size**: 10 MB (enforced on both client and server)
+
+> **Note:** For detailed protocol documentation, see [ADR-0002-Envelope-Based-Palantir-Framing.md](adr/ADR-0002-Envelope-Based-Palantir-Framing.md) and [IPC_ENVELOPE_PROTOCOL.md](ipc/IPC_ENVELOPE_PROTOCOL.md).
 
 ### Message Handling
 
-Messages are dispatched via:
-1. **Signal**: `messageReceived(quint16 type, QByteArray payload)` - for signal/slot consumers
-2. **Handler**: `registerHandler(quint16 type, Handler)` - for direct callback registration
+Messages are dispatched via the envelope protocol:
+1. **Envelope Parsing**: `MessageEnvelope` is parsed from the wire format
+2. **Type Dispatch**: Message type determines which handler processes the payload
+3. **Payload Extraction**: Inner protobuf message is extracted and deserialized
 
-Handlers are called after the signal is emitted, allowing both patterns to coexist.
+> **Note:** For detailed protocol documentation, see [ADR-0002-Envelope-Based-Palantir-Framing.md](adr/ADR-0002-Envelope-Based-Palantir-Framing.md) and [IPC_ENVELOPE_PROTOCOL.md](ipc/IPC_ENVELOPE_PROTOCOL.md).
 
 ### Non-Blocking Design
 

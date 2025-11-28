@@ -1,24 +1,28 @@
-# Coding Standards - Phoenix (C++17/Qt 6.9)
+# Coding Standards - Phoenix
 
 **Version:** 1.0.0  
 **Last Updated:** 2025-01-21  
 **Language:** C++17  
-**Framework:** Qt 6.9+  
-**Build Tool:** CMake 3.22+  
-**Development Environment:** dev-01 (Primary) + Local Machines (Secondary)
+**Framework:** Qt 6+  
+**Build Tool:** CMake (see [VERSIONS.md](VERSIONS.md) for minimum version)  
+**Development Environment:** Local Machines + GitHub Actions CI
+
+> **Note:** For current toolchain versions (C++ standard, Qt, CMake, Protobuf, etc.), see [VERSIONS.md](VERSIONS.md).
 
 ---
 
 ## Core Principles
 
-### 1. Development Environment First
+### 1. Development Environment
 
-**ALL CODE CHANGES MUST BE DONE ON DEV-01 FIRST**
+**Local Development + GitHub Actions CI**
 
-- ✅ Build and test on dev-01 before local development
-- ✅ Use Tailscale for secure connection to dev-01
-- ✅ Test GUI with Xvfb on dev-01
-- ✅ Commit changes from dev-01
+- ✅ **Develop locally** - Make code changes on your machine (Crucible for macOS GUI development)
+- ✅ **Test locally** - Build and test with Qt (see [VERSIONS.md](VERSIONS.md) for current version)
+- ✅ **Commit and push** - Push changes to repository
+- ✅ **CI validates** - GitHub Actions runs tests automatically on Linux and macOS
+
+> **Note:** For detailed development workflow, see [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md). For toolchain versions, see [VERSIONS.md](VERSIONS.md).
 
 ### 2. C++17 Standard
 

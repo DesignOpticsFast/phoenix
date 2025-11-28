@@ -14,8 +14,9 @@ struct XYSineResult {
 // Register as Qt meta-type for signal/slot passing
 Q_DECLARE_METATYPE(XYSineResult)
 
-// Phoenix-only local XY Sine computation (Phase 2B)
-// This provides local compute path without transport dependencies
+// Local XY Sine computation implementation (Phase 2B)
+// Provides local compute path without transport dependencies
+// Used by LocalExecutor for local-only XY Sine computation
 namespace XYSineDemo {
     // Compute XY Sine locally (matches Bedrock's math exactly)
     // Returns true on success, false on failure

@@ -30,6 +30,11 @@ private slots:
     void testRoundTripCapabilitiesResponse();
     void testRoundTripXYSineRequest();
     void testRoundTripXYSineResponse();
+    
+    void testParseEnvelopeVersionZero();
+    void testParseEnvelopeCompletelyMalformed();
+    void testMetadataRoundTripWithSpecialCharacters();
+    void testMetadataRoundTripEmpty();
 };
 
 #ifdef PHX_WITH_TRANSPORT_DEPS
@@ -355,6 +360,87 @@ void EnvelopeHelpersTest::testRoundTripXYSineResponse()
     QCOMPARE(decoded.y(1), 1.0);
     QCOMPARE(decoded.status(), "OK");
 }
+
+void EnvelopeHelpersTest::testParseEnvelopeVersionZero()
+{
+    // Test that version 0 is rejected
+    palantir::MessageEnvelope envelope;
+    envelope.set_version(0); // Invalid version
+    envelope.set_type(palantir::MessageType::CAPABILITIES_REQUEST);
+    envelope.set_payload("test");
+    
+    std::string serialized;
+    QVERIFY(envelope.SerializeToString(&serialized));
+    
+    QByteArray buffer(serialized.data(), static_cast<int>(serialized.size()));
+    palantir::MessageEnvelope parsed;
+    QString error;
+    
+    QVERIFY(!parseEnvelope(buffer, parsed, &error));
+    QVERIFY(!error.isEmpty());
+    QVERIFY(error.contains("Invalid protocol version"));
+}
+
+void EnvelopeHelpersTest::testParseEnvelopeCompletelyMalformed()
+{
+    // Test with completely random/invalid data
+    QByteArray malformed("\x00\x01\x02\x03\xFF\xFE\xFD\xFC", 8);
+    
+    palantir::MessageEnvelope parsed;
+    QString error;
+    
+    // parseEnvelope should fail on completely malformed data
+    QVERIFY(!parseEnvelope(malformed, parsed, &error));
+    QVERIFY(!error.isEmpty());
+}
+
+void EnvelopeHelpersTest::testMetadataRoundTripWithSpecialCharacters()
+{
+    // Test metadata with special characters and empty values
+    palantir::CapabilitiesRequest request;
+    std::map<std::string, std::string> metadata;
+    metadata["trace_id"] = "abc-123_xyz";
+    metadata["client_version"] = "phoenix-0.0.4";
+    metadata["empty_value"] = "";
+    metadata["special_chars"] = "test@example.com:8080/path?query=value";
+    
+    auto envelope = makeEnvelope(palantir::MessageType::CAPABILITIES_REQUEST, request, metadata);
+    QVERIFY(envelope.has_value());
+    
+    // Serialize and parse
+    std::string serialized;
+    QVERIFY(envelope->SerializeToString(&serialized));
+    QByteArray buffer(serialized.data(), static_cast<int>(serialized.size()));
+    palantir::MessageEnvelope parsed;
+    QVERIFY(parseEnvelope(buffer, parsed));
+    
+    // Verify metadata round-trip
+    QCOMPARE(parsed.metadata().size(), 4u);
+    QCOMPARE(parsed.metadata().at("trace_id"), "abc-123_xyz");
+    QCOMPARE(parsed.metadata().at("client_version"), "phoenix-0.0.4");
+    QCOMPARE(parsed.metadata().at("empty_value"), "");
+    QCOMPARE(parsed.metadata().at("special_chars"), "test@example.com:8080/path?query=value");
+}
+
+void EnvelopeHelpersTest::testMetadataRoundTripEmpty()
+{
+    // Test metadata with empty map
+    palantir::CapabilitiesRequest request;
+    std::map<std::string, std::string> emptyMetadata;
+    
+    auto envelope = makeEnvelope(palantir::MessageType::CAPABILITIES_REQUEST, request, emptyMetadata);
+    QVERIFY(envelope.has_value());
+    
+    // Serialize and parse
+    std::string serialized;
+    QVERIFY(envelope->SerializeToString(&serialized));
+    QByteArray buffer(serialized.data(), static_cast<int>(serialized.size()));
+    palantir::MessageEnvelope parsed;
+    QVERIFY(parseEnvelope(buffer, parsed));
+    
+    // Verify metadata is empty
+    QCOMPARE(parsed.metadata().size(), 0u);
+}
 #else
 // Stub implementations when transport deps are disabled
 void EnvelopeHelpersTest::testMakeEnvelopeCapabilitiesRequest() { QSKIP("Transport deps not enabled"); }
@@ -372,6 +458,10 @@ void EnvelopeHelpersTest::testRoundTripCapabilitiesRequest() { QSKIP("Transport 
 void EnvelopeHelpersTest::testRoundTripCapabilitiesResponse() { QSKIP("Transport deps not enabled"); }
 void EnvelopeHelpersTest::testRoundTripXYSineRequest() { QSKIP("Transport deps not enabled"); }
 void EnvelopeHelpersTest::testRoundTripXYSineResponse() { QSKIP("Transport deps not enabled"); }
+void EnvelopeHelpersTest::testParseEnvelopeVersionZero() { QSKIP("Transport deps not enabled"); }
+void EnvelopeHelpersTest::testParseEnvelopeCompletelyMalformed() { QSKIP("Transport deps not enabled"); }
+void EnvelopeHelpersTest::testMetadataRoundTripWithSpecialCharacters() { QSKIP("Transport deps not enabled"); }
+void EnvelopeHelpersTest::testMetadataRoundTripEmpty() { QSKIP("Transport deps not enabled"); }
 #endif
 
 #include "envelope_helpers_test.moc"

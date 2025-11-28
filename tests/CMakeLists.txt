@@ -103,6 +103,45 @@ if(BUILD_TESTING AND PHX_WITH_TRANSPORT_DEPS)
   target_compile_definitions(envelope_helpers_test PRIVATE PHX_WITH_TRANSPORT_DEPS)
 
   add_test(NAME envelope_helpers_test COMMAND envelope_helpers_test)
+  
+  # Alias for overnight QA framework compatibility
+  add_executable(palantir_integration_tests ALIAS envelope_helpers_test)
+  
+  # Error mapping tests (Sprint 4.5 - Chunk 3.2)
+  add_executable(error_mapping_test
+    transport/ErrorMapping_test.cpp
+  )
+
+  target_link_libraries(error_mapping_test PRIVATE
+    phoenix_transport
+    phoenix_palantir_proto
+    Qt6::Test
+    Qt6::Core
+  )
+  
+  # Link abseil libraries (required by protobuf 6.33+)
+  if(ABSL_DIE_IF_NULL_LIB AND ABSL_LOG_INITIALIZE_LIB AND ABSL_STATUSOR_LIB)
+    target_link_libraries(error_mapping_test PRIVATE
+      ${ABSL_DIE_IF_NULL_LIB}
+      ${ABSL_LOG_INITIALIZE_LIB}
+      ${ABSL_STATUSOR_LIB}
+      ${ABSL_LOG_INTERNAL_CHECK_OP_LIB}
+      ${ABSL_LOG_INTERNAL_CONDITIONS_LIB}
+      ${ABSL_LOG_INTERNAL_MESSAGE_LIB}
+    )
+    if(ABSL_HASH_LIB)
+      target_link_libraries(error_mapping_test PRIVATE ${ABSL_HASH_LIB})
+    endif()
+  endif()
+
+  target_include_directories(error_mapping_test
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/..
+  )
+
+  target_compile_definitions(error_mapping_test PRIVATE PHX_WITH_TRANSPORT_DEPS)
+
+  add_test(NAME error_mapping_test COMMAND error_mapping_test)
 endif()
 
 # XY plot autoscaling tests (Phoenix-only, no transport dependencies)

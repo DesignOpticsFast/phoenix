@@ -1,0 +1,1 @@
+genhtml qa_reports_20251126_153643/coverage_report/coverage.info --output-directory qa_reports_20251126_153643/coverage_report/coverage_html --ignore-errors inconsistent,corrupt,category,unsupported

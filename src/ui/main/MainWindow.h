@@ -10,6 +10,7 @@
 #include <QElapsedTimer>
 #include <QLocale>
 #include <QPointer>
+#include <QSet>
 #include "app/SettingsProvider.h"
 
 QT_BEGIN_NAMESPACE
@@ -52,6 +53,7 @@ protected:
     void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent* ev) override;
     void focusInEvent(QFocusEvent* event) override;
+    void changeEvent(QEvent* event) override;
     bool event(QEvent* e) override;
 
 private slots:
@@ -208,4 +210,9 @@ private:
     // Telemetry hooks
     void logUIAction(const QString& action, qint64 elapsed);
     void logRibbonAction(const QString& action);
+    
+    // Minimize/restore synchronization
+    QList<QPointer<QWidget>> m_hiddenDueToMinimize;
+    void hideChildWindowsForMinimize();
+    void restoreChildWindowsAfterMinimize();
 };

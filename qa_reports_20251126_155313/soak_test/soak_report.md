@@ -1,0 +1,16 @@
+# Soak Test Report
+
+## Summary
+- Iterations: 500
+- Passed: 500
+- Failed: 0
+- Timed out: 0
+- Failure rate: 0.00%
+- Threshold: 5%
+
+## Status: ✅ PASS
+
+All iterations passed within failure rate threshold.
+
+---
+Full log: [soak.log](soak.log)

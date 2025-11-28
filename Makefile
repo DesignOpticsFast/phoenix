@@ -1,12 +1,6 @@
-.PHONY: preflight build-dev01 clean-dev01 daily
-preflight: build-dev01
-	@echo "✅ Preflight OK"
-
-build-dev01:
-	@./scripts/dev01-preflight.sh
-
-clean-dev01:
-	@rm -rf build/dev-01-relwithdebinfo
+.PHONY: preflight daily
+preflight:
+	@echo "✅ Preflight OK (dev-01 removed, use GitHub Actions for CI)"
 
 daily:
 	@./.underlord/tasks/daily_startup.sh

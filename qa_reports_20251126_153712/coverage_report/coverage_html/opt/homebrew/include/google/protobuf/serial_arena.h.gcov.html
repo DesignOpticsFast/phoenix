@@ -1,0 +1,523 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage.info - opt/homebrew/include/google/protobuf/serial_arena.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory /opt/homebrew/include/google/protobuf">/opt/homebrew/include/google/protobuf</a> - serial_arena.h<span style="font-size: 80%;"> (source / <a href="serial_arena.h.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-11-26 15:37:14</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // Protocol Buffers - Google's data interchange format</span>
+<span id="L2"><span class="lineNum">       2</span>              : // Copyright 2022 Google Inc.  All rights reserved.</span>
+<span id="L3"><span class="lineNum">       3</span>              : //</span>
+<span id="L4"><span class="lineNum">       4</span>              : // Use of this source code is governed by a BSD-style</span>
+<span id="L5"><span class="lineNum">       5</span>              : // license that can be found in the LICENSE file or at</span>
+<span id="L6"><span class="lineNum">       6</span>              : // https://developers.google.com/open-source/licenses/bsd</span>
+<span id="L7"><span class="lineNum">       7</span>              : //</span>
+<span id="L8"><span class="lineNum">       8</span>              : // This file defines the internal class SerialArena</span>
+<span id="L9"><span class="lineNum">       9</span>              : </span>
+<span id="L10"><span class="lineNum">      10</span>              : #ifndef GOOGLE_PROTOBUF_SERIAL_ARENA_H__</span>
+<span id="L11"><span class="lineNum">      11</span>              : #define GOOGLE_PROTOBUF_SERIAL_ARENA_H__</span>
+<span id="L12"><span class="lineNum">      12</span>              : </span>
+<span id="L13"><span class="lineNum">      13</span>              : #include &lt;algorithm&gt;</span>
+<span id="L14"><span class="lineNum">      14</span>              : #include &lt;atomic&gt;</span>
+<span id="L15"><span class="lineNum">      15</span>              : #include &lt;cstddef&gt;</span>
+<span id="L16"><span class="lineNum">      16</span>              : #include &lt;cstdint&gt;</span>
+<span id="L17"><span class="lineNum">      17</span>              : #include &lt;string&gt;</span>
+<span id="L18"><span class="lineNum">      18</span>              : #include &lt;vector&gt;</span>
+<span id="L19"><span class="lineNum">      19</span>              : </span>
+<span id="L20"><span class="lineNum">      20</span>              : #include &quot;absl/base/attributes.h&quot;</span>
+<span id="L21"><span class="lineNum">      21</span>              : #include &quot;absl/base/optimization.h&quot;</span>
+<span id="L22"><span class="lineNum">      22</span>              : #include &quot;absl/base/prefetch.h&quot;</span>
+<span id="L23"><span class="lineNum">      23</span>              : #include &quot;absl/log/absl_check.h&quot;</span>
+<span id="L24"><span class="lineNum">      24</span>              : #include &quot;absl/numeric/bits.h&quot;</span>
+<span id="L25"><span class="lineNum">      25</span>              : #include &quot;google/protobuf/arena_align.h&quot;</span>
+<span id="L26"><span class="lineNum">      26</span>              : #include &quot;google/protobuf/arena_cleanup.h&quot;</span>
+<span id="L27"><span class="lineNum">      27</span>              : #include &quot;google/protobuf/port.h&quot;</span>
+<span id="L28"><span class="lineNum">      28</span>              : #include &quot;google/protobuf/string_block.h&quot;</span>
+<span id="L29"><span class="lineNum">      29</span>              : </span>
+<span id="L30"><span class="lineNum">      30</span>              : // Must be included last.</span>
+<span id="L31"><span class="lineNum">      31</span>              : #include &quot;google/protobuf/port_def.inc&quot;</span>
+<span id="L32"><span class="lineNum">      32</span>              : </span>
+<span id="L33"><span class="lineNum">      33</span>              : namespace google {</span>
+<span id="L34"><span class="lineNum">      34</span>              : namespace protobuf {</span>
+<span id="L35"><span class="lineNum">      35</span>              : namespace internal {</span>
+<span id="L36"><span class="lineNum">      36</span>              : </span>
+<span id="L37"><span class="lineNum">      37</span>              : // Arena blocks are variable length malloc-ed objects.  The following structure</span>
+<span id="L38"><span class="lineNum">      38</span>              : // describes the common header for all blocks.</span>
+<span id="L39"><span class="lineNum">      39</span>              : struct ArenaBlock {</span>
+<span id="L40"><span class="lineNum">      40</span>              :   // For the sentry block with zero-size where ptr_/limit_ both point to `this`.</span>
+<span id="L41"><span class="lineNum">      41</span>              :   constexpr ArenaBlock() : next(nullptr), size(0) {}</span>
+<span id="L42"><span class="lineNum">      42</span>              : </span>
+<span id="L43"><span class="lineNum">      43</span>              :   ArenaBlock(ArenaBlock* next, size_t size) : next(next), size(size) {</span>
+<span id="L44"><span class="lineNum">      44</span>              :     ABSL_DCHECK_GT(size, sizeof(ArenaBlock));</span>
+<span id="L45"><span class="lineNum">      45</span>              :   }</span>
+<span id="L46"><span class="lineNum">      46</span>              : </span>
+<span id="L47"><span class="lineNum">      47</span>              :   char* Pointer(size_t n) {</span>
+<span id="L48"><span class="lineNum">      48</span>              :     ABSL_DCHECK_LE(n, size);</span>
+<span id="L49"><span class="lineNum">      49</span>              :     return reinterpret_cast&lt;char*&gt;(this) + n;</span>
+<span id="L50"><span class="lineNum">      50</span>              :   }</span>
+<span id="L51"><span class="lineNum">      51</span>              :   char* Limit() { return Pointer(size &amp; static_cast&lt;size_t&gt;(-8)); }</span>
+<span id="L52"><span class="lineNum">      52</span>              : </span>
+<span id="L53"><span class="lineNum">      53</span>              :   bool IsSentry() const { return size == 0; }</span>
+<span id="L54"><span class="lineNum">      54</span>              : </span>
+<span id="L55"><span class="lineNum">      55</span>              :   ArenaBlock* const next;</span>
+<span id="L56"><span class="lineNum">      56</span>              :   const size_t size;</span>
+<span id="L57"><span class="lineNum">      57</span>              :   // data follows</span>
+<span id="L58"><span class="lineNum">      58</span>              : };</span>
+<span id="L59"><span class="lineNum">      59</span>              : </span>
+<span id="L60"><span class="lineNum">      60</span>              : enum class AllocationClient { kDefault, kArray };</span>
+<span id="L61"><span class="lineNum">      61</span>              : </span>
+<span id="L62"><span class="lineNum">      62</span>              : class ThreadSafeArena;</span>
+<span id="L63"><span class="lineNum">      63</span>              : </span>
+<span id="L64"><span class="lineNum">      64</span>              : // Tag type used to invoke the constructor of the first SerialArena.</span>
+<span id="L65"><span class="lineNum">      65</span>              : struct FirstSerialArena {</span>
+<span id="L66"><span class="lineNum">      66</span>              :   explicit FirstSerialArena() = default;</span>
+<span id="L67"><span class="lineNum">      67</span>              : };</span>
+<span id="L68"><span class="lineNum">      68</span>              : </span>
+<span id="L69"><span class="lineNum">      69</span>              : // A simple arena allocator. Calls to allocate functions must be properly</span>
+<span id="L70"><span class="lineNum">      70</span>              : // serialized by the caller, hence this class cannot be used as a general</span>
+<span id="L71"><span class="lineNum">      71</span>              : // purpose allocator in a multi-threaded program. It serves as a building block</span>
+<span id="L72"><span class="lineNum">      72</span>              : // for ThreadSafeArena, which provides a thread-safe arena allocator.</span>
+<span id="L73"><span class="lineNum">      73</span>              : //</span>
+<span id="L74"><span class="lineNum">      74</span>              : // This class manages</span>
+<span id="L75"><span class="lineNum">      75</span>              : // 1) Arena bump allocation + owning memory blocks.</span>
+<span id="L76"><span class="lineNum">      76</span>              : // 2) Maintaining a cleanup list.</span>
+<span id="L77"><span class="lineNum">      77</span>              : // It delegates the actual memory allocation back to ThreadSafeArena, which</span>
+<span id="L78"><span class="lineNum">      78</span>              : // contains the information on block growth policy and backing memory allocation</span>
+<span id="L79"><span class="lineNum">      79</span>              : // used.</span>
+<span id="L80"><span class="lineNum">      80</span>              : class PROTOBUF_EXPORT SerialArena {</span>
+<span id="L81"><span class="lineNum">      81</span>              :  public:</span>
+<span id="L82"><span class="lineNum">      82</span>              :   static constexpr size_t kBlockHeaderSize =</span>
+<span id="L83"><span class="lineNum">      83</span>              :       ArenaAlignDefault::Ceil(sizeof(ArenaBlock));</span>
+<span id="L84"><span class="lineNum">      84</span>              : </span>
+<span id="L85"><span class="lineNum">      85</span>              :   void CleanupList() { cleanup_list_.Cleanup(*this); }</span>
+<span id="L86"><span class="lineNum">      86</span>              :   uint64_t SpaceAllocated() const {</span>
+<span id="L87"><span class="lineNum">      87</span>              :     return space_allocated_.load(std::memory_order_relaxed);</span>
+<span id="L88"><span class="lineNum">      88</span>              :   }</span>
+<span id="L89"><span class="lineNum">      89</span>              :   uint64_t SpaceUsed() const;</span>
+<span id="L90"><span class="lineNum">      90</span>              : </span>
+<span id="L91"><span class="lineNum">      91</span>              :   // See comments on `cached_blocks_` member for details.</span>
+<span id="L92"><span class="lineNum">      92</span>              :   PROTOBUF_ALWAYS_INLINE void* TryAllocateFromCachedBlock(size_t size) {</span>
+<span id="L93"><span class="lineNum">      93</span>              :     if (ABSL_PREDICT_FALSE(size &lt; 16)) return nullptr;</span>
+<span id="L94"><span class="lineNum">      94</span>              :     // We round up to the next larger block in case the memory doesn't match</span>
+<span id="L95"><span class="lineNum">      95</span>              :     // the pattern we are looking for.</span>
+<span id="L96"><span class="lineNum">      96</span>              :     const size_t index = absl::bit_width(size - 1) - 4;</span>
+<span id="L97"><span class="lineNum">      97</span>              : </span>
+<span id="L98"><span class="lineNum">      98</span>              :     if (ABSL_PREDICT_FALSE(index &gt;= cached_block_length_)) return nullptr;</span>
+<span id="L99"><span class="lineNum">      99</span>              :     auto&amp; cached_head = cached_blocks_[index];</span>
+<span id="L100"><span class="lineNum">     100</span>              :     if (cached_head == nullptr) return nullptr;</span>
+<span id="L101"><span class="lineNum">     101</span>              : </span>
+<span id="L102"><span class="lineNum">     102</span>              :     void* ret = cached_head;</span>
+<span id="L103"><span class="lineNum">     103</span>              :     internal::UnpoisonMemoryRegion(ret, size);</span>
+<span id="L104"><span class="lineNum">     104</span>              :     cached_head = cached_head-&gt;next;</span>
+<span id="L105"><span class="lineNum">     105</span>              :     return ret;</span>
+<span id="L106"><span class="lineNum">     106</span>              :   }</span>
+<span id="L107"><span class="lineNum">     107</span>              : </span>
+<span id="L108"><span class="lineNum">     108</span>              :   // In kArray mode we look through cached blocks.</span>
+<span id="L109"><span class="lineNum">     109</span>              :   // We do not do this by default because most non-array allocations will not</span>
+<span id="L110"><span class="lineNum">     110</span>              :   // have the right size and will fail to find an appropriate cached block.</span>
+<span id="L111"><span class="lineNum">     111</span>              :   //</span>
+<span id="L112"><span class="lineNum">     112</span>              :   // TODO: Evaluate if we should use cached blocks for message types of</span>
+<span id="L113"><span class="lineNum">     113</span>              :   // the right size. We can statically know if the allocation size can benefit</span>
+<span id="L114"><span class="lineNum">     114</span>              :   // from it.</span>
+<span id="L115"><span class="lineNum">     115</span>              :   template &lt;AllocationClient alloc_client = AllocationClient::kDefault&gt;</span>
+<span id="L116"><span class="lineNum">     116</span>              :   void* AllocateAligned(size_t n) {</span>
+<span id="L117"><span class="lineNum">     117</span>              :     ABSL_DCHECK(internal::ArenaAlignDefault::IsAligned(n));</span>
+<span id="L118"><span class="lineNum">     118</span>              :     ABSL_DCHECK_GE(limit_, ptr());</span>
+<span id="L119"><span class="lineNum">     119</span>              : </span>
+<span id="L120"><span class="lineNum">     120</span>              :     if (alloc_client == AllocationClient::kArray) {</span>
+<span id="L121"><span class="lineNum">     121</span>              :       if (void* res = TryAllocateFromCachedBlock(n)) {</span>
+<span id="L122"><span class="lineNum">     122</span>              :         return res;</span>
+<span id="L123"><span class="lineNum">     123</span>              :       }</span>
+<span id="L124"><span class="lineNum">     124</span>              :     }</span>
+<span id="L125"><span class="lineNum">     125</span>              : </span>
+<span id="L126"><span class="lineNum">     126</span>              :     void* ptr;</span>
+<span id="L127"><span class="lineNum">     127</span>              :     if (ABSL_PREDICT_TRUE(MaybeAllocateAligned(n, &amp;ptr))) {</span>
+<span id="L128"><span class="lineNum">     128</span>              :       return ptr;</span>
+<span id="L129"><span class="lineNum">     129</span>              :     }</span>
+<span id="L130"><span class="lineNum">     130</span>              :     return AllocateAlignedFallback(n);</span>
+<span id="L131"><span class="lineNum">     131</span>              :   }</span>
+<span id="L132"><span class="lineNum">     132</span>              : </span>
+<span id="L133"><span class="lineNum">     133</span>              :  private:</span>
+<span id="L134"><span class="lineNum">     134</span>              :   static PROTOBUF_ALWAYS_INLINE constexpr size_t AlignUpTo(size_t n, size_t a) {</span>
+<span id="L135"><span class="lineNum">     135</span>              :     // We are wasting space by over allocating align - 8 bytes. Compared to a</span>
+<span id="L136"><span class="lineNum">     136</span>              :     // dedicated function that takes current alignment in consideration.  Such a</span>
+<span id="L137"><span class="lineNum">     137</span>              :     // scheme would only waste (align - 8)/2 bytes on average, but requires a</span>
+<span id="L138"><span class="lineNum">     138</span>              :     // dedicated function in the outline arena allocation functions. Possibly</span>
+<span id="L139"><span class="lineNum">     139</span>              :     // re-evaluate tradeoffs later.</span>
+<span id="L140"><span class="lineNum">     140</span>              :     return a &lt;= 8 ? ArenaAlignDefault::Ceil(n) : ArenaAlignAs(a).Padded(n);</span>
+<span id="L141"><span class="lineNum">     141</span>              :   }</span>
+<span id="L142"><span class="lineNum">     142</span>              : </span>
+<span id="L143"><span class="lineNum">     143</span>              :   static PROTOBUF_ALWAYS_INLINE void* AlignTo(void* p, size_t a) {</span>
+<span id="L144"><span class="lineNum">     144</span>              :     return (a &lt;= ArenaAlignDefault::align)</span>
+<span id="L145"><span class="lineNum">     145</span>              :                ? ArenaAlignDefault::CeilDefaultAligned(p)</span>
+<span id="L146"><span class="lineNum">     146</span>              :                : ArenaAlignAs(a).CeilDefaultAligned(p);</span>
+<span id="L147"><span class="lineNum">     147</span>              :   }</span>
+<span id="L148"><span class="lineNum">     148</span>              : </span>
+<span id="L149"><span class="lineNum">     149</span>              :   // See comments on `cached_blocks_` member for details.</span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaUNC">           0 :   void ReturnArrayMemory(void* p, size_t size) {</span></span>
+<span id="L151"><span class="lineNum">     151</span>              :     // We only need to check for 32-bit platforms.</span>
+<span id="L152"><span class="lineNum">     152</span>              :     // In 64-bit platforms the minimum allocation size from Repeated*Field will</span>
+<span id="L153"><span class="lineNum">     153</span>              :     // be 16 guaranteed.</span>
+<span id="L154"><span class="lineNum">     154</span>              :     if (sizeof(void*) &lt; 8) {</span>
+<span id="L155"><span class="lineNum">     155</span>              :       if (ABSL_PREDICT_FALSE(size &lt; 16)) return;</span>
+<span id="L156"><span class="lineNum">     156</span>              :     } else {</span>
+<span id="L157"><span class="lineNum">     157</span> <span class="tlaUNC">           0 :       PROTOBUF_ASSUME(size &gt;= 16);</span></span>
+<span id="L158"><span class="lineNum">     158</span>              :     }</span>
+<span id="L159"><span class="lineNum">     159</span>              : </span>
+<span id="L160"><span class="lineNum">     160</span>              :     // We round down to the next smaller block in case the memory doesn't match</span>
+<span id="L161"><span class="lineNum">     161</span>              :     // the pattern we are looking for. eg, someone might have called Reserve()</span>
+<span id="L162"><span class="lineNum">     162</span>              :     // on the repeated field.</span>
+<span id="L163"><span class="lineNum">     163</span> <span class="tlaUNC">           0 :     const size_t index = absl::bit_width(size) - 5;</span></span>
+<span id="L164"><span class="lineNum">     164</span>              : </span>
+<span id="L165"><span class="lineNum">     165</span> <span class="tlaUNC">           0 :     if (ABSL_PREDICT_FALSE(index &gt;= cached_block_length_)) {</span></span>
+<span id="L166"><span class="lineNum">     166</span>              :       // We can't put this object on the freelist so make this object the</span>
+<span id="L167"><span class="lineNum">     167</span>              :       // freelist. It is guaranteed it is larger than the one we have, and</span>
+<span id="L168"><span class="lineNum">     168</span>              :       // large enough to hold another allocation of `size`.</span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaUNC">           0 :       CachedBlock** new_list = static_cast&lt;CachedBlock**&gt;(p);</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaUNC">           0 :       size_t new_size = size / sizeof(CachedBlock*);</span></span>
+<span id="L171"><span class="lineNum">     171</span>              : </span>
+<span id="L172"><span class="lineNum">     172</span> <span class="tlaUNC">           0 :       std::copy(cached_blocks_, cached_blocks_ + cached_block_length_,</span></span>
+<span id="L173"><span class="lineNum">     173</span> <span class="tlaUNC">           0 :                 new_list);</span></span>
+<span id="L174"><span class="lineNum">     174</span>              : </span>
+<span id="L175"><span class="lineNum">     175</span>              :       // We need to unpoison this memory before filling it in case it has been</span>
+<span id="L176"><span class="lineNum">     176</span>              :       // poisoned by another sanitizer client.</span>
+<span id="L177"><span class="lineNum">     177</span> <span class="tlaUNC">           0 :       internal::UnpoisonMemoryRegion(</span></span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaUNC">           0 :           new_list + cached_block_length_,</span></span>
+<span id="L179"><span class="lineNum">     179</span> <span class="tlaUNC">           0 :           (new_size - cached_block_length_) * sizeof(CachedBlock*));</span></span>
+<span id="L180"><span class="lineNum">     180</span>              : </span>
+<span id="L181"><span class="lineNum">     181</span> <span class="tlaUNC">           0 :       std::fill(new_list + cached_block_length_, new_list + new_size, nullptr);</span></span>
+<span id="L182"><span class="lineNum">     182</span>              : </span>
+<span id="L183"><span class="lineNum">     183</span> <span class="tlaUNC">           0 :       cached_blocks_ = new_list;</span></span>
+<span id="L184"><span class="lineNum">     184</span>              :       // Make the size fit in uint8_t. This is the power of two, so we don't</span>
+<span id="L185"><span class="lineNum">     185</span>              :       // need anything larger.</span>
+<span id="L186"><span class="lineNum">     186</span> <span class="tlaUNC">           0 :       cached_block_length_ =</span></span>
+<span id="L187"><span class="lineNum">     187</span> <span class="tlaUNC">           0 :           static_cast&lt;uint8_t&gt;(std::min(size_t{64}, new_size));</span></span>
+<span id="L188"><span class="lineNum">     188</span>              : </span>
+<span id="L189"><span class="lineNum">     189</span>              :       return;</span>
+<span id="L190"><span class="lineNum">     190</span> <span class="tlaUNC">           0 :     }</span></span>
+<span id="L191"><span class="lineNum">     191</span>              : </span>
+<span id="L192"><span class="lineNum">     192</span> <span class="tlaUNC">           0 :     auto&amp; cached_head = cached_blocks_[index];</span></span>
+<span id="L193"><span class="lineNum">     193</span> <span class="tlaUNC">           0 :     auto* new_node = static_cast&lt;CachedBlock*&gt;(p);</span></span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaUNC">           0 :     new_node-&gt;next = cached_head;</span></span>
+<span id="L195"><span class="lineNum">     195</span> <span class="tlaUNC">           0 :     cached_head = new_node;</span></span>
+<span id="L196"><span class="lineNum">     196</span> <span class="tlaUNC">           0 :     internal::PoisonMemoryRegion(p, size);</span></span>
+<span id="L197"><span class="lineNum">     197</span> <span class="tlaUNC">           0 :   }</span></span>
+<span id="L198"><span class="lineNum">     198</span>              : </span>
+<span id="L199"><span class="lineNum">     199</span>              :  public:</span>
+<span id="L200"><span class="lineNum">     200</span>              :   // Allocate space if the current region provides enough space.</span>
+<span id="L201"><span class="lineNum">     201</span>              :   bool MaybeAllocateAligned(size_t n, void** out) {</span>
+<span id="L202"><span class="lineNum">     202</span>              :     ABSL_DCHECK(internal::ArenaAlignDefault::IsAligned(n));</span>
+<span id="L203"><span class="lineNum">     203</span>              :     ABSL_DCHECK_GE(limit_, ptr());</span>
+<span id="L204"><span class="lineNum">     204</span>              :     char* ret = ptr();</span>
+<span id="L205"><span class="lineNum">     205</span>              :     if (ABSL_PREDICT_FALSE(limit_ - ret &lt; static_cast&lt;ptrdiff_t&gt;(n))) {</span>
+<span id="L206"><span class="lineNum">     206</span>              :       return false;</span>
+<span id="L207"><span class="lineNum">     207</span>              :     }</span>
+<span id="L208"><span class="lineNum">     208</span>              :     internal::UnpoisonMemoryRegion(ret, n);</span>
+<span id="L209"><span class="lineNum">     209</span>              :     *out = ret;</span>
+<span id="L210"><span class="lineNum">     210</span>              :     char* next = ret + n;</span>
+<span id="L211"><span class="lineNum">     211</span>              :     set_ptr(next);</span>
+<span id="L212"><span class="lineNum">     212</span>              :     MaybePrefetchData(next);</span>
+<span id="L213"><span class="lineNum">     213</span>              :     return true;</span>
+<span id="L214"><span class="lineNum">     214</span>              :   }</span>
+<span id="L215"><span class="lineNum">     215</span>              : </span>
+<span id="L216"><span class="lineNum">     216</span>              :   // If there is enough space in the current block, allocate space for one</span>
+<span id="L217"><span class="lineNum">     217</span>              :   // std::string object and register for destruction. The object has not been</span>
+<span id="L218"><span class="lineNum">     218</span>              :   // constructed and the memory returned is uninitialized.</span>
+<span id="L219"><span class="lineNum">     219</span>              :   PROTOBUF_ALWAYS_INLINE void* MaybeAllocateStringWithCleanup() {</span>
+<span id="L220"><span class="lineNum">     220</span>              :     void* p;</span>
+<span id="L221"><span class="lineNum">     221</span>              :     return MaybeAllocateString(p) ? p : nullptr;</span>
+<span id="L222"><span class="lineNum">     222</span>              :   }</span>
+<span id="L223"><span class="lineNum">     223</span>              : </span>
+<span id="L224"><span class="lineNum">     224</span>              :   PROTOBUF_ALWAYS_INLINE</span>
+<span id="L225"><span class="lineNum">     225</span>              :   void* AllocateAlignedWithCleanup(size_t n, size_t align,</span>
+<span id="L226"><span class="lineNum">     226</span>              :                                    void (*destructor)(void*)) {</span>
+<span id="L227"><span class="lineNum">     227</span>              :     n = ArenaAlignDefault::Ceil(n);</span>
+<span id="L228"><span class="lineNum">     228</span>              :     char* ret = ArenaAlignAs(align).CeilDefaultAligned(ptr());</span>
+<span id="L229"><span class="lineNum">     229</span>              :     // See the comment in MaybeAllocateAligned re uintptr_t.</span>
+<span id="L230"><span class="lineNum">     230</span>              :     if (ABSL_PREDICT_FALSE(reinterpret_cast&lt;uintptr_t&gt;(ret) + n &gt;</span>
+<span id="L231"><span class="lineNum">     231</span>              :                            reinterpret_cast&lt;uintptr_t&gt;(limit_))) {</span>
+<span id="L232"><span class="lineNum">     232</span>              :       return AllocateAlignedWithCleanupFallback(n, align, destructor);</span>
+<span id="L233"><span class="lineNum">     233</span>              :     }</span>
+<span id="L234"><span class="lineNum">     234</span>              :     internal::UnpoisonMemoryRegion(ret, n);</span>
+<span id="L235"><span class="lineNum">     235</span>              :     char* next = ret + n;</span>
+<span id="L236"><span class="lineNum">     236</span>              :     set_ptr(next);</span>
+<span id="L237"><span class="lineNum">     237</span>              :     AddCleanup(ret, destructor);</span>
+<span id="L238"><span class="lineNum">     238</span>              :     ABSL_DCHECK_GE(limit_, ptr());</span>
+<span id="L239"><span class="lineNum">     239</span>              :     MaybePrefetchData(next);</span>
+<span id="L240"><span class="lineNum">     240</span>              :     return ret;</span>
+<span id="L241"><span class="lineNum">     241</span>              :   }</span>
+<span id="L242"><span class="lineNum">     242</span>              : </span>
+<span id="L243"><span class="lineNum">     243</span>              :   PROTOBUF_ALWAYS_INLINE</span>
+<span id="L244"><span class="lineNum">     244</span>              :   void AddCleanup(void* elem, void (*destructor)(void*)) {</span>
+<span id="L245"><span class="lineNum">     245</span>              :     cleanup_list_.Add(elem, destructor, *this);</span>
+<span id="L246"><span class="lineNum">     246</span>              :     MaybePrefetchCleanup();</span>
+<span id="L247"><span class="lineNum">     247</span>              :   }</span>
+<span id="L248"><span class="lineNum">     248</span>              : </span>
+<span id="L249"><span class="lineNum">     249</span>              :   ABSL_ATTRIBUTE_RETURNS_NONNULL void* AllocateFromStringBlock();</span>
+<span id="L250"><span class="lineNum">     250</span>              : </span>
+<span id="L251"><span class="lineNum">     251</span>              :   std::vector&lt;void*&gt; PeekCleanupListForTesting();</span>
+<span id="L252"><span class="lineNum">     252</span>              : </span>
+<span id="L253"><span class="lineNum">     253</span>              :  private:</span>
+<span id="L254"><span class="lineNum">     254</span>              :   friend class ThreadSafeArena;</span>
+<span id="L255"><span class="lineNum">     255</span>              :   friend class cleanup::ChunkList;</span>
+<span id="L256"><span class="lineNum">     256</span>              : </span>
+<span id="L257"><span class="lineNum">     257</span>              :   // See comments for cached_blocks_.</span>
+<span id="L258"><span class="lineNum">     258</span>              :   struct CachedBlock {</span>
+<span id="L259"><span class="lineNum">     259</span>              :     // Simple linked list.</span>
+<span id="L260"><span class="lineNum">     260</span>              :     CachedBlock* next;</span>
+<span id="L261"><span class="lineNum">     261</span>              :   };</span>
+<span id="L262"><span class="lineNum">     262</span>              : </span>
+<span id="L263"><span class="lineNum">     263</span>              :   static constexpr ptrdiff_t kPrefetchDataDegree = ABSL_CACHELINE_SIZE * 16;</span>
+<span id="L264"><span class="lineNum">     264</span>              :   static constexpr ptrdiff_t kPrefetchCleanupDegree = ABSL_CACHELINE_SIZE * 6;</span>
+<span id="L265"><span class="lineNum">     265</span>              : </span>
+<span id="L266"><span class="lineNum">     266</span>              :   // Constructor is private as only New() should be used.</span>
+<span id="L267"><span class="lineNum">     267</span>              :   inline SerialArena(ArenaBlock* b, ThreadSafeArena&amp; parent);</span>
+<span id="L268"><span class="lineNum">     268</span>              : </span>
+<span id="L269"><span class="lineNum">     269</span>              :   // Constructors to handle the first SerialArena.</span>
+<span id="L270"><span class="lineNum">     270</span>              :   inline explicit SerialArena(ThreadSafeArena&amp; parent);</span>
+<span id="L271"><span class="lineNum">     271</span>              :   inline SerialArena(FirstSerialArena, ArenaBlock* b, ThreadSafeArena&amp; parent);</span>
+<span id="L272"><span class="lineNum">     272</span>              : </span>
+<span id="L273"><span class="lineNum">     273</span>              :   bool MaybeAllocateString(void*&amp; p);</span>
+<span id="L274"><span class="lineNum">     274</span>              :   ABSL_ATTRIBUTE_RETURNS_NONNULL void* AllocateFromStringBlockFallback();</span>
+<span id="L275"><span class="lineNum">     275</span>              : </span>
+<span id="L276"><span class="lineNum">     276</span>              :   // Prefetch the next prefetch_degree bytes after `prefetch_ptr` and</span>
+<span id="L277"><span class="lineNum">     277</span>              :   // up to `limit`, if `next` is within prefetch_degree bytes of `prefetch_ptr`.</span>
+<span id="L278"><span class="lineNum">     278</span>              :   PROTOBUF_ALWAYS_INLINE</span>
+<span id="L279"><span class="lineNum">     279</span>              :   static const char* MaybePrefetchImpl(const ptrdiff_t prefetch_degree,</span>
+<span id="L280"><span class="lineNum">     280</span>              :                                        const char* next, const char* limit,</span>
+<span id="L281"><span class="lineNum">     281</span>              :                                        const char* prefetch_ptr) {</span>
+<span id="L282"><span class="lineNum">     282</span>              :     if (ABSL_PREDICT_TRUE(prefetch_ptr - next &gt; prefetch_degree))</span>
+<span id="L283"><span class="lineNum">     283</span>              :       return prefetch_ptr;</span>
+<span id="L284"><span class="lineNum">     284</span>              :     if (ABSL_PREDICT_TRUE(prefetch_ptr &lt; limit)) {</span>
+<span id="L285"><span class="lineNum">     285</span>              :       prefetch_ptr = std::max(next, prefetch_ptr);</span>
+<span id="L286"><span class="lineNum">     286</span>              :       ABSL_DCHECK(prefetch_ptr != nullptr);</span>
+<span id="L287"><span class="lineNum">     287</span>              :       const char* end = std::min(limit, prefetch_ptr + prefetch_degree);</span>
+<span id="L288"><span class="lineNum">     288</span>              :       for (; prefetch_ptr &lt; end; prefetch_ptr += ABSL_CACHELINE_SIZE) {</span>
+<span id="L289"><span class="lineNum">     289</span>              :         absl::PrefetchToLocalCacheForWrite(prefetch_ptr);</span>
+<span id="L290"><span class="lineNum">     290</span>              :       }</span>
+<span id="L291"><span class="lineNum">     291</span>              :     }</span>
+<span id="L292"><span class="lineNum">     292</span>              :     return prefetch_ptr;</span>
+<span id="L293"><span class="lineNum">     293</span>              :   }</span>
+<span id="L294"><span class="lineNum">     294</span>              :   PROTOBUF_ALWAYS_INLINE</span>
+<span id="L295"><span class="lineNum">     295</span>              :   void MaybePrefetchData(const char* next) {</span>
+<span id="L296"><span class="lineNum">     296</span>              :     ABSL_DCHECK(static_cast&lt;const void*&gt;(prefetch_ptr_) == ptr() ||</span>
+<span id="L297"><span class="lineNum">     297</span>              :                 static_cast&lt;const void*&gt;(prefetch_ptr_) &gt;= head());</span>
+<span id="L298"><span class="lineNum">     298</span>              :     prefetch_ptr_ =</span>
+<span id="L299"><span class="lineNum">     299</span>              :         MaybePrefetchImpl(kPrefetchDataDegree, next, limit_, prefetch_ptr_);</span>
+<span id="L300"><span class="lineNum">     300</span>              :   }</span>
+<span id="L301"><span class="lineNum">     301</span>              :   PROTOBUF_ALWAYS_INLINE</span>
+<span id="L302"><span class="lineNum">     302</span>              :   void MaybePrefetchCleanup() {</span>
+<span id="L303"><span class="lineNum">     303</span>              :     ABSL_DCHECK(static_cast&lt;const void*&gt;(cleanup_list_.prefetch_ptr_) ==</span>
+<span id="L304"><span class="lineNum">     304</span>              :                     nullptr ||</span>
+<span id="L305"><span class="lineNum">     305</span>              :                 static_cast&lt;const void*&gt;(cleanup_list_.prefetch_ptr_) &gt;=</span>
+<span id="L306"><span class="lineNum">     306</span>              :                     cleanup_list_.head_);</span>
+<span id="L307"><span class="lineNum">     307</span>              :     cleanup_list_.prefetch_ptr_ = MaybePrefetchImpl(</span>
+<span id="L308"><span class="lineNum">     308</span>              :         kPrefetchCleanupDegree, reinterpret_cast&lt;char*&gt;(cleanup_list_.next_),</span>
+<span id="L309"><span class="lineNum">     309</span>              :         reinterpret_cast&lt;char*&gt;(cleanup_list_.limit_),</span>
+<span id="L310"><span class="lineNum">     310</span>              :         cleanup_list_.prefetch_ptr_);</span>
+<span id="L311"><span class="lineNum">     311</span>              :   }</span>
+<span id="L312"><span class="lineNum">     312</span>              : </span>
+<span id="L313"><span class="lineNum">     313</span>              :   // Creates a new SerialArena inside mem using the remaining memory as for</span>
+<span id="L314"><span class="lineNum">     314</span>              :   // future allocations.</span>
+<span id="L315"><span class="lineNum">     315</span>              :   // The `parent` arena must outlive the serial arena, which is guaranteed</span>
+<span id="L316"><span class="lineNum">     316</span>              :   // because the parent manages the lifetime of the serial arenas.</span>
+<span id="L317"><span class="lineNum">     317</span>              :   static SerialArena* New(SizedPtr mem, ThreadSafeArena&amp; parent);</span>
+<span id="L318"><span class="lineNum">     318</span>              :   // Free SerialArena returning the memory passed in to New.</span>
+<span id="L319"><span class="lineNum">     319</span>              :   template &lt;typename Deallocator&gt;</span>
+<span id="L320"><span class="lineNum">     320</span>              :   SizedPtr Free(Deallocator deallocator);</span>
+<span id="L321"><span class="lineNum">     321</span>              : </span>
+<span id="L322"><span class="lineNum">     322</span>              :   size_t FreeStringBlocks() {</span>
+<span id="L323"><span class="lineNum">     323</span>              :     // On the active block delete all strings skipping the unused instances.</span>
+<span id="L324"><span class="lineNum">     324</span>              :     size_t unused_bytes = string_block_unused_.load(std::memory_order_relaxed);</span>
+<span id="L325"><span class="lineNum">     325</span>              :     if (StringBlock* sb = string_block_.load(std::memory_order_relaxed)) {</span>
+<span id="L326"><span class="lineNum">     326</span>              :       return FreeStringBlocks(sb, unused_bytes);</span>
+<span id="L327"><span class="lineNum">     327</span>              :     }</span>
+<span id="L328"><span class="lineNum">     328</span>              :     return 0;</span>
+<span id="L329"><span class="lineNum">     329</span>              :   }</span>
+<span id="L330"><span class="lineNum">     330</span>              :   static size_t FreeStringBlocks(StringBlock* string_block, size_t unused);</span>
+<span id="L331"><span class="lineNum">     331</span>              : </span>
+<span id="L332"><span class="lineNum">     332</span>              :   // Adds 'used` to space_used_ in relaxed atomic order.</span>
+<span id="L333"><span class="lineNum">     333</span>              :   void AddSpaceUsed(size_t space_used) {</span>
+<span id="L334"><span class="lineNum">     334</span>              :     space_used_.store(space_used_.load(std::memory_order_relaxed) + space_used,</span>
+<span id="L335"><span class="lineNum">     335</span>              :                       std::memory_order_relaxed);</span>
+<span id="L336"><span class="lineNum">     336</span>              :   }</span>
+<span id="L337"><span class="lineNum">     337</span>              : </span>
+<span id="L338"><span class="lineNum">     338</span>              :   // Adds 'allocated` to space_allocated_ in relaxed atomic order.</span>
+<span id="L339"><span class="lineNum">     339</span>              :   void AddSpaceAllocated(size_t space_allocated) {</span>
+<span id="L340"><span class="lineNum">     340</span>              :     space_allocated_.store(</span>
+<span id="L341"><span class="lineNum">     341</span>              :         space_allocated_.load(std::memory_order_relaxed) + space_allocated,</span>
+<span id="L342"><span class="lineNum">     342</span>              :         std::memory_order_relaxed);</span>
+<span id="L343"><span class="lineNum">     343</span>              :   }</span>
+<span id="L344"><span class="lineNum">     344</span>              : </span>
+<span id="L345"><span class="lineNum">     345</span>              :   // Helper getters/setters to handle relaxed operations on atomic variables.</span>
+<span id="L346"><span class="lineNum">     346</span>              :   ArenaBlock* head() { return head_.load(std::memory_order_relaxed); }</span>
+<span id="L347"><span class="lineNum">     347</span>              :   const ArenaBlock* head() const {</span>
+<span id="L348"><span class="lineNum">     348</span>              :     return head_.load(std::memory_order_relaxed);</span>
+<span id="L349"><span class="lineNum">     349</span>              :   }</span>
+<span id="L350"><span class="lineNum">     350</span>              : </span>
+<span id="L351"><span class="lineNum">     351</span>              :   char* ptr() { return ptr_.load(std::memory_order_relaxed); }</span>
+<span id="L352"><span class="lineNum">     352</span>              :   const char* ptr() const { return ptr_.load(std::memory_order_relaxed); }</span>
+<span id="L353"><span class="lineNum">     353</span>              :   void set_ptr(char* ptr) { return ptr_.store(ptr, std::memory_order_relaxed); }</span>
+<span id="L354"><span class="lineNum">     354</span>              :   PROTOBUF_ALWAYS_INLINE void set_range(char* ptr, char* limit) {</span>
+<span id="L355"><span class="lineNum">     355</span>              :     set_ptr(ptr);</span>
+<span id="L356"><span class="lineNum">     356</span>              :     prefetch_ptr_ = ptr;</span>
+<span id="L357"><span class="lineNum">     357</span>              :     limit_ = limit;</span>
+<span id="L358"><span class="lineNum">     358</span>              :   }</span>
+<span id="L359"><span class="lineNum">     359</span>              : </span>
+<span id="L360"><span class="lineNum">     360</span>              :   void* AllocateAlignedFallback(size_t n);</span>
+<span id="L361"><span class="lineNum">     361</span>              :   void* AllocateAlignedWithCleanupFallback(size_t n, size_t align,</span>
+<span id="L362"><span class="lineNum">     362</span>              :                                            void (*destructor)(void*));</span>
+<span id="L363"><span class="lineNum">     363</span>              :   void AddCleanupFallback(void* elem, void (*destructor)(void*));</span>
+<span id="L364"><span class="lineNum">     364</span>              :   inline void AllocateNewBlock(size_t n);</span>
+<span id="L365"><span class="lineNum">     365</span>              :   inline void Init(ArenaBlock* b, size_t offset);</span>
+<span id="L366"><span class="lineNum">     366</span>              : </span>
+<span id="L367"><span class="lineNum">     367</span>              :   // Members are declared here to track sizeof(SerialArena) and hotness</span>
+<span id="L368"><span class="lineNum">     368</span>              :   // centrally. They are (roughly) laid out in descending order of hotness.</span>
+<span id="L369"><span class="lineNum">     369</span>              : </span>
+<span id="L370"><span class="lineNum">     370</span>              :   // We initialize ptr/limit with an arbitrary valid pointer.</span>
+<span id="L371"><span class="lineNum">     371</span>              :   // This allows Allocate to always return non-null even when asking for zero</span>
+<span id="L372"><span class="lineNum">     372</span>              :   // bytes.</span>
+<span id="L373"><span class="lineNum">     373</span>              :   static char* ArbitraryInternalPointerForInit() {</span>
+<span id="L374"><span class="lineNum">     374</span>              :     // Use rodata to detect potential bugs. No one should be writing here.</span>
+<span id="L375"><span class="lineNum">     375</span>              :     alignas(8) static constexpr char dummy{};</span>
+<span id="L376"><span class="lineNum">     376</span>              :     return const_cast&lt;char*&gt;(&amp;dummy);</span>
+<span id="L377"><span class="lineNum">     377</span>              :   }</span>
+<span id="L378"><span class="lineNum">     378</span>              : </span>
+<span id="L379"><span class="lineNum">     379</span>              : </span>
+<span id="L380"><span class="lineNum">     380</span>              :   // Repeated*Field and Arena play together to reduce memory consumption by</span>
+<span id="L381"><span class="lineNum">     381</span>              :   // reusing blocks. Currently, natural growth of the repeated field types makes</span>
+<span id="L382"><span class="lineNum">     382</span>              :   // them allocate blocks of size `8 + 2^N, N&gt;=3`.</span>
+<span id="L383"><span class="lineNum">     383</span>              :   // When the repeated field grows returns the previous block and we put it in</span>
+<span id="L384"><span class="lineNum">     384</span>              :   // this free list.</span>
+<span id="L385"><span class="lineNum">     385</span>              :   // `cached_blocks_[i]` points to the free list for blocks of size `8+2^(i+3)`.</span>
+<span id="L386"><span class="lineNum">     386</span>              :   // The array of freelists is grown when needed in `ReturnArrayMemory()`.</span>
+<span id="L387"><span class="lineNum">     387</span>              :   uint8_t cached_block_length_ = 0;</span>
+<span id="L388"><span class="lineNum">     388</span>              : </span>
+<span id="L389"><span class="lineNum">     389</span>              :   // Current prefetch positions. Data from `ptr_` up to but not including</span>
+<span id="L390"><span class="lineNum">     390</span>              :   // `prefetch_ptr_` is software prefetched.</span>
+<span id="L391"><span class="lineNum">     391</span>              :   const char* prefetch_ptr_ = ArbitraryInternalPointerForInit();</span>
+<span id="L392"><span class="lineNum">     392</span>              : </span>
+<span id="L393"><span class="lineNum">     393</span>              :   std::atomic&lt;ArenaBlock*&gt; head_{nullptr};  // Head of linked list of blocks.</span>
+<span id="L394"><span class="lineNum">     394</span>              : </span>
+<span id="L395"><span class="lineNum">     395</span>              :   // Next pointer to allocate from.  Always 8-byte aligned.  Points inside</span>
+<span id="L396"><span class="lineNum">     396</span>              :   // head_ (and head_-&gt;pos will always be non-canonical).  We keep these</span>
+<span id="L397"><span class="lineNum">     397</span>              :   // here to reduce indirection.</span>
+<span id="L398"><span class="lineNum">     398</span>              :   std::atomic&lt;char*&gt; ptr_{ArbitraryInternalPointerForInit()};</span>
+<span id="L399"><span class="lineNum">     399</span>              : </span>
+<span id="L400"><span class="lineNum">     400</span>              :   // Limiting address up to which memory can be allocated from the head block.</span>
+<span id="L401"><span class="lineNum">     401</span>              :   char* limit_ = ArbitraryInternalPointerForInit();</span>
+<span id="L402"><span class="lineNum">     402</span>              : </span>
+<span id="L403"><span class="lineNum">     403</span>              :   std::atomic&lt;size_t&gt; space_allocated_{0};</span>
+<span id="L404"><span class="lineNum">     404</span>              : </span>
+<span id="L405"><span class="lineNum">     405</span>              :   CachedBlock** cached_blocks_ = nullptr;</span>
+<span id="L406"><span class="lineNum">     406</span>              : </span>
+<span id="L407"><span class="lineNum">     407</span>              :   // The active string block.</span>
+<span id="L408"><span class="lineNum">     408</span>              :   std::atomic&lt;StringBlock*&gt; string_block_{nullptr};</span>
+<span id="L409"><span class="lineNum">     409</span>              : </span>
+<span id="L410"><span class="lineNum">     410</span>              :   ThreadSafeArena&amp; parent_;</span>
+<span id="L411"><span class="lineNum">     411</span>              :   // The number of unused bytes in string_block_.</span>
+<span id="L412"><span class="lineNum">     412</span>              :   // We allocate from `effective_size()` down to 0 inside `string_block_`.</span>
+<span id="L413"><span class="lineNum">     413</span>              :   // `unused  == 0` means that `string_block_` is exhausted. (or null).</span>
+<span id="L414"><span class="lineNum">     414</span>              :   std::atomic&lt;size_t&gt; string_block_unused_{0};</span>
+<span id="L415"><span class="lineNum">     415</span>              : </span>
+<span id="L416"><span class="lineNum">     416</span>              :   // Chunked linked list for managing cleanup for arena elements.</span>
+<span id="L417"><span class="lineNum">     417</span>              :   cleanup::ChunkList cleanup_list_;</span>
+<span id="L418"><span class="lineNum">     418</span>              : </span>
+<span id="L419"><span class="lineNum">     419</span>              :   std::atomic&lt;size_t&gt; space_used_{0};  // Necessary for metrics.</span>
+<span id="L420"><span class="lineNum">     420</span>              : };</span>
+<span id="L421"><span class="lineNum">     421</span>              : </span>
+<span id="L422"><span class="lineNum">     422</span>              : PROTOBUF_ALWAYS_INLINE bool SerialArena::MaybeAllocateString(void*&amp; p) {</span>
+<span id="L423"><span class="lineNum">     423</span>              :   // Check how many unused instances are in the current block.</span>
+<span id="L424"><span class="lineNum">     424</span>              :   size_t unused_bytes = string_block_unused_.load(std::memory_order_relaxed);</span>
+<span id="L425"><span class="lineNum">     425</span>              :   if (ABSL_PREDICT_TRUE(unused_bytes != 0)) {</span>
+<span id="L426"><span class="lineNum">     426</span>              :     unused_bytes -= sizeof(std::string);</span>
+<span id="L427"><span class="lineNum">     427</span>              :     string_block_unused_.store(unused_bytes, std::memory_order_relaxed);</span>
+<span id="L428"><span class="lineNum">     428</span>              :     p = string_block_.load(std::memory_order_relaxed)-&gt;AtOffset(unused_bytes);</span>
+<span id="L429"><span class="lineNum">     429</span>              :     return true;</span>
+<span id="L430"><span class="lineNum">     430</span>              :   }</span>
+<span id="L431"><span class="lineNum">     431</span>              :   return false;</span>
+<span id="L432"><span class="lineNum">     432</span>              : }</span>
+<span id="L433"><span class="lineNum">     433</span>              : </span>
+<span id="L434"><span class="lineNum">     434</span>              : ABSL_ATTRIBUTE_RETURNS_NONNULL PROTOBUF_ALWAYS_INLINE void*</span>
+<span id="L435"><span class="lineNum">     435</span>              : SerialArena::AllocateFromStringBlock() {</span>
+<span id="L436"><span class="lineNum">     436</span>              :   void* p;</span>
+<span id="L437"><span class="lineNum">     437</span>              :   if (ABSL_PREDICT_TRUE(MaybeAllocateString(p))) return p;</span>
+<span id="L438"><span class="lineNum">     438</span>              :   return AllocateFromStringBlockFallback();</span>
+<span id="L439"><span class="lineNum">     439</span>              : }</span>
+<span id="L440"><span class="lineNum">     440</span>              : </span>
+<span id="L441"><span class="lineNum">     441</span>              : }  // namespace internal</span>
+<span id="L442"><span class="lineNum">     442</span>              : }  // namespace protobuf</span>
+<span id="L443"><span class="lineNum">     443</span>              : }  // namespace google</span>
+<span id="L444"><span class="lineNum">     444</span>              : </span>
+<span id="L445"><span class="lineNum">     445</span>              : #include &quot;google/protobuf/port_undef.inc&quot;</span>
+<span id="L446"><span class="lineNum">     446</span>              : </span>
+<span id="L447"><span class="lineNum">     447</span>              : #endif  // GOOGLE_PROTOBUF_SERIAL_ARENA_H__</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.3.2-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

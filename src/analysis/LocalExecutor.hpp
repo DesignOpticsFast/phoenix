@@ -2,7 +2,8 @@
 
 #include "IAnalysisExecutor.hpp"
 
-// Local analysis executor - wraps XYSineDemo for local-only compute
+// Local analysis executor - uses XYSineDemo for local-only compute
+// Provides local XY Sine computation without requiring Bedrock server
 // WP1: Simple wrapper around existing local compute path
 // Does NOT modify XYSineDemo or existing worker logic
 class LocalExecutor : public IAnalysisExecutor {

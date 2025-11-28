@@ -15,8 +15,5 @@ git -C "$ROOT" rev-parse --abbrev-ref HEAD
 git -C "$ROOT" log -1 --pretty='%h %s' || true
 echo "CI policy: Required check = gate; CodeQL runs on main only"
 
-if is_dev01; then
-  echo "On dev-01 (detected via ${_DEV01_SRC:-unknown}) — skipping enforced build."
-else
-  echo "Not on dev-01 — standard refresh only."
-fi
+# dev-01 removed - all CI now runs on GitHub Actions
+echo "CI runs on GitHub Actions (dev-01 removed)"

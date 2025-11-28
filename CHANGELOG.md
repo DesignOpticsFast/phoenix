@@ -6,19 +6,105 @@ This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ---
 
-## [0.0.4] – 2025-01-25
-### Phoenix (Frontend)
+## [0.0.4] – 2025-01-26
+
+**Sprint 4.5 Fixup** — Envelope Protocol & IPC Hardening
+
+This release represents a foundational overhaul of the Phoenix ↔ Bedrock IPC layer, establishing a stable, well-tested, and well-documented foundation for future development.
+
+### Added
+
+#### Transport & Protocol
 - **Envelope-Based Palantir Protocol**: Migrated to envelope-based wire format for all IPC communication. All messages now use `MessageEnvelope` protobuf with version, type, payload, and metadata fields. Wire format: `[4-byte length][serialized MessageEnvelope]`. See `ADR-0002-Envelope-Based-Palantir-Framing.md` for details.
+- **Envelope Helpers**: Added reusable `makeEnvelope()` and `parseEnvelope()` helpers in both Phoenix and Bedrock for creating and parsing envelope messages. Helpers include version validation, type checking, and error reporting.
+- **XY Sine RPC Client**: Implemented envelope-based XY Sine RPC client in Phoenix, enabling remote computation of XY sine wave analysis via Bedrock.
+
+#### Error Handling
+- **Centralized Error Mapping**: Added `mapErrorResponse()` function in Phoenix to provide consistent, user-friendly error messages from Bedrock's standardized error codes.
+- **Standardized Error Codes**: Normalized error semantics across Phoenix and Bedrock with consistent error codes: `INTERNAL_ERROR`, `MESSAGE_TOO_LARGE`, `INVALID_MESSAGE_FORMAT`, `PROTOBUF_PARSE_ERROR`, `UNKNOWN_MESSAGE_TYPE`, `INVALID_PARAMETER_VALUE`.
+
+#### Testing & CI
+- **Envelope Helper Tests**: Comprehensive unit tests for envelope encoding/decoding, version validation, metadata round-trip, and malformed data handling in both Phoenix and Bedrock.
+- **Error Mapping Tests**: Unit tests for error response encoding/decoding and client-side error mapping.
+- **Integration Test Suite**: Complete integration test coverage including:
+  - Capabilities RPC end-to-end
+  - XY Sine RPC end-to-end with mathematical correctness validation
+  - Error cases (unknown type, oversize messages, malformed payload, invalid version, invalid parameters)
+  - Edge cases (multiple concurrent clients, rapid connect/disconnect, large/minimal valid requests, mixed-mode sequences)
+- **CI Integration**: GitHub Actions workflows now run unit and integration tests on Linux and macOS for both Phoenix and Bedrock.
+- **Coverage Reporting**: Code coverage measurement integrated into Linux CI using gcov/lcov, generating HTML reports as artifacts. Focus on Palantir-related code with ~80% coverage target.
+
+#### Documentation
+- **VERSIONS.md**: Created single source of truth for toolchain versions (C++ standard, Qt, CMake, Protobuf) in both Phoenix and Bedrock.
+- **Documentation Harmonization**: Comprehensive documentation updates across Phoenix, Bedrock, and Palantir:
+  - Removed all stale dev-01 references
+  - Updated protocol descriptions to envelope-based
+  - Consolidated duplicate documentation
+  - Created comprehensive architecture, build, testing, and deployment guides
+- **Threading Documentation**: Complete threading model documentation for Bedrock, covering PalantirServer, OpenMP/TBB usage, and concurrency guidelines.
+
+### Changed
+
+#### Transport & IPC
+- **IPC Transport Refactor**: Complete migration from legacy `[length][type][payload]` format to envelope-only framing. All RPCs now use envelope-based transport with proper versioning and extensibility.
+- **Message Size Limits**: Implemented 10 MB message size limit enforced on both client and server, with clear error messages for oversize messages.
+- **Input Validation**: Added comprehensive input validation at RPC boundaries in Bedrock, ensuring invalid parameters fail early with clear error codes.
+
+#### Concurrency & Validation
 - **IPC Hardening**: Eliminated deadlocks in transport layer by refactoring lock scope. Narrowed mutex protection to buffer manipulation only, with dispatch and I/O operations outside critical sections. Transport layer now safe under concurrency.
-- **Envelope Helpers**: Added reusable `makeEnvelope()` and `parseEnvelope()` helpers for creating and parsing envelope messages. Helpers include version validation, type checking, and error reporting.
-- **Transport Layer Rewrite**: Removed legacy `[length][type][payload]` format. All RPCs now use envelope-based transport with proper versioning and extensibility.
+- **Error Semantics**: Normalized error response generation and mapping across Phoenix and Bedrock for consistent, user-meaningful error handling.
+
+#### Documentation
+- **Documentation Overhaul**: Complete documentation refresh across Phoenix, Bedrock, and Palantir:
+  - Phoenix: Removed dev-01 workflow, updated to Crucible + CI model, protocol descriptions updated
+  - Palantir: Clear separation of current (envelope-based) vs future (Arrow Flight, gRPC) transports
+  - Bedrock: Comprehensive architecture, build, testing, deployment, and repository structure documentation
+- **Toolchain Normalization**: All toolchain version references now point to VERSIONS.md instead of hard-coding versions.
+
+#### Toolchain
+- **Qt Baseline Verification**: Qt 6.10.1 verified and documented as baseline for Phoenix development and CI.
+
+### Fixed
+
+#### Protocol & Documentation
+- **Legacy Protocol Descriptions**: Replaced all legacy "PLTR magic" protocol descriptions with accurate envelope-based protocol documentation.
+- **Stale Documentation**: Fixed multiple stale documentation issues:
+  - Removed dev-01 workflow references
+  - Removed demo-mode references (clarified as local compute)
+  - Updated Qt version references to use VERSIONS.md
+  - Sanitized personal paths in documentation
+- **Transport Description Consistency**: Ensured Phoenix, Bedrock, and Palantir docs consistently describe current (envelope-based) vs future (Arrow Flight, gRPC) transports.
+
+#### Error Handling
+- **Error Semantics Consistency**: Fixed inconsistent error handling between Phoenix and Bedrock. Error responses now use standardized codes and messages consistently.
+
+### Removed
+
+#### Legacy Code
+- **Legacy Protocol Format**: Removed all legacy `[length][type][payload]` header-based protocol code. Bedrock is now envelope-only.
+- **Old dev-01 Content**: Removed all dev-01 workflow documentation and references from active docs.
+- **Demo-Mode References**: Removed misleading "demo mode" references from documentation. Clarified that `XYSineDemo` is legitimate local compute, not a demo mode.
+
+---
 
 ### Bedrock (Backend)
+
+#### Added
 - **Envelope-Based Palantir Transport**: Server-side migration to envelope-based protocol matching Phoenix client. All message handling now uses `MessageEnvelope` with proper validation.
+- **Integration Test Harness**: Comprehensive integration test framework with in-process server fixture and minimal test client. Validates end-to-end envelope transport for RPCs.
+- **Input Validation**: RPC boundary validation for all request types, ensuring invalid inputs fail early with clear error codes.
+- **Threading Documentation**: Complete threading model documentation covering PalantirServer, OpenMP/TBB usage patterns, and concurrency guidelines.
+
+#### Changed
 - **Deadlock Elimination**: Fixed deadlock in `parseIncomingData()` by refactoring to `extractMessage()` helper (no locking) and narrowing lock scope. Removed mutex from `sendMessage()` to prevent nested locking.
-- **Integration Test Harness**: Added comprehensive integration test framework with in-process server fixture and minimal test client. Validates end-to-end envelope transport for RPCs.
-- **Capabilities RPC Integration Test**: End-to-end test validating Capabilities request/response cycle using envelope transport.
-- **XY Sine RPC Integration Test**: End-to-end test validating XY Sine computation with mathematical correctness checks. Validates envelope transport for numeric RPCs with repeated double fields.
+- **Error Response Standardization**: Centralized error response generation via `sendErrorResponse()` helper with normalized error codes.
+
+#### Fixed
+- **C++ Standard Consistency**: Fixed inconsistency where `bedrock_core` was explicitly set to C++17, overriding the top-level C++20 setting. All Bedrock code now consistently builds with C++20.
+
+---
+
+**For detailed implementation notes, see `bedrock/docs/sprint4.5/` directory.**
 
 ---
 

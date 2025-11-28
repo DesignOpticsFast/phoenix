@@ -5,6 +5,8 @@
 #ifdef PHX_WITH_TRANSPORT_DEPS
 #include "palantir/capabilities.pb.h"
 #include "palantir/envelope.pb.h"
+#include "palantir/xysine.pb.h"
+#include "palantir/error.pb.h"
 #include "EnvelopeHelpers.hpp"
 #endif
 
@@ -120,6 +122,17 @@ std::optional<palantir::CapabilitiesResponse> LocalSocketChannel::getCapabilitie
         return std::nullopt;
     }
     
+    // Check size limit before sending (fail fast client-side)
+    // MAX_MESSAGE_SIZE = 10MB - matches Bedrock server limit
+    if (serialized.size() > MAX_MESSAGE_SIZE) {
+        if (outError) {
+            *outError = QString("Message too large: envelope size %1 exceeds limit %2 MB")
+                       .arg(serialized.size())
+                       .arg(MAX_MESSAGE_SIZE / (1024 * 1024));
+        }
+        return std::nullopt;
+    }
+    
     // Create length-prefixed frame (4-byte little-endian length + serialized envelope)
     uint32_t length = static_cast<uint32_t>(serialized.size());
     QByteArray data;
@@ -200,6 +213,22 @@ std::optional<palantir::CapabilitiesResponse> LocalSocketChannel::getCapabilitie
         return std::nullopt;
     }
     
+    // Check for error response
+    if (responseEnvelope.type() == palantir::MessageType::ERROR_RESPONSE) {
+        palantir::ErrorResponse errorResponse;
+        const std::string& payload = responseEnvelope.payload();
+        if (errorResponse.ParseFromArray(payload.data(), static_cast<int>(payload.size()))) {
+            if (outError) {
+                *outError = mapErrorResponse(errorResponse);
+            }
+        } else {
+            if (outError) {
+                *outError = QString("Received ERROR_RESPONSE but failed to parse ErrorResponse");
+            }
+        }
+        return std::nullopt;
+    }
+    
     if (responseEnvelope.type() != palantir::MessageType::CAPABILITIES_RESPONSE) {
         if (outError) {
             *outError = QString("Unexpected message type: %1").arg(static_cast<int>(responseEnvelope.type()));
@@ -218,6 +247,238 @@ std::optional<palantir::CapabilitiesResponse> LocalSocketChannel::getCapabilitie
     }
     
     return response;
+}
+
+std::optional<palantir::XYSineResponse> LocalSocketChannel::sendXYSineRequest(
+    const palantir::XYSineRequest& request, QString* outError)
+{
+    // Ensure connected
+    if (!isConnected() && !connect()) {
+        if (outError) {
+            *outError = QString("Failed to connect to Bedrock server");
+        }
+        return std::nullopt;
+    }
+    
+    // Create envelope from XYSineRequest
+    QString envelopeError;
+    auto envelope = phoenix::transport::makeEnvelope(
+        palantir::MessageType::XY_SINE_REQUEST,
+        request,
+        {},
+        &envelopeError
+    );
+    
+    if (!envelope.has_value()) {
+        if (outError) {
+            *outError = QString("Failed to create envelope: %1").arg(envelopeError);
+        }
+        return std::nullopt;
+    }
+    
+    // Serialize envelope
+    std::string serialized;
+    if (!envelope->SerializeToString(&serialized)) {
+        if (outError) {
+            *outError = QString("Failed to serialize MessageEnvelope");
+        }
+        return std::nullopt;
+    }
+    
+    // Check size limit before sending (fail fast client-side)
+    // MAX_MESSAGE_SIZE = 10MB - matches Bedrock server limit
+    if (serialized.size() > MAX_MESSAGE_SIZE) {
+        if (outError) {
+            *outError = QString("Message too large: envelope size %1 exceeds limit %2 MB")
+                       .arg(serialized.size())
+                       .arg(MAX_MESSAGE_SIZE / (1024 * 1024));
+        }
+        return std::nullopt;
+    }
+    
+    // Create length-prefixed frame (4-byte little-endian length + serialized envelope)
+    uint32_t length = static_cast<uint32_t>(serialized.size());
+    QByteArray data;
+    data.append(reinterpret_cast<const char*>(&length), 4);
+    data.append(serialized.data(), static_cast<int>(serialized.size()));
+    
+    // Send request
+    qint64 written = m_socket->write(data);
+    if (written != data.size()) {
+        if (outError) {
+            *outError = QString("Failed to send XYSineRequest");
+        }
+        return std::nullopt;
+    }
+    
+    // Wait for data to be written
+    if (!m_socket->waitForBytesWritten(5000)) {
+        if (outError) {
+            *outError = QString("Timeout writing XYSineRequest");
+        }
+        return std::nullopt;
+    }
+    
+    // Wait for response
+    if (!m_socket->waitForReadyRead(5000)) {
+        if (outError) {
+            *outError = QString("Timeout waiting for XYSineResponse");
+        }
+        return std::nullopt;
+    }
+    
+    // Read length prefix (4 bytes)
+    QByteArray lengthBytes = m_socket->read(4);
+    if (lengthBytes.size() != 4) {
+        if (outError) {
+            *outError = QString("Failed to read length prefix");
+        }
+        return std::nullopt;
+    }
+    
+    uint32_t responseLength;
+    std::memcpy(&responseLength, lengthBytes.data(), 4);
+    
+    // Read envelope bytes (may need multiple reads)
+    QByteArray envelopeBytes;
+    while (envelopeBytes.size() < static_cast<int>(responseLength)) {
+        if (!m_socket->waitForReadyRead(5000)) {
+            if (outError) {
+                *outError = QString("Timeout reading MessageEnvelope");
+            }
+            return std::nullopt;
+        }
+        envelopeBytes += m_socket->read(responseLength - envelopeBytes.size());
+    }
+    
+    if (envelopeBytes.size() != static_cast<int>(responseLength)) {
+        if (outError) {
+            *outError = QString("Failed to read complete MessageEnvelope");
+        }
+        return std::nullopt;
+    }
+    
+    // Parse envelope
+    palantir::MessageEnvelope responseEnvelope;
+    QString parseError;
+    if (!phoenix::transport::parseEnvelope(envelopeBytes, responseEnvelope, &parseError)) {
+        if (outError) {
+            *outError = QString("Failed to parse MessageEnvelope: %1").arg(parseError);
+        }
+        return std::nullopt;
+    }
+    
+    // Validate envelope
+    if (responseEnvelope.version() != 1) {
+        if (outError) {
+            *outError = QString("Invalid envelope version: %1").arg(responseEnvelope.version());
+        }
+        return std::nullopt;
+    }
+    
+    // Check for error response
+    if (responseEnvelope.type() == palantir::MessageType::ERROR_RESPONSE) {
+        palantir::ErrorResponse errorResponse;
+        const std::string& payload = responseEnvelope.payload();
+        if (errorResponse.ParseFromArray(payload.data(), static_cast<int>(payload.size()))) {
+            if (outError) {
+                *outError = mapErrorResponse(errorResponse);
+            }
+        } else {
+            if (outError) {
+                *outError = QString("Received ERROR_RESPONSE but failed to parse ErrorResponse");
+            }
+        }
+        return std::nullopt;
+    }
+    
+    // Validate response type
+    if (responseEnvelope.type() != palantir::MessageType::XY_SINE_RESPONSE) {
+        if (outError) {
+            *outError = QString("Unexpected message type: %1 (expected XY_SINE_RESPONSE)")
+                       .arg(static_cast<int>(responseEnvelope.type()));
+        }
+        return std::nullopt;
+    }
+    
+    // Parse inner XYSineResponse from payload
+    palantir::XYSineResponse response;
+    const std::string& payload = responseEnvelope.payload();
+    if (!response.ParseFromArray(payload.data(), static_cast<int>(payload.size()))) {
+        if (outError) {
+            *outError = QString("Failed to parse XYSineResponse from envelope payload");
+        }
+        return std::nullopt;
+    }
+    
+    return response;
+}
+
+QString LocalSocketChannel::mapErrorResponse(const palantir::ErrorResponse& errorResponse)
+{
+    // Centralized error mapping: ErrorCode -> user-meaningful message
+    // This ensures consistent error handling across all RPCs (Capabilities, XY Sine, etc.)
+    //
+    // Error codes mapped (Sprint 4.5):
+    //   - MESSAGE_TOO_LARGE, UNKNOWN_MESSAGE_TYPE, PROTOBUF_PARSE_ERROR, INVALID_MESSAGE_FORMAT: Protocol errors
+    //   - INVALID_ARGUMENT, MISSING_REQUIRED_FIELD, INVALID_PARAMETER_VALUE: Request validation errors
+    //   - INTERNAL_ERROR, SERVICE_UNAVAILABLE, TIMEOUT: Server errors
+    //   - CONNECTION_CLOSED, CONNECTION_TIMEOUT: Connection errors
+    
+    QString baseMessage = QString::fromStdString(errorResponse.message());
+    QString details = QString::fromStdString(errorResponse.details());
+    
+    // Map error codes to user-friendly messages
+    QString userMessage;
+    switch (errorResponse.error_code()) {
+        case palantir::ErrorCode::MESSAGE_TOO_LARGE:
+            userMessage = QString("Message too large: %1").arg(baseMessage);
+            break;
+        case palantir::ErrorCode::UNKNOWN_MESSAGE_TYPE:
+            userMessage = QString("Unknown message type: %1").arg(baseMessage);
+            break;
+        case palantir::ErrorCode::PROTOBUF_PARSE_ERROR:
+            userMessage = QString("Protocol error: %1").arg(baseMessage);
+            break;
+        case palantir::ErrorCode::INVALID_MESSAGE_FORMAT:
+            userMessage = QString("Invalid message format: %1").arg(baseMessage);
+            break;
+        case palantir::ErrorCode::INVALID_ARGUMENT:
+            userMessage = QString("Invalid argument: %1").arg(baseMessage);
+            break;
+        case palantir::ErrorCode::MISSING_REQUIRED_FIELD:
+            userMessage = QString("Missing required field: %1").arg(baseMessage);
+            break;
+        case palantir::ErrorCode::INVALID_PARAMETER_VALUE:
+            userMessage = QString("Invalid parameter: %1").arg(baseMessage);
+            break;
+        case palantir::ErrorCode::INTERNAL_ERROR:
+            userMessage = QString("Server error: %1").arg(baseMessage);
+            break;
+        case palantir::ErrorCode::SERVICE_UNAVAILABLE:
+            userMessage = QString("Service unavailable: %1").arg(baseMessage);
+            break;
+        case palantir::ErrorCode::TIMEOUT:
+            userMessage = QString("Request timeout: %1").arg(baseMessage);
+            break;
+        case palantir::ErrorCode::CONNECTION_CLOSED:
+            userMessage = QString("Connection closed: %1").arg(baseMessage);
+            break;
+        case palantir::ErrorCode::CONNECTION_TIMEOUT:
+            userMessage = QString("Connection timeout: %1").arg(baseMessage);
+            break;
+        default:
+            // Unknown error code - use base message
+            userMessage = baseMessage.isEmpty() ? QString("Unknown error (code %1)").arg(static_cast<int>(errorResponse.error_code())) : baseMessage;
+            break;
+    }
+    
+    // Append details if available
+    if (!details.isEmpty()) {
+        userMessage += QString(" (%1)").arg(details);
+    }
+    
+    return userMessage;
 }
 #else
 std::optional<int> LocalSocketChannel::getCapabilities(QString* outError)

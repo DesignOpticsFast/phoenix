@@ -1,0 +1,26 @@
+# Bedrock Palantir Server Library (from CMakeLists.txt, lines 310-333)
+# PalantirServer library (Qt-based IPC server)
+if(BEDROCK_WITH_TRANSPORT_DEPS)
+  add_library(bedrock_palantir_server STATIC
+    src/palantir/PalantirServer.cpp
+    src/palantir/EnvelopeHelpers.cpp
+    src/palantir/EnvelopeHelpers.hpp
+  )
+
+  target_include_directories(bedrock_palantir_server PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+  )
+
+  target_link_libraries(bedrock_palantir_server PUBLIC
+    Qt6::Core
+    Qt6::Network
+    bedrock_palantir_proto
+  )
+
+  if(ABSEIL_LIBS)
+    target_link_libraries(bedrock_palantir_server PUBLIC ${ABSEIL_LIBS})
+  endif()
+
+  target_compile_definitions(bedrock_palantir_server PRIVATE BEDROCK_WITH_TRANSPORT_DEPS)
+endif()
+
