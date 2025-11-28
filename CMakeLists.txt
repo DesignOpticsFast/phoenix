@@ -235,6 +235,7 @@ if(PHX_WITH_LIBSODIUM)
 
   target_include_directories(phoenix_libsodium PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium/include/sodium
   )
 
   # Platform-specific compilation flags
