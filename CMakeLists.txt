@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 project(Phoenix
   VERSION 0.0.4
   DESCRIPTION "Qt UI for Bedrock"
-  LANGUAGES CXX)
+  LANGUAGES CXX C)
 
 # ---- C++ & Qt automations ---------------------------------------------------
 # C++/Qt config (confirmed present)
@@ -224,40 +224,55 @@ wire_translations_for(phoenix_app)
 
 # ---- libsodium library ----------------------------------------------------
 if(PHX_WITH_LIBSODIUM)
-  # Collect all libsodium source files
+  # Collect all libsodium source files (exclude version.c which requires generated header)
   file(GLOB_RECURSE LIBSODIUM_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium/*.c"
   )
+  
+  # Remove version.c as it requires autotools-generated version.h
+  list(FILTER LIBSODIUM_SOURCES EXCLUDE REGEX ".*version\\.c$")
 
-  add_library(phoenix_libsodium STATIC
-    ${LIBSODIUM_SOURCES}
-  )
-
-  target_include_directories(phoenix_libsodium PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium/include/sodium
-  )
-
-  # Platform-specific compilation flags
-  if(WIN32)
-    # Windows-specific flags for libsodium
-    target_compile_definitions(phoenix_libsodium PRIVATE
-      SODIUM_STATIC=1
+  if(LIBSODIUM_SOURCES)
+    add_library(phoenix_libsodium STATIC
+      ${LIBSODIUM_SOURCES}
     )
-  endif()
 
-  if(APPLE)
-    # macOS-specific flags if needed
-    target_compile_definitions(phoenix_libsodium PRIVATE
-      SODIUM_STATIC=1
+    # Disable AUTOMOC for this C-only library (libsodium is C, not C++)
+    set_target_properties(phoenix_libsodium PROPERTIES
+      AUTOMOC OFF
+      AUTOUIC OFF
+      AUTORCC OFF
     )
-  endif()
 
-  if(UNIX AND NOT APPLE)
-    # Linux-specific flags
-    target_compile_definitions(phoenix_libsodium PRIVATE
-      SODIUM_STATIC=1
+    target_include_directories(phoenix_libsodium PUBLIC
+      ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium/include
+      ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsodium/src/libsodium/include/sodium
     )
+
+    # Platform-specific compilation flags
+    if(WIN32)
+      # Windows-specific flags for libsodium
+      target_compile_definitions(phoenix_libsodium PRIVATE
+        SODIUM_STATIC=1
+      )
+    endif()
+
+    if(APPLE)
+      # macOS-specific flags if needed
+      target_compile_definitions(phoenix_libsodium PRIVATE
+        SODIUM_STATIC=1
+      )
+    endif()
+
+    if(UNIX AND NOT APPLE)
+      # Linux-specific flags
+      target_compile_definitions(phoenix_libsodium PRIVATE
+        SODIUM_STATIC=1
+      )
+    endif()
+  else()
+    message(WARNING "PHX_WITH_LIBSODIUM is ON but no libsodium source files found. Disabling libsodium support.")
+    set(PHX_WITH_LIBSODIUM OFF CACHE BOOL "Build with libsodium crypto support" FORCE)
   endif()
 endif()
 

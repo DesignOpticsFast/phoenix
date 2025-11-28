@@ -169,6 +169,8 @@ endif()
 if(BUILD_TESTING)
   add_executable(test_analysis_window_creation
     test_analysis_window_creation.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/themes/ThemeManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/widgets/FeatureParameterPanel.cpp
   )
 
   target_link_libraries(test_analysis_window_creation PRIVATE
@@ -193,6 +195,7 @@ if(BUILD_TESTING)
   add_executable(test_xy_plot_instrumentation
     test_xy_plot_instrumentation.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/widgets/FeatureParameterPanel.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/themes/ThemeManager.cpp
   )
 
   target_link_libraries(test_xy_plot_instrumentation PRIVATE
@@ -215,10 +218,13 @@ endif()
 if(BUILD_TESTING)
   add_executable(test_analysis_window_manager
     test_analysis_window_manager.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/themes/ThemeManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/widgets/FeatureParameterPanel.cpp
   )
 
   target_link_libraries(test_analysis_window_manager PRIVATE
     phoenix_analysis
+    phoenix_feature_registry
     Qt6::Core
     Qt6::Widgets
     Qt6::Test
@@ -278,11 +284,14 @@ endif()
 if(BUILD_TESTING)
   add_executable(analysis_sanity_tests
     analysis_sanity_tests.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/themes/ThemeManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/widgets/FeatureParameterPanel.cpp
   )
 
   target_link_libraries(analysis_sanity_tests
     PRIVATE
       phoenix_analysis
+      phoenix_feature_registry
       Qt6::Test
       Qt6::Core
       Qt6::Widgets
