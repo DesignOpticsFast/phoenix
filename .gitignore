@@ -115,3 +115,4 @@ ci-audit-package/
 # UnderLord runtime state (ephemeral)
 .underlord/state/
 scripts/build/
+CMakeUserPresets.json
