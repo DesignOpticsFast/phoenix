@@ -21,9 +21,11 @@
 #include <QDebug>
 #include <QLayout>
 #include <QLayoutItem>
+#include <QHideEvent>
+#include <QEvent>
 
 XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
-    : QMainWindow(nullptr)  // Force nullptr parent to create top-level window (macOS Z-order requirement)
+    : QMainWindow(nullptr)  // S4.3 shape: true top-level, no Qt parent
     , m_plotView(nullptr)
     , m_toolbar(nullptr)
     , m_runAction(nullptr)
@@ -36,9 +38,11 @@ XYAnalysisWindow::XYAnalysisWindow(QWidget* parent)
     setWindowTitle(tr("XY Plot Analysis"));
     resize(900, 600);
     
-    // Ensure this is a top-level window and always stays above MainWindow.
-    // QMainWindow already has Qt::Window by default; we just add the stays-on-top hint.
+    // S4.3 behavior: always-on-top top-level analysis window
     setWindowFlag(Qt::WindowStaysOnTopHint, true);
+    
+    // DO NOT set Qt::Tool here
+    // DO NOT change any other flags in this step
     
     // Create XYPlotViewGraphs
     m_plotView = new XYPlotViewGraphs();
@@ -407,6 +411,16 @@ void XYAnalysisWindow::showEvent(QShowEvent* event)
         dumpWidgetTree();
     }
 #endif
+}
+
+void XYAnalysisWindow::hideEvent(QHideEvent* event)
+{
+    QMainWindow::hideEvent(event);
+}
+
+void XYAnalysisWindow::changeEvent(QEvent* event)
+{
+    QMainWindow::changeEvent(event);
 }
 
 void XYAnalysisWindow::closeEvent(QCloseEvent* event)

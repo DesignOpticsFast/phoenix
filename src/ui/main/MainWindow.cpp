@@ -35,6 +35,7 @@
 #include <QShowEvent>
 #include <QFocusEvent>
 #include <QEvent>
+#include <QWindowStateChangeEvent>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QSet>
@@ -221,6 +222,116 @@ void MainWindow::focusInEvent(QFocusEvent* event)
     // This ensures analysis windows stay above MainWindow but below tool windows
     if (AnalysisWindowManager* mgr = AnalysisWindowManager::instance()) {
         mgr->raiseAllAnalysisWindows();
+    }
+}
+
+void MainWindow::hideChildWindowsForMinimize()
+{
+    m_hiddenDueToMinimize.clear();
+    
+    // Analysis windows
+    if (auto* mgr = AnalysisWindowManager::instance()) {
+        const auto windows = mgr->windows();
+        for (QMainWindow* win : windows) {
+            if (win && win->isVisible()) {
+                m_hiddenDueToMinimize.append(win);  // implicit QPointer
+                win->setVisible(false);  // Use setVisible for immediate effect
+            }
+        }
+    }
+    
+    // Helper lambdas for floating docks and toolbars
+    auto hideIfFloatingDock = [this](QDockWidget* dock) {
+        if (dock && dock->isFloating() && dock->isVisible()) {
+            m_hiddenDueToMinimize.append(dock);
+            dock->setVisible(false);  // Use setVisible for immediate effect
+        }
+    };
+    
+    hideIfFloatingDock(m_toolboxDock);
+    hideIfFloatingDock(m_propertiesDock);
+    
+    auto hideIfFloatingToolbar = [this](QToolBar* tb) {
+        if (tb && tb->isFloating() && tb->isVisible()) {
+            m_hiddenDueToMinimize.append(tb);
+            tb->setVisible(false);  // Use setVisible for immediate effect
+        }
+    };
+    
+    hideIfFloatingToolbar(m_mainToolBar);
+    hideIfFloatingToolbar(m_topRibbon);
+    hideIfFloatingToolbar(m_rightRibbon);
+    
+    // Force immediate event processing to ensure visual updates happen synchronously
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+}
+
+void MainWindow::restoreChildWindowsAfterMinimize()
+{
+    for (const QPointer<QWidget>& ptr : m_hiddenDueToMinimize) {
+        if (ptr && !ptr->isVisible()) {
+            // Temporarily clear WindowStaysOnTopHint so WA_ShowWithoutActivating can work.
+            // On macOS, windows with WindowStaysOnTopHint are often forced to activate
+            // when shown; removing the flag briefly lets WA_ShowWithoutActivating have effect.
+            
+            const Qt::WindowFlags oldFlags = ptr->windowFlags();
+            Qt::WindowFlags newFlags = oldFlags & ~Qt::WindowStaysOnTopHint;
+            
+            ptr->setWindowFlags(newFlags);
+            
+            // Show without activating: set the attribute first, then show().
+            ptr->setAttribute(Qt::WA_ShowWithoutActivating, true);
+            ptr->show();
+            
+            // Restore original flags (including WindowStaysOnTopHint) after the window is visible.
+            // Note: setWindowFlags() on a visible window may hide it, so we need to ensure
+            // it stays visible after restoring flags.
+            ptr->setWindowFlags(oldFlags);
+            
+            // Ensure window remains visible after flag restore (setWindowFlags can hide it)
+            if (!ptr->isVisible()) {
+                ptr->setAttribute(Qt::WA_ShowWithoutActivating, true);
+                ptr->show();
+            }
+        }
+    }
+    
+    m_hiddenDueToMinimize.clear();
+}
+
+// NOTE: On macOS with multiple top-level analysis/tool windows, Qt/macOS
+// does not automatically group these windows for minimize/restore.
+// We explicitly hide/show analysis windows and floating tools here
+// to keep them visually synchronized with the main window. There is still
+// a small residual "cascade" effect during restore due to how the macOS
+// window server handles activation and animation; fully eliminating that
+// would require platform-specific NSWindow integration and is deferred
+// to a future Phoenix windowing/UX sprint (Sprint 4.6).
+void MainWindow::changeEvent(QEvent* event)
+{
+    if (event->type() == QEvent::WindowStateChange) {
+        auto* stateEvent = static_cast<QWindowStateChangeEvent*>(event);
+        const bool wasMinimized = (stateEvent->oldState() & Qt::WindowMinimized);
+        const bool isNowMinimized = (windowState() & Qt::WindowMinimized);
+        
+        // Transitioning to minimized: hide children BEFORE base class handles minimize.
+        if (!wasMinimized && isNowMinimized) {
+            hideChildWindowsForMinimize();
+        }
+    }
+    
+    // Let base class handle the state change (including the OS animation for MainWindow).
+    QMainWindow::changeEvent(event);
+    
+    if (event->type() == QEvent::WindowStateChange) {
+        auto* stateEvent = static_cast<QWindowStateChangeEvent*>(event);
+        const bool wasMinimized = (stateEvent->oldState() & Qt::WindowMinimized);
+        const bool isNowMinimized = (windowState() & Qt::WindowMinimized);
+        
+        // Transitioning from minimized to normal: restore children AFTER base.
+        if (wasMinimized && !isNowMinimized) {
+            restoreChildWindowsAfterMinimize();
+        }
     }
 }
 
@@ -1259,11 +1370,9 @@ void MainWindow::showXYPlot()
         qInfo() << "[MAIN] showXYPlot() called";
     }
 #endif
-    // Create XYAnalysisWindow as top-level window (no parent)
-    // This ensures macOS allows it to appear above MainWindow
-    // Tool windows (Qt::Tool) will naturally stay on top of both
-    // License checking removed (transport-dependent, Phase 3+)
-    auto* win = new XYAnalysisWindow(nullptr);
+    // S4.3 shape: create XYAnalysisWindow as true top-level window (no parent)
+    // WindowStaysOnTopHint keeps it visually above MainWindow
+    auto* win = new XYAnalysisWindow(nullptr);  // S4.3 shape: no parent pointer
     
 #ifndef NDEBUG
     if (qEnvironmentVariableIsSet("PHOENIX_DEBUG_UI_LOG")) {
