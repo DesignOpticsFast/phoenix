@@ -142,7 +142,7 @@ doc_files="$(collect_docs || true)"
 files_count=$(printf '%s\n' "$doc_files" | sed '/^$/d' | wc -l | awk '{print $1}')
 
 if [[ -n "$doc_files" ]]; then
-  current_sha=$(printf '%s\n' "$doc_files" | xargs -r cat | sha256sum | awk '{print $1}')
+  current_sha=$(printf '%s\n' "$doc_files" | while read -r f; do cat "$f"; done | sha256sum | awk '{print $1}')
 else
   current_sha=""
 fi
@@ -555,7 +555,7 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
   # macOS: use stat instead of -printf
   find "$root/.underlord/logs" -maxdepth 1 -type d -name '20*' 2>/dev/null | while read -r dir; do
     [ -n "$dir" ] && echo "$(stat -f '%m %N' "$dir" 2>/dev/null || echo "0 $dir")"
-  done | sort -rn | awk 'NR>30 {print $2}' | xargs rm -rf 2>/dev/null || true
+  done | sort -rn | awk 'NR>30 {print $2}' | while read -r f; do rm -rf "$f"; done || true
 else
   # Linux: use -printf
   find "$root/.underlord/logs" -maxdepth 1 -type d -name '20*' -printf '%T@ %p\n' 2>/dev/null \
